@@ -17,7 +17,15 @@
         "command": "tabstronaut.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "tabstronaut",
+          "name": "Tabstronaut"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
