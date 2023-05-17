@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "tabstronaut.helloWorld",
-        "title": "Hello World"
+        "command": "tabstronaut.addCurrentTab",
+        "title": "Add Current Tab to Tabstronaut"
       }
     ],
     "views": {
