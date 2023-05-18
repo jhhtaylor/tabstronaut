@@ -4,26 +4,27 @@ import { DataSource } from "typeorm";
 import { __prod__ } from './constants';
 import { join } from 'path';
 import dotenv from "dotenv";
+//import { User } from "./entities/User";
 
 dotenv.config();
 
 const main = async () => {
-    const conn = new DataSource({
+    const AppDataSource = new DataSource({
         type: "postgres",
         url: process.env.DATABASE_URI,
-        entities: [join(__dirname), "./entities/*.*"],
+        entities: [join(__dirname, "./entities/*.*")],
         logging: !__prod__,
         synchronize: !__prod__,
     });
 
-    conn
-        .initialize()
-        .then(() => {
-            console.log(`Data Source has been initialized`);
-        })
-        .catch((err) => {
-            console.error(`Data Source initialization error`, err);
-        })
+    try {
+        await AppDataSource.initialize();
+        console.log(`Data Source has been initialized`);
+    } catch (err) {
+        console.error(`Data Source initialization error`, err);
+    }
+
+    //const user = await AppDataSource.manager.create(User, { name: "bob", githubId: "1" }).save();
 
     const app = express();
     app.get("/", (_req, res) => {
