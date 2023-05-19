@@ -2,10 +2,14 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { authenticate } from "./authenticate";
 import { TabstronautDataProvider } from './tabstronautDataProvider';
+import { TokenManager } from "./TokenManager";
 
 let treeDataProvider: TabstronautDataProvider;
 
 export function activate(context: vscode.ExtensionContext) {
+
+	TokenManager.globalState = context.globalState;
+
 	treeDataProvider = new TabstronautDataProvider();
 	vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
