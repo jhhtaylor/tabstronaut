@@ -20,4 +20,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
         this.items.push(item);
         this._onDidChangeTreeData.fire();
     }
+
+    addUserItem(name: string) {
+        const item = new vscode.TreeItem(`Logged in as ${name}`, vscode.TreeItemCollapsibleState.None);
+        item.iconPath = new vscode.ThemeIcon('account');
+        this.items.unshift(item);
+        this._onDidChangeTreeData.fire();
+    }
 }
