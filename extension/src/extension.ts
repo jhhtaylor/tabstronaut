@@ -39,12 +39,22 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.authenticate", () => {
+		vscode.commands.registerCommand("tabstronaut.authenticate", async () => {
 			try {
-				authenticate();
+				const user = await authenticate();
+				if (user) {
+					treeDataProvider.addUserItem(user.name);
+				}
 			} catch (err) {
 				console.log(err);
 			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
+			TokenManager.setToken(""); // Invalidate the token
+			treeDataProvider.addUserItem(name); // Update the tree view item
 		})
 	);
 
@@ -55,20 +65,28 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 }
 
-async function getCurrentUser() {
+async function getCurrentUser(): Promise<{ name: string } | undefined> {
 	try {
 		const token = await TokenManager.getToken(); // Get the stored token
 
+		if (!token) {
+			return undefined; // No token available, return undefined
+		}
+
 		const response = await axios.get(`${apiBaseUrl}/me`, {
-			headers: { Authorization: `Bearer ${token}` } // Send the token in the Authorization header
+			headers: { authorization: `Bearer ${token}` } // Send the token in the Authorization header
 		});
+
+		if (!response.data.user) {
+			return undefined; // User not found, return undefined
+		}
 
 		return response.data.user;
 	} catch (err) {
 		console.error(err);
+		return undefined;
 	}
-
-	return null;
 }
+
 
 export function deactivate() { }

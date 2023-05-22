@@ -22,6 +22,11 @@
         "command": "tabstronaut.authenticate",
         "category": "Tabstronaut",
         "title": "Authenticate"
+      },
+      {
+        "command": "tabstronaut.logout",
+        "category": "Tabstronaut",
+        "title": "Logout"
       }
     ],
     "views": {
