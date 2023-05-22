@@ -18,7 +18,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
     }
 
     getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
-        return Promise.resolve(this.items);
+        if (!element) {
+            // Return the top-level items
+            return Promise.resolve(this.items);
+        }
+
+        return Promise.resolve([]);
     }
 
     addItem(label: string) {
@@ -33,6 +38,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
 
         // Update the existing "Logged in as" item if it exists
         const existingItem = this.items.find(item => item.contextValue === 'loggedInUser');
+
         if (existingItem) {
             existingItem.label = name ? `Logged in as ${name}` : 'Click me to log in';
             existingItem.description = '';
@@ -41,13 +47,17 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
                 title: 'Log in',
                 command: 'tabstronaut.authenticate'
             };
-            this._onDidChangeTreeData.fire();
-            return;
+        } else {
+            // Create a new "Logged in as" or "Click me to log in" item
+            const item = this.createLoggedInItem(name);
+            this.items.push(item);
         }
 
-        // Create a new "Logged in as" or "Click me to log in" item
-        const item = this.createLoggedInItem(name);
-        this.items.unshift(item);
+        this._onDidChangeTreeData.fire();
+    }
+
+
+    refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
@@ -65,6 +75,14 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
         item.iconPath = new vscode.ThemeIcon('account');
         item.contextValue = 'loggedInUser';
         item.tooltip = `Logged in as ${name}`;
+
+        // Add the right-click menu option for logout
+        item.contextValue = 'loggedInUser';
+        item.command = {
+            title: 'Logout',
+            command: 'tabstronaut.openContextMenu',
+            arguments: [item] // Pass the item as an argument to the command
+        };
 
         return item;
     }

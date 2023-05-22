@@ -27,6 +27,11 @@
         "command": "tabstronaut.logout",
         "category": "Tabstronaut",
         "title": "Logout"
+      },
+      {
+        "command": "tabstronaut.openContextMenu",
+        "category": "Tabstronaut",
+        "title": "Open Context Menu"
       }
     ],
     "views": {

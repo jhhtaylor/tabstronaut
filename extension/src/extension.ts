@@ -7,13 +7,14 @@ import { TokenManager } from "./TokenManager";
 import { apiBaseUrl } from './constants';
 
 let treeDataProvider: TabstronautDataProvider;
+let loggedInUser: string | undefined;
+let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function activate(context: vscode.ExtensionContext) {
-
 	TokenManager.globalState = context.globalState;
 
 	treeDataProvider = new TabstronautDataProvider();
-	vscode.window.createTreeView('tabstronaut', { treeDataProvider });
+	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
 	const statusBarCommand = 'tabstronaut.addCurrentTab';
 	const statusBarButtonText = '$(plus) Add to Tabstronaut';
@@ -23,12 +24,11 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.command = statusBarCommand;
 	statusBarItem.show();
 
-	context.subscriptions.push(
-		statusBarItem
-	);
+	context.subscriptions.push(statusBarItem);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(statusBarCommand, () => {
+			console.log('Add Current Tab command triggered.');
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
@@ -40,10 +40,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("tabstronaut.authenticate", async () => {
+			console.log('Authenticate command triggered.');
 			try {
 				const user = await authenticate();
 				if (user) {
-					treeDataProvider.addUserItem(user.name);
+					loggedInUser = user.name;
+					treeDataProvider.addUserItem(user.name); // Pass the user name to the addUserItem method
 				}
 			} catch (err) {
 				console.log(err);
@@ -52,20 +54,40 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
-			TokenManager.setToken(""); // Invalidate the token
-			treeDataProvider.addUserItem(name); // Update the tree view item
+		vscode.commands.registerCommand("tabstronaut.openContextMenu", async (item: vscode.TreeItem) => {
+			console.log('Open Context Menu command triggered.');
+
+			if (item.contextValue === "loggedInUser") {
+				const choice = await vscode.window.showQuickPick(["Logout"], {
+					placeHolder: "Select an action"
+				});
+
+				if (choice === "Logout") {
+					vscode.commands.executeCommand("tabstronaut.logout", item.label);
+				}
+			}
 		})
 	);
 
-	getCurrentUser().then(user => {
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
+			console.log('Logout command triggered for user:', name);
+			TokenManager.setToken(""); // Invalidate the token
+			loggedInUser = undefined; // Reset the logged-in user
+			treeDataProvider.addUserItem(''); // Pass an empty string to the addUserItem method
+		})
+	);
+
+	getLoggedInUser().then(user => {
 		if (user) {
-			treeDataProvider.addUserItem(user.name);
+			loggedInUser = user.name;
+			treeDataProvider.addUserItem(user.name); // Pass the user name to the addUserItem method
 		}
 	});
 }
 
-async function getCurrentUser(): Promise<{ name: string } | undefined> {
+async function getLoggedInUser(): Promise<{ name: string } | undefined> {
 	try {
 		const token = await TokenManager.getToken(); // Get the stored token
 
@@ -87,6 +109,5 @@ async function getCurrentUser(): Promise<{ name: string } | undefined> {
 		return undefined;
 	}
 }
-
 
 export function deactivate() { }
