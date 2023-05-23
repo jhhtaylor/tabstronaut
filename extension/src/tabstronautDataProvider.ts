@@ -23,7 +23,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return Promise.resolve([userItem, ...this.groups]);
     }
 
-
     addGroup(label: string) {
         const group = new Group(label);
         this.groups.push(group);

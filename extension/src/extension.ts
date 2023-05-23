@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import axios from 'axios';
 import { authenticate, getLoggedInUser } from "./authenticate";
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { TokenManager } from "./TokenManager";
-import { apiBaseUrl } from './constants';
 
 let treeDataProvider: TabstronautDataProvider;
 let loggedInUser: string | undefined;
@@ -17,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
 	const statusBarCommand = 'tabstronaut.addCurrentTab';
-	const statusBarButtonText = '$(plus) Add to Tabstronaut';
+	const statusBarButtonText = '$(plus) Tabstronaut';
 
 	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBarItem.text = statusBarButtonText;
@@ -91,7 +89,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		})
 	);
-
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
