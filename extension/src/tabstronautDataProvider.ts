@@ -8,12 +8,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
     private loggedInUser: string | null = null;
 
     getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
-        // Check if the element is the "Logged in as" item
-        if (element.contextValue === 'loggedInUser') {
-            // Set the description to an empty string
-            element.description = '';
-        }
-
         return element;
     }
 
@@ -41,9 +35,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
 
         if (existingItem) {
             existingItem.label = name ? `Logged in as ${name}` : 'Click me to log in';
-            existingItem.description = '';
-            existingItem.tooltip = '';
-            existingItem.command = name ? undefined : {
+            existingItem.tooltip = name ? `Logged in as ${name}` : '';
+            existingItem.command = name ? {
+                title: 'Logout',
+                command: 'tabstronaut.openContextMenu',
+                arguments: [existingItem] // Pass the item as an argument to the command
+            } : {
                 title: 'Log in',
                 command: 'tabstronaut.authenticate'
             };
@@ -55,7 +52,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
 
         this._onDidChangeTreeData.fire();
     }
-
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
@@ -75,9 +71,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.T
         item.iconPath = new vscode.ThemeIcon('account');
         item.contextValue = 'loggedInUser';
         item.tooltip = `Logged in as ${name}`;
-
-        // Add the right-click menu option for logout
-        item.contextValue = 'loggedInUser';
         item.command = {
             title: 'Logout',
             command: 'tabstronaut.openContextMenu',
