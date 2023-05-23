@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import axios from 'axios';
-import { authenticate } from "./authenticate";
+import { authenticate, getLoggedInUser } from "./authenticate";
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { TokenManager } from "./TokenManager";
 import { apiBaseUrl } from './constants';
@@ -108,29 +108,6 @@ export function activate(context: vscode.ExtensionContext) {
 			treeDataProvider.addUserItem(user.name); // Pass the user name to the addUserItem method
 		}
 	});
-}
-
-async function getLoggedInUser(): Promise<{ name: string } | undefined> {
-	try {
-		const token = await TokenManager.getToken(); // Get the stored token
-
-		if (!token) {
-			return undefined; // No token available, return undefined
-		}
-
-		const response = await axios.get(`${apiBaseUrl}/me`, {
-			headers: { authorization: `Bearer ${token}` } // Send the token in the Authorization header
-		});
-
-		if (!response.data.user) {
-			return undefined; // User not found, return undefined
-		}
-
-		return response.data.user;
-	} catch (err) {
-		console.error(err);
-		return undefined;
-	}
 }
 
 export function deactivate() { }

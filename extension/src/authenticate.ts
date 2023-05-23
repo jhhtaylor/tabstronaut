@@ -67,3 +67,26 @@ async function getCurrentUser(): Promise<{ name: string } | null> {
     }
 }
 
+export async function getLoggedInUser(): Promise<{ name: string } | undefined> {
+    try {
+        const token = await TokenManager.getToken(); // Get the stored token
+
+        if (!token) {
+            return undefined; // No token available, return undefined
+        }
+
+        const response = await axios.get(`${apiBaseUrl}/me`, {
+            headers: { authorization: `Bearer ${token}` } // Send the token in the Authorization header
+        });
+
+        if (!response.data.user) {
+            return undefined; // User not found, return undefined
+        }
+
+        return response.data.user;
+    } catch (err) {
+        console.error(err);
+        return undefined;
+    }
+}
+

@@ -1,20 +1,5 @@
 import * as vscode from 'vscode';
-
-
-class Group extends vscode.TreeItem {
-    items: vscode.TreeItem[] = [];
-
-    constructor(label: string) {
-        super(label, vscode.TreeItemCollapsibleState.Expanded);
-        this.contextValue = 'group';
-    }
-
-    addItem(label: string) {
-        const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-        item.iconPath = new vscode.ThemeIcon('file');
-        this.items.push(item);
-    }
-}
+import { Group } from './Group';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -33,9 +18,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         if (element instanceof Group) {
             return Promise.resolve(element.items);
         }
-        // Return the top-level items
-        return Promise.resolve(this.groups);
+        // Create a user item based on whether a user is logged in or not
+        const userItem = this.createLoggedInItem(this.loggedInUser || undefined);
+        return Promise.resolve([userItem, ...this.groups]);
     }
+
 
     addGroup(label: string) {
         const group = new Group(label);
@@ -70,6 +57,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     addUserItem(name?: string) {
         this.loggedInUser = name !== undefined ? name : null;
+        this._onDidChangeTreeData.fire(); // Add this line
 
         // Update the existing "Logged in as" item if it exists
         const existingItem = this.items.find(item => item.contextValue === 'loggedInUser');
