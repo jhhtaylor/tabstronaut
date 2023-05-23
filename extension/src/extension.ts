@@ -27,13 +27,36 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(statusBarItem);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand(statusBarCommand, () => {
+		vscode.commands.registerCommand(statusBarCommand, async () => {
 			console.log('Add Current Tab command triggered.');
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
 				const fileName = path.basename(filePath);
-				treeDataProvider.addItem(fileName);
+
+				// Show input box if there are no groups yet
+				let groupName: string | undefined;
+				if (treeDataProvider.getGroups().length === 0) {
+					groupName = await vscode.window.showInputBox({ prompt: 'Enter group name:' });
+					if (!groupName) {
+						return;
+					}
+				} else {
+					// Show quick pick dialog for group selection
+					const options: string[] = treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label);
+					options.push('New Group...'); // Option to create a new group
+					groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
+					if (!groupName) {
+						return;
+					}
+					if (groupName === 'New Group...') {
+						groupName = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+						if (!groupName) {
+							return;
+						}
+					}
+				}
+				treeDataProvider.addToGroup(groupName, fileName);
 			}
 		})
 	);

@@ -30,6 +30,7 @@ const main = async () => {
 
     const app = express();
     app.use(cors());
+    app.use(express.json());
 
     passport.serializeUser((user: any, done) => {
         done(null, user.accessToken);

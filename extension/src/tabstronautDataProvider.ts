@@ -1,23 +1,64 @@
 import * as vscode from 'vscode';
 
-export class TabstronautDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+class Group extends vscode.TreeItem {
+    items: vscode.TreeItem[] = [];
+
+    constructor(label: string) {
+        super(label, vscode.TreeItemCollapsibleState.Expanded);
+        this.contextValue = 'group';
+    }
+
+    addItem(label: string) {
+        const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+        item.iconPath = new vscode.ThemeIcon('file');
+        this.items.push(item);
+    }
+}
+
+export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    private groups: Group[] = [];
 
     private items: vscode.TreeItem[] = [];
     private loggedInUser: string | null = null;
 
-    getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+    getTreeItem(element: Group | vscode.TreeItem): vscode.TreeItem {
         return element;
     }
 
-    getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
-        if (!element) {
-            // Return the top-level items
-            return Promise.resolve(this.items);
+    getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
+        if (element instanceof Group) {
+            return Promise.resolve(element.items);
         }
+        // Return the top-level items
+        return Promise.resolve(this.groups);
+    }
 
-        return Promise.resolve([]);
+    addGroup(label: string) {
+        const group = new Group(label);
+        this.groups.push(group);
+        this._onDidChangeTreeData.fire();
+    }
+
+    getGroup(groupName: string): Group | undefined {
+        return this.groups.find(g => g.label === groupName);
+    }
+
+    public getGroups(): Group[] {
+        return this.groups;
+    }
+
+    addToGroup(groupName: string, label: string) {
+        let group = this.getGroup(groupName);
+        if (!group) {
+            this.addGroup(groupName);
+            group = this.getGroup(groupName);
+        }
+        group?.addItem(label);
+        this._onDidChangeTreeData.fire();
     }
 
     addItem(label: string) {
