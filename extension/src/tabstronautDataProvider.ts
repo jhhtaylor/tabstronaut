@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Group } from './Group';
+import { Group } from './models/Group';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
