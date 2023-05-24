@@ -79,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 			console.log('Open Context Menu command triggered.');
 
 			if (item.contextValue === "loggedInUser") {
-				const choice = await vscode.window.showQuickPick(["Logout"], {
+				const choice = await vscode.window.showQuickPick(["Log out"], {
 					placeHolder: "Select an action"
 				});
 
