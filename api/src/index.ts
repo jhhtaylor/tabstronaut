@@ -5,6 +5,7 @@ import { DataSource } from "typeorm";
 import { __prod__ } from './constants';
 import { join } from 'path';
 import { User } from "./entities/User";
+import { TabGroup } from "./entities/TabGroup";
 import { Strategy as GitHubStrategy } from "passport-github";
 import passport from "passport";
 import jwt from "jsonwebtoken";
@@ -118,6 +119,67 @@ const main = async () => {
     app.listen(3002, () => {
         console.log('listening on localhost:3002');
     })
+
+    app.get("/tabGroups", async (req, res) => {
+        //console.log("Received request at /tabGroups");
+
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            //console.log("No auth header found");
+            res.send({ user: null });
+            return;
+        }
+
+        const token = authHeader.split(" ")[1];
+        if (!token) {
+            //console.log("No token found in auth header");
+            res.send({ user: null });
+            return;
+        }
+
+        let userId: number | null = null;
+
+        try {
+            const payload: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            userId = parseInt(payload.userId);
+        } catch (err) {
+            //console.log("JWT verification failed:", err);
+            res.send({ user: null });
+            return;
+        }
+
+        if (!userId) {
+            //console.log("No user ID found in token payload");
+            res.send({ user: null });
+            return;
+        }
+
+        //console.log(`Looking for user with ID ${userId}`);
+        const user = await User.findOne({ where: { id: userId }, relations: ["tabGroup", "tabGroup.tabs"] });
+
+        if (!user) {
+            console.log(`No user found with ID ${userId}`);
+            res.send({ user: null });
+            return;
+        }
+
+        //console.log(`Found user with ID ${userId}:`, user);
+        const tabGroupsData = await user.tabGroup;
+
+        const tabGroups = tabGroupsData instanceof Array
+            ? await Promise.all(
+                tabGroupsData.map(async (group: TabGroup) => {
+                    //console.log(`Retrieving tabs for group ${group.id}`);
+                    const tabs = await group.tabs;
+                    //console.log(`Tabs for group ${group.id}:`, tabs);
+                    return { ...group, tabs };
+                })
+            )
+            : [];
+
+        //console.log(`Sending tab groups for user ${userId}:`, tabGroups);
+        res.send({ tabGroups });
+    });
 };
 
 main();

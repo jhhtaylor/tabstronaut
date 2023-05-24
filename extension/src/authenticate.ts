@@ -52,6 +52,8 @@ async function getCurrentUser(): Promise<{ name: string } | null> {
             return null; // No token available, return null
         }
 
+        //console.log(token);
+
         const response = await axios.get(`${apiBaseUrl}/me`, {
             headers: { authorization: `Bearer ${token}` } // Send the token in the Authorization header
         });
