@@ -46,20 +46,20 @@ export const authenticate = (): Promise<{ name: string } | null> => {
 
 async function getCurrentUser(): Promise<{ name: string } | null> {
     try {
-        const token = await TokenManager.getToken(); // Get the stored token
+        const token = await TokenManager.getToken();
 
         if (!token) {
-            return null; // No token available, return null
+            return null;
         }
 
         //console.log(token);
 
         const response = await axios.get(`${apiBaseUrl}/me`, {
-            headers: { authorization: `Bearer ${token}` } // Send the token in the Authorization header
+            headers: { authorization: `Bearer ${token}` }
         });
 
         if (!response.data.user) {
-            return null; // User not found, return null
+            return null;
         }
 
         return response.data.user;
@@ -71,18 +71,18 @@ async function getCurrentUser(): Promise<{ name: string } | null> {
 
 export async function getLoggedInUser(): Promise<{ name: string } | undefined> {
     try {
-        const token = await TokenManager.getToken(); // Get the stored token
+        const token = await TokenManager.getToken();
 
         if (!token) {
-            return undefined; // No token available, return undefined
+            return undefined;
         }
 
         const response = await axios.get(`${apiBaseUrl}/me`, {
-            headers: { authorization: `Bearer ${token}` } // Send the token in the Authorization header
+            headers: { authorization: `Bearer ${token}` }
         });
 
         if (!response.data.user) {
-            return undefined; // User not found, return undefined
+            return undefined;
         }
 
         return response.data.user;

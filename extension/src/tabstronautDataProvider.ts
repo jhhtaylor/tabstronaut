@@ -18,7 +18,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         if (element instanceof Group) {
             return Promise.resolve(element.items);
         }
-        // Create a user item based on whether a user is logged in or not
         const userItem = this.createLoggedInItem(this.loggedInUser || undefined);
         return Promise.resolve([userItem, ...this.groups]);
     }
@@ -56,9 +55,8 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     addUserItem(name?: string) {
         this.loggedInUser = name !== undefined ? name : null;
-        this._onDidChangeTreeData.fire(); // Add this line
+        this._onDidChangeTreeData.fire();
 
-        // Update the existing "Logged in as" item if it exists
         const existingItem = this.items.find(item => item.contextValue === 'loggedInUser');
 
         if (existingItem) {
@@ -67,13 +65,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             existingItem.command = name ? {
                 title: 'Logout',
                 command: 'tabstronaut.openContextMenu',
-                arguments: [existingItem] // Pass the item as an argument to the command
+                arguments: [existingItem]
             } : {
                 title: 'Log in',
                 command: 'tabstronaut.authenticate'
             };
         } else {
-            // Create a new "Logged in as" or "Click me to log in" item
             const item = this.createLoggedInItem(name);
             this.items.push(item);
         }
@@ -102,7 +99,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         item.command = {
             title: 'Logout',
             command: 'tabstronaut.openContextMenu',
-            arguments: [item] // Pass the item as an argument to the command
+            arguments: [item]
         };
 
         return item;

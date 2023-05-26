@@ -32,7 +32,6 @@ export function activate(context: vscode.ExtensionContext) {
 				const filePath = activeEditor.document.fileName;
 				const fileName = path.basename(filePath);
 
-				// Show input box if there are no groups yet
 				let groupName: string | undefined;
 				if (treeDataProvider.getGroups().length === 0) {
 					groupName = await vscode.window.showInputBox({ prompt: 'Enter group name:' });
@@ -40,9 +39,8 @@ export function activate(context: vscode.ExtensionContext) {
 						return;
 					}
 				} else {
-					// Show quick pick dialog for group selection
 					const options: string[] = treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label);
-					options.push('New Group...'); // Option to create a new group
+					options.push('New Group...');
 					groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
 					if (!groupName) {
 						return;
@@ -66,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const user = await authenticate();
 				if (user) {
 					loggedInUser = user.name;
-					treeDataProvider.addUserItem(user.name); // Pass the user name to the addUserItem method
+					treeDataProvider.addUserItem(user.name);
 				}
 			} catch (err) {
 				console.log(err);
@@ -93,16 +91,16 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
 			console.log('Logout command triggered for user:', name);
-			TokenManager.setToken(""); // Invalidate the token
-			loggedInUser = undefined; // Reset the logged-in user
-			treeDataProvider.addUserItem(''); // Pass an empty string to the addUserItem method
+			TokenManager.setToken("");
+			loggedInUser = undefined;
+			treeDataProvider.addUserItem('');
 		})
 	);
 
 	getLoggedInUser().then(user => {
 		if (user) {
 			loggedInUser = user.name;
-			treeDataProvider.addUserItem(user.name); // Pass the user name to the addUserItem method
+			treeDataProvider.addUserItem(user.name);
 		}
 	});
 }
