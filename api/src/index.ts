@@ -6,6 +6,7 @@ import { __prod__ } from './constants';
 import { join } from 'path';
 import { User } from "./entities/User";
 import { TabGroup } from "./entities/TabGroup";
+import { Tab } from "./entities/Tab";
 import { Strategy as GitHubStrategy } from "passport-github";
 import passport from "passport";
 import jwt from "jsonwebtoken";
@@ -169,6 +170,65 @@ const main = async () => {
 
         res.send({ tabGroups });
     });
+
+    app.put('/tabGroups/:groupId', async (req, res) => {
+        const groupId = parseInt(req.params.groupId);
+        const { tabLabel } = req.body;
+
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        let userId: number | null = null;
+
+        try {
+            const payload: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            userId = parseInt(payload.userId);
+        } catch (err) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        if (!userId) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        const user = await User.findOne({ where: { id: userId } });
+
+        if (!user) {
+            res.status(404).send({ message: 'User not found' });
+            return;
+        }
+
+        const tabGroup = await TabGroup.createQueryBuilder("tabGroup")
+            .where("tabGroup.id = :id", { id: groupId })
+            .andWhere("tabGroup.creatorId = :creatorId", { creatorId: user.id })
+            .getOne();
+
+        if (!tabGroup) {
+            res.status(404).send({ message: 'Tab group not found' });
+            return;
+        }
+
+        // Create new tab and associate it with the tab group
+        const newTab = new Tab();
+        newTab.name = tabLabel;
+        newTab.tabGroup = Promise.resolve(tabGroup);
+
+        await newTab.save(); // Save new tab to DB
+
+        res.status(200).send({ message: 'Tab group updated successfully', tabGroup });
+    });
+
 };
 
 main();

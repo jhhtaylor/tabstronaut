@@ -24,11 +24,26 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return Promise.resolve([userItem, ...this.groups]);
     }
 
-    addGroup(label: string) {
-        const group = new Group(label);
+    async addGroup(label: string) {
+        // Post to your backend to create a new group
+        const response = await axios.post('http://localhost:3002/tabGroups', { name: label }, {
+            headers: {
+                Authorization: `Bearer ${TokenManager.getToken()}`,
+            },
+        });
+
+        // Assuming the response data contains the new group's id
+        const groupId = response.data.groupId;
+
+        // Now we can create a new group with the correct id
+        const group = new Group(label, groupId);
+
+        // Then we can add this group to our groups array
         this.groups.push(group);
+
         this._onDidChangeTreeData.fire();
     }
+
 
     getGroup(groupName: string): Group | undefined {
         return this.groups.find(g => g.label === groupName);
@@ -38,14 +53,20 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return this.groups;
     }
 
-    addToGroup(groupName: string, label: string) {
+    async addToGroup(groupName: string, tabLabel: string) {
         let group = this.getGroup(groupName);
         if (!group) {
             this.addGroup(groupName);
             group = this.getGroup(groupName);
         }
-        group?.addItem(label);
-        this._onDidChangeTreeData.fire();
+
+        // Update the group in the DB
+        const groupId = group?.id; // You'll need to fetch and store the group's DB id when fetching groups
+        if (group && groupId) {
+            await this.updateGroup(Number(groupId), tabLabel); // Send only the new tab's label
+            group?.addItem(tabLabel);
+            this._onDidChangeTreeData.fire();
+        }
     }
 
     addItem(label: string) {
@@ -121,7 +142,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             });
 
             this.groups = response.data.tabGroups.map((groupData: any) => {
-                const group = new Group(groupData.name);
+                // Here I'm assuming that groupData.id holds the correct id
+                // If not, you need to replace it with the correct property
+                const group = new Group(groupData.name, groupData.id);
                 groupData.tabs.forEach((tabData: any) => {
                     group.addItem(tabData.name);
                 });
@@ -134,8 +157,27 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         }
     }
 
+
     clearGroups() {
         this.groups = [];
         this._onDidChangeTreeData.fire();
+    }
+
+    async updateGroup(groupId: number, tabLabel: string) {
+        try {
+            const response = await axios.put(`http://localhost:3002/tabGroups/${groupId}`, { tabLabel }, {
+                headers: {
+                    Authorization: `Bearer ${TokenManager.getToken()}`,
+                },
+            });
+
+            console.log('updateGroup response', response.data);
+
+            // Fetch groups again after updating
+            this.fetchGroups();
+
+        } catch (error) {
+            console.error(error);
+        }
     }
 }

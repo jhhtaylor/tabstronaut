@@ -21,6 +21,6 @@ export class TabGroup extends BaseEntity {
     @ManyToOne(() => User, (u) => u.tabGroup)
     creator: Promise<User>;
 
-    @OneToMany(() => Tab, (t) => t.tabGroup)
+    @OneToMany(() => Tab, (t) => t.tabGroup, { cascade: true })
     tabs: Promise<Tab[]>;
 }

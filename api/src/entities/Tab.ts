@@ -16,6 +16,6 @@ export class Tab extends BaseEntity {
     @Column("text")
     name: string;
 
-    @ManyToOne(() => TabGroup, (t) => t.tabs)
+    @ManyToOne(() => TabGroup, (t) => t.tabs, { cascade: ['insert', 'update'] })
     tabGroup: Promise<TabGroup>;
 }
