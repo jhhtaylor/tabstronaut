@@ -171,6 +171,54 @@ const main = async () => {
         res.send({ tabGroups });
     });
 
+    app.post('/tabGroups', async (req, res) => {
+        console.log("Received name: ", req.body.name);
+        const { name } = req.body;  // Get the name from the request body 
+
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        let userId: number | null = null;
+
+        try {
+            const payload: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            userId = parseInt(payload.userId);
+        } catch (err) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        if (!userId) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        const user = await User.findOne({ where: { id: userId } });
+
+        if (!user) {
+            res.status(404).send({ message: 'User not found' });
+            return;
+        }
+
+        // Create new group and associate it with the user
+        const newGroup = new TabGroup();
+        newGroup.name = name;
+        newGroup.creator = Promise.resolve(user);
+
+        await newGroup.save(); // Save new group to DB
+
+        res.status(201).send({ message: 'Tab group created successfully', newGroup });
+    });
+
     app.put('/tabGroups/:groupId', async (req, res) => {
         const groupId = parseInt(req.params.groupId);
         const { tabLabel } = req.body;

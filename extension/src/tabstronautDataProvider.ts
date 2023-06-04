@@ -25,25 +25,30 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async addGroup(label: string) {
-        // Post to your backend to create a new group
-        const response = await axios.post('http://localhost:3002/tabGroups', { name: label }, {
-            headers: {
-                Authorization: `Bearer ${TokenManager.getToken()}`,
-            },
-        });
+        console.log(`Group label: ${label}`); // Add this line
+        try {
+            // Post to your backend to create a new group
+            const response = await axios.post('http://localhost:3002/tabGroups', { name: label }, {
+                headers: {
+                    Authorization: `Bearer ${TokenManager.getToken()}`,
+                },
+            });
 
-        // Assuming the response data contains the new group's id
-        const groupId = response.data.groupId;
+            // Assuming the response data contains the new group's id 
+            const groupId = response.data.groupId;
 
-        // Now we can create a new group with the correct id
-        const group = new Group(label, groupId);
+            // Now we can create a new group with the correct id
+            const group = new Group(label, groupId);
 
-        // Then we can add this group to our groups array
-        this.groups.push(group);
+            // Then we can add this group to our groups array
+            this.groups.push(group);
 
-        this._onDidChangeTreeData.fire();
+            this._onDidChangeTreeData.fire();
+
+        } catch (error) {
+            console.error('Error occurred while adding group:', error);
+        }
     }
-
 
     getGroup(groupName: string): Group | undefined {
         return this.groups.find(g => g.label === groupName);
