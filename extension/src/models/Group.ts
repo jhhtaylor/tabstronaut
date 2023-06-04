@@ -4,7 +4,7 @@ export class Group extends vscode.TreeItem {
     items: vscode.TreeItem[] = [];
 
     constructor(label: string) {
-        super(label, vscode.TreeItemCollapsibleState.Expanded);
+        super(label, vscode.TreeItemCollapsibleState.Collapsed);
         this.contextValue = 'group';
     }
 

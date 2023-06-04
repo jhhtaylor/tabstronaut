@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { Group } from './models/Group';
+import { TokenManager } from "./TokenManager";
+import axios from 'axios';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -107,5 +109,33 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     getLoggedInUser(): string | null {
         return this.loggedInUser;
+    }
+
+    async fetchGroups() {
+        console.log("fetchGroups function triggered.");
+        try {
+            const response = await axios.get('http://localhost:3002/tabGroups', {
+                headers: {
+                    Authorization: `Bearer ${TokenManager.getToken()}`,
+                },
+            });
+
+            this.groups = response.data.tabGroups.map((groupData: any) => {
+                const group = new Group(groupData.name);
+                groupData.tabs.forEach((tabData: any) => {
+                    group.addItem(tabData.name);
+                });
+                return group;
+            });
+
+            this._onDidChangeTreeData.fire();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    clearGroups() {
+        this.groups = [];
+        this._onDidChangeTreeData.fire();
     }
 }

@@ -65,6 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
 				if (user) {
 					loggedInUser = user.name;
 					treeDataProvider.addUserItem(user.name);
+
+					await treeDataProvider.fetchGroups();
 				}
 			} catch (err) {
 				console.log(err);
@@ -81,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
 					placeHolder: "Select an action"
 				});
 
-				if (choice === "Logout") {
+				if (choice === "Log out") {
 					vscode.commands.executeCommand("tabstronaut.logout", item.label);
 				}
 			}
@@ -94,13 +96,15 @@ export function activate(context: vscode.ExtensionContext) {
 			TokenManager.setToken("");
 			loggedInUser = undefined;
 			treeDataProvider.addUserItem('');
+			treeDataProvider.clearGroups();
 		})
 	);
 
-	getLoggedInUser().then(user => {
+	getLoggedInUser().then(async (user) => {
 		if (user) {
 			loggedInUser = user.name;
 			treeDataProvider.addUserItem(user.name);
+			await treeDataProvider.fetchGroups();
 		}
 	});
 }
