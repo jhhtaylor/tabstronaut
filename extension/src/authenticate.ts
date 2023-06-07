@@ -3,6 +3,32 @@ import { apiBaseUrl } from './constants';
 import * as polka from "polka";
 import { TokenManager } from './TokenManager';
 import axios from 'axios';
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
+
+async function getGithubSVG(): Promise<string> {
+    const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
+    if (!extension) {
+        console.error('Could not find extension');
+        throw new Error('Could not find extension');
+    }
+    const extensionDirectoryPath = extension.extensionPath;
+    const pathToSVG = path.join(extensionDirectoryPath, 'media', 'github-mark.svg');
+    const svgBuffer = await fsPromises.readFile(pathToSVG);
+    return svgBuffer.toString('base64');
+}
+
+async function getAuthPageHTML(): Promise<string> {
+    const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
+    if (!extension) {
+        console.error('Could not find extension');
+        throw new Error('Could not find extension');
+    }
+    const extensionDirectoryPath = extension.extensionPath;
+    const pathToHTML = path.join(extensionDirectoryPath, 'views', 'authPage.html');
+    let htmlBuffer = await fsPromises.readFile(pathToHTML, 'utf-8');
+    return htmlBuffer.replace('PLACEHOLDER', `data:image/svg+xml;base64,${await getGithubSVG()}`);
+}
 
 export const authenticate = (): Promise<{ name: string } | null> => {
     return new Promise((resolve, reject) => {
@@ -17,7 +43,9 @@ export const authenticate = (): Promise<{ name: string } | null> => {
 
             await TokenManager.setToken(token);
 
-            res.end(`<h1>Auth was successful, you can close this now</h1>`);
+            const authPageHTML = await getAuthPageHTML();
+
+            res.end(authPageHTML);
 
             app.server?.close();
         });
