@@ -1,6 +1,7 @@
 {
   "name": "tabstronaut",
   "displayName": "Tabstronaut",
+  "publisher": "tabstronaut",
   "description": "A cosmic solution to group VS Code editor tabs",
   "version": "0.0.1",
   "engines": {

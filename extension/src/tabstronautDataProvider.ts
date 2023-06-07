@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Group } from './models/Group';
 import { TokenManager } from "./TokenManager";
 import axios from 'axios';
+import * as path from 'path';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -71,7 +72,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async addToGroup(groupName: string, tabLabel: string) {
         console.log(`Attempting to add tab with label: ${tabLabel} to group with name: ${groupName}`);
-        
+
         let group = this.getGroup(groupName);
         if (!group) {
             group = await this.addGroup(groupName);
@@ -127,13 +128,45 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
+    private getGithubIconPath(): string | null {
+        const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
+        if (!extension) {
+            console.error('Could not find extension');
+            return null;
+        }
+        const extensionDirectoryPath = extension.extensionPath;
+
+        let githubIconPath: string;
+        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark) {
+            console.log("Dark theme detected. Using light GitHub icon.");
+            githubIconPath = path.join(extensionDirectoryPath, 'media', 'github-mark-white.svg');
+        } else {
+            console.log("Light or high contrast theme detected. Using dark GitHub icon.");
+            githubIconPath = path.join(extensionDirectoryPath, 'media', 'github-mark.svg');
+        }
+
+        console.log('githubIconPath:', githubIconPath); // Debugging log
+        return githubIconPath;
+    }
+
     private createLoggedInItem(name?: string): vscode.TreeItem {
+        const githubIconPath = this.getGithubIconPath();
+        if (!githubIconPath) {
+            console.error('Could not get GitHub icon path');
+            const item = new vscode.TreeItem('Error: Could not get GitHub icon path', vscode.TreeItemCollapsibleState.None);
+            return item;
+        }
+
         if (!name) {
+            console.log("No user name. Creating log in item.");
             const item = new vscode.TreeItem('Click me to log in', vscode.TreeItemCollapsibleState.None);
             item.command = {
                 title: 'Log in',
                 command: 'tabstronaut.authenticate'
             };
+
+            // set the icon to the github logo
+            item.iconPath = vscode.Uri.file(githubIconPath);
             return item;
         }
 
