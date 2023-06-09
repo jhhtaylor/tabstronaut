@@ -99,7 +99,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     addUserItem(name?: string) {
         this.loggedInUser = name !== undefined ? name : null;
-        this._onDidChangeTreeData.fire();
+        vscode.commands.executeCommand('setContext', 'isLoggedIn', !!this.loggedInUser);
 
         const existingItem = this.items.find(item => item.contextValue === 'loggedInUser');
 

@@ -23,12 +23,17 @@
       {
         "command": "tabstronaut.authenticate",
         "category": "Tabstronaut",
-        "title": "Authenticate"
+        "title": "Log in with GitHub",
+        "icon": {
+          "light": "media/github-mark.svg",
+          "dark": "media/github-mark-white.svg"
+        }
       },
       {
         "command": "tabstronaut.logout",
         "category": "Tabstronaut",
-        "title": "Logout"
+        "title": "Log out",
+        "icon": "$(account)"
       },
       {
         "command": "tabstronaut.openProfileContextMenu",
@@ -50,6 +55,16 @@
         {
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut",
+          "group": "navigation"
+        },
+        {
+          "command": "tabstronaut.authenticate",
+          "when": "view == tabstronaut && !isLoggedIn",
+          "group": "navigation"
+        },
+        {
+          "command": "tabstronaut.logout",
+          "when": "view == tabstronaut && isLoggedIn",
           "group": "navigation"
         }
       ]
