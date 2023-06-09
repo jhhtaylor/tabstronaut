@@ -14,6 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
 	treeDataProvider = new TabstronautDataProvider();
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
+	async function getGroupName(): Promise<string> {
+		let groupName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+		return groupName === undefined ? `Group ${treeDataProvider.getGroups().length + 1}` : groupName.trim() !== '' ? groupName : `Group ${treeDataProvider.getGroups().length + 1}`;
+	}
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
 			console.log('Add Current Tab command triggered.');
@@ -24,10 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				let groupName: string | undefined;
 				if (treeDataProvider.getGroups().length === 0) {
-					groupName = await vscode.window.showInputBox({ prompt: 'Enter group name:' });
-					if (!groupName) {
-						return;
-					}
+					groupName = await getGroupName();
 				} else {
 					const options: string[] = treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label);
 					options.push('New Group...');
@@ -37,17 +39,17 @@ export function activate(context: vscode.ExtensionContext) {
 						return;
 					}
 					if (groupName === 'New Group...') {
-						groupName = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
-						if (!groupName) {
-							return;
-						}
+						groupName = await getGroupName();
 					}
 					if (groupName === 'All to New Group...') {
 						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
 						return;
 					}
 				}
-				treeDataProvider.addToGroup(groupName, fileName);
+
+				if (groupName) {
+					treeDataProvider.addToGroup(groupName, fileName);
+				}
 			}
 		})
 	);
@@ -105,7 +107,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {
-			let groupName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+			let groupName: string | undefined = await getGroupName();
+
 			if (!groupName) {
 				return;
 			}
