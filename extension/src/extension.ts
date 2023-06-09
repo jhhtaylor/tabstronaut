@@ -54,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const user = await authenticate();
 				if (user) {
 					loggedInUser = user.name;
-					treeDataProvider.addUserItem(user.name);
+					treeDataProvider.setLoggedInContext(user.name);
 
 					await treeDataProvider.fetchGroups();
 				}
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 			console.log('Logout command triggered for user:', name);
 			TokenManager.setToken("");
 			loggedInUser = undefined;
-			treeDataProvider.addUserItem('');
+			treeDataProvider.setLoggedInContext('');
 			treeDataProvider.clearGroups();
 		})
 	);
@@ -93,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 	getLoggedInUser().then(async (user) => {
 		if (user) {
 			loggedInUser = user.name;
-			treeDataProvider.addUserItem(user.name);
+			treeDataProvider.setLoggedInContext(user.name);
 			await treeDataProvider.fetchGroups();
 		}
 	});

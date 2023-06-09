@@ -97,29 +97,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
-    addUserItem(name?: string) {
+    setLoggedInContext(name?: string) {
         this.loggedInUser = name !== undefined ? name : null;
         vscode.commands.executeCommand('setContext', 'isLoggedIn', !!this.loggedInUser);
-
-        const existingItem = this.items.find(item => item.contextValue === 'loggedInUser');
-
-        if (existingItem) {
-            existingItem.label = name ? `${name}` : 'Log in with GitHub';
-            existingItem.tooltip = name ? `${name}` : '';
-            existingItem.command = name ? {
-                title: 'Logout',
-                command: 'tabstronaut.openProfileContextMenu',
-                arguments: [existingItem]
-            } : {
-                title: 'Log in',
-                command: 'tabstronaut.authenticate'
-            };
-        } else {
-            const item = this.createLoggedInItem(name);
-            this.items.push(item);
-        }
-
-        this._onDidChangeTreeData.fire();
     }
 
     refresh(): void {
