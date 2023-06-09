@@ -276,7 +276,6 @@ const main = async () => {
 
         res.status(200).send({ message: 'Tab group updated successfully', tabGroup });
     });
-
 };
 
 main();

@@ -57,14 +57,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         }
     }
 
-
     getGroup(groupName: string): Group | undefined {
         console.log(`Attempting to get group with name: ${groupName}`);
         let group = this.groups.find(g => g.label === groupName);
         console.log(`Group added: ${JSON.stringify(group)}`);
         return group;
     }
-
 
     public getGroups(): Group[] {
         return this.groups;
@@ -106,8 +104,8 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const existingItem = this.items.find(item => item.contextValue === 'loggedInUser');
 
         if (existingItem) {
-            existingItem.label = name ? `Logged in as ${name}` : 'Click me to log in';
-            existingItem.tooltip = name ? `Logged in as ${name}` : '';
+            existingItem.label = name ? `${name}` : 'Log in with GitHub';
+            existingItem.tooltip = name ? `${name}` : '';
             existingItem.command = name ? {
                 title: 'Logout',
                 command: 'tabstronaut.openContextMenu',
@@ -159,7 +157,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
         if (!name) {
             console.log("No user name. Creating log in item.");
-            const item = new vscode.TreeItem('Click me to log in', vscode.TreeItemCollapsibleState.None);
+            const item = new vscode.TreeItem('Log in with GitHub', vscode.TreeItemCollapsibleState.None);
             item.command = {
                 title: 'Log in',
                 command: 'tabstronaut.authenticate'
@@ -170,10 +168,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             return item;
         }
 
-        const item = new vscode.TreeItem(`Logged in as ${name}`, vscode.TreeItemCollapsibleState.None);
+        const item = new vscode.TreeItem(`${name}`, vscode.TreeItemCollapsibleState.None);
         item.iconPath = new vscode.ThemeIcon('account');
         item.contextValue = 'loggedInUser';
-        item.tooltip = `Logged in as ${name}`;
+        item.tooltip = `${name}`;
         item.command = {
             title: 'Logout',
             command: 'tabstronaut.openContextMenu',
@@ -211,7 +209,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             console.error(error);
         }
     }
-
 
     clearGroups() {
         this.groups = [];

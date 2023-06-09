@@ -119,4 +119,3 @@ export async function getLoggedInUser(): Promise<{ name: string } | undefined> {
         return undefined;
     }
 }
-
