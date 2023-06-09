@@ -31,17 +31,16 @@ export function activate(context: vscode.ExtensionContext) {
 				if (treeDataProvider.getGroups().length === 0) {
 					groupName = await getGroupName();
 				} else {
-					const options: string[] = treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label);
-					options.push('New Group...');
-					options.push('All to New Group...'); // New option added
+					let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...']; // Add the options to the top of the list
+					options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label)); // Then add the group names
 					groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
 					if (!groupName) {
 						return;
 					}
-					if (groupName === 'New Group...') {
+					if (groupName === 'New Group from Current Tab...') {
 						groupName = await getGroupName();
 					}
-					if (groupName === 'All to New Group...') {
+					if (groupName === 'New Group from All Tabs...') {
 						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
 						return;
 					}
