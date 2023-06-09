@@ -15,9 +15,10 @@
   "contributes": {
     "commands": [
       {
-        "command": "tabstronaut.addCurrentTab",
+        "command": "tabstronaut.openTabGroupContextMenu",
         "category": "Tabstronaut",
-        "title": "Add Current Tab to Tabstronaut"
+        "title": "Add to Tab Group...",
+        "icon": "$(plus)"
       },
       {
         "command": "tabstronaut.authenticate",
@@ -30,7 +31,7 @@
         "title": "Logout"
       },
       {
-        "command": "tabstronaut.openContextMenu",
+        "command": "tabstronaut.openProfileContextMenu",
         "category": "Tabstronaut",
         "title": "Open Context Menu"
       }
@@ -41,6 +42,15 @@
           "id": "tabstronaut",
           "name": "Tabstronaut",
           "contextualTitle": "Tabstronaut"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu",
+          "when": "view == tabstronaut",
+          "group": "navigation"
         }
       ]
     }

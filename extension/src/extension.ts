@@ -14,18 +14,8 @@ export function activate(context: vscode.ExtensionContext) {
 	treeDataProvider = new TabstronautDataProvider();
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
-	const statusBarCommand = 'tabstronaut.addCurrentTab';
-	const statusBarButtonText = '$(plus) Tabstronaut';
-
-	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBarItem.text = statusBarButtonText;
-	statusBarItem.command = statusBarCommand;
-	statusBarItem.show();
-
-	context.subscriptions.push(statusBarItem);
-
 	context.subscriptions.push(
-		vscode.commands.registerCommand(statusBarCommand, async () => {
+		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
 			console.log('Add Current Tab command triggered.');
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
@@ -75,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.openContextMenu", async (item: vscode.TreeItem) => {
+		vscode.commands.registerCommand("tabstronaut.openProfileContextMenu", async (item: vscode.TreeItem) => {
 			console.log('Open Context Menu command triggered.');
 
 			if (item.contextValue === "loggedInUser") {

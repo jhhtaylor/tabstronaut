@@ -108,7 +108,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             existingItem.tooltip = name ? `${name}` : '';
             existingItem.command = name ? {
                 title: 'Logout',
-                command: 'tabstronaut.openContextMenu',
+                command: 'tabstronaut.openProfileContextMenu',
                 arguments: [existingItem]
             } : {
                 title: 'Log in',
@@ -174,7 +174,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         item.tooltip = `${name}`;
         item.command = {
             title: 'Logout',
-            command: 'tabstronaut.openContextMenu',
+            command: 'tabstronaut.openProfileContextMenu',
             arguments: [item]
         };
 
