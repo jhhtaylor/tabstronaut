@@ -31,6 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
 				} else {
 					const options: string[] = treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label);
 					options.push('New Group...');
+					options.push('All to New Group...'); // New option added
 					groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
 					if (!groupName) {
 						return;
@@ -40,6 +41,10 @@ export function activate(context: vscode.ExtensionContext) {
 						if (!groupName) {
 							return;
 						}
+					}
+					if (groupName === 'All to New Group...') {
+						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
+						return;
 					}
 				}
 				treeDataProvider.addToGroup(groupName, fileName);
@@ -97,6 +102,40 @@ export function activate(context: vscode.ExtensionContext) {
 			await treeDataProvider.fetchGroups();
 		}
 	});
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {
+			let groupName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+			if (!groupName) {
+				return;
+			}
+
+			let startingTab = vscode.window.activeTextEditor;
+			if (!startingTab) {
+				// If there are no editors open, there's nothing to do
+				return;
+			}
+
+			let addedFiles = new Set<string>();
+
+			let editor: vscode.TextEditor | undefined = startingTab;
+			let startFilePath = startingTab.document.fileName;
+			do {
+				if (editor) {
+					const filePath = editor.document.fileName;
+					const fileName = path.basename(filePath);
+
+					if (!addedFiles.has(fileName)) {
+						await treeDataProvider.addToGroup(groupName, fileName);
+						addedFiles.add(fileName);
+					}
+				}
+
+				await vscode.commands.executeCommand('workbench.action.nextEditor');
+				editor = vscode.window.activeTextEditor;
+			} while (editor && editor.document.fileName !== startFilePath);
+		})
+	);
 }
 
 export function deactivate() { }
