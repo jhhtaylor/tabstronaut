@@ -169,6 +169,7 @@ export function activate(context: vscode.ExtensionContext) {
 					} catch (error) {
 						console.error(`Failed to open file: ${filePath}`);
 						console.error(error);
+						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
 					}
 				}
 			}
@@ -196,7 +197,7 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage('Invalid group name. Please try again.');
 				return;
 			}
-			treeDataProvider.renameGroup(group.id, newName);  
+			treeDataProvider.renameGroup(group.id, newName);
 		})
 	);
 }
