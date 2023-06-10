@@ -126,11 +126,11 @@ export function activate(context: vscode.ExtensionContext) {
 			do {
 				if (editor) {
 					const filePath = editor.document.fileName;
-					const fileName = path.basename(filePath);
+					//const fileName = path.basename(filePath);
 
-					if (!addedFiles.has(fileName)) {
-						await treeDataProvider.addToGroup(groupName, fileName);
-						addedFiles.add(fileName);
+					if (!addedFiles.has(filePath)) {
+						await treeDataProvider.addToGroup(groupName, filePath);
+						addedFiles.add(filePath);
 					}
 				}
 

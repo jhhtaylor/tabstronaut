@@ -44,7 +44,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             const group = new Group(label, groupId);
 
             // Then we can add this group to our groups array
-            this.groups.push(group);
+            this.groups.unshift(group);
 
             this._onDidChangeTreeData.fire();
 
@@ -175,14 +175,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             });
 
             this.groups = response.data.tabGroups.map((groupData: any) => {
-                // Here I'm assuming that groupData.id holds the correct id
-                // If not, you need to replace it with the correct property
                 const group = new Group(groupData.name, groupData.id);
                 groupData.tabs.forEach((tabData: any) => {
                     group.addItem(tabData.name);
                 });
                 return group;
-            });
+            }).reverse();
 
             this._onDidChangeTreeData.fire();
         } catch (error) {
