@@ -114,6 +114,9 @@ const main = async () => {
 
     });
 
+    app.get("/", (_req, res) => {
+        res.send("Thank you for using Tabstronaut!");
+    });
     app.listen(3002, () => {
         console.log('listening on localhost:3002');
     })
