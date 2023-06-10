@@ -1,6 +1,7 @@
 {
   "name": "tabstronaut",
   "displayName": "Tabstronaut",
+  "publisher": "tabstronaut",
   "description": "A cosmic solution to group VS Code editor tabs",
   "version": "0.0.1",
   "engines": {
@@ -14,9 +15,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "tabstronaut.addCurrentTab",
+        "command": "tabstronaut.openTabGroupContextMenu",
         "category": "Tabstronaut",
-        "title": "Add Current Tab to Tabstronaut"
+        "title": "Add to Tab Group...",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "tabstronaut.openAllTabsInGroup",
+        "category": "Tabstronaut",
+        "title": "Restore all Tabs in Group",
+        "icon": "$(debug-continue-small)"
       },
       {
         "command": "tabstronaut.authenticate",
@@ -26,10 +34,10 @@
       {
         "command": "tabstronaut.logout",
         "category": "Tabstronaut",
-        "title": "Logout"
+        "title": "Log out"
       },
       {
-        "command": "tabstronaut.openContextMenu",
+        "command": "tabstronaut.openProfileContextMenu",
         "category": "Tabstronaut",
         "title": "Open Context Menu"
       }
@@ -40,6 +48,22 @@
           "id": "tabstronaut",
           "name": "Tabstronaut",
           "contextualTitle": "Tabstronaut"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu",
+          "when": "view == tabstronaut && isLoggedIn",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tabstronaut.openAllTabsInGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline"
         }
       ]
     }
