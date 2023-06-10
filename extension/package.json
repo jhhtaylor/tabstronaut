@@ -21,6 +21,12 @@
         "icon": "$(plus)"
       },
       {
+        "command": "tabstronaut.openAllTabsInGroup",
+        "category": "Tabstronaut",
+        "title": "Restore all Tabs in Group",
+        "icon": "$(debug-continue-small)"
+      },
+      {
         "command": "tabstronaut.authenticate",
         "category": "Tabstronaut",
         "title": "Authenticate"
@@ -51,6 +57,13 @@
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut && isLoggedIn",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tabstronaut.openAllTabsInGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline"
         }
       ]
     }

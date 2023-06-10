@@ -3,6 +3,7 @@ import * as path from 'path';
 import { authenticate, getLoggedInUser } from "./authenticate";
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { TokenManager } from "./TokenManager";
+import { Group } from './models/Group';
 
 let treeDataProvider: TabstronautDataProvider;
 let loggedInUser: string | undefined;
@@ -25,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
-				const fileName = path.basename(filePath);
+				//const fileName = path.basename(filePath);
 
 				let groupName: string | undefined;
 				if (treeDataProvider.getGroups().length === 0) {
@@ -47,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 
 				if (groupName) {
-					treeDataProvider.addToGroup(groupName, fileName);
+					treeDataProvider.addToGroup(groupName, filePath);
 				}
 			}
 		})
@@ -136,6 +137,31 @@ export function activate(context: vscode.ExtensionContext) {
 				await vscode.commands.executeCommand('workbench.action.nextEditor');
 				editor = vscode.window.activeTextEditor;
 			} while (editor && editor.document.fileName !== startFilePath);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.openAllTabsInGroup', async (item: any) => {
+			console.log('Open All Tabs In Group command triggered.');
+			if (item.contextValue !== 'group') {
+				// If it's not a group, we don't need to proceed further
+				console.log(`The clicked item is not a group: ${item.label}`);
+				return;
+			}
+			const group: Group = item; // We now know this is a Group
+
+			for (let i = 0; i < group.items.length; i++) {
+				const filePath = group.items[i].label as string;
+				if (filePath) {
+					try {
+						const document = await vscode.workspace.openTextDocument(filePath);
+						await vscode.window.showTextDocument(document, { preview: false });
+					} catch (error) {
+						console.error(`Failed to open file: ${filePath}`);
+						console.error(error);
+					}
+				}
+			}
 		})
 	);
 }
