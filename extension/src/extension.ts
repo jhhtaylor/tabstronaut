@@ -113,6 +113,12 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
+			let initialTab = vscode.window.activeTextEditor;
+			let initialTabFilePath = initialTab?.document.fileName;
+
+			// Focus the first editor in the group before starting
+			await vscode.commands.executeCommand('workbench.action.firstEditorInGroup');
+
 			let startingTab = vscode.window.activeTextEditor;
 			if (!startingTab) {
 				// If there are no editors open, there's nothing to do
@@ -126,7 +132,6 @@ export function activate(context: vscode.ExtensionContext) {
 			do {
 				if (editor) {
 					const filePath = editor.document.fileName;
-					//const fileName = path.basename(filePath);
 
 					if (!addedFiles.has(filePath)) {
 						await treeDataProvider.addToGroup(groupName, filePath);
@@ -137,6 +142,16 @@ export function activate(context: vscode.ExtensionContext) {
 				await vscode.commands.executeCommand('workbench.action.nextEditor');
 				editor = vscode.window.activeTextEditor;
 			} while (editor && editor.document.fileName !== startFilePath);
+
+			// Iterate through all tabs to refocus on initial tab
+			if (initialTabFilePath) {
+				editor = vscode.window.activeTextEditor;
+				startFilePath = editor?.document.fileName || '';
+				while (editor && editor.document.fileName !== initialTabFilePath) {
+					await vscode.commands.executeCommand('workbench.action.nextEditor');
+					editor = vscode.window.activeTextEditor;
+				}
+			}
 		})
 	);
 
