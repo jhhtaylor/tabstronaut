@@ -276,6 +276,60 @@ const main = async () => {
 
         res.status(200).send({ message: 'Tab group updated successfully', tabGroup });
     });
+
+    app.patch('/tabGroups/:groupId', async (req, res) => {
+        const groupId = parseInt(req.params.groupId);
+        const { newName } = req.body;
+
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        let userId: number | null = null;
+
+        try {
+            const payload: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            userId = parseInt(payload.userId);
+        } catch (err) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        if (!userId) {
+            res.status(401).send({ message: 'Unauthorized' });
+            return;
+        }
+
+        const user = await User.findOne({ where: { id: userId } });
+
+        if (!user) {
+            res.status(404).send({ message: 'User not found' });
+            return;
+        }
+
+        const tabGroup = await TabGroup.createQueryBuilder("tabGroup")
+            .where("tabGroup.id = :id", { id: groupId })
+            .andWhere("tabGroup.creatorId = :creatorId", { creatorId: user.id })
+            .getOne();
+
+        if (!tabGroup) {
+            res.status(404).send({ message: 'Tab group not found' });
+            return;
+        }
+
+        tabGroup.name = newName;
+        await tabGroup.save();
+
+        res.status(200).send({ message: 'Tab group renamed successfully', tabGroup });
+    });
 };
 
 main();

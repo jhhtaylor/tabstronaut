@@ -174,6 +174,31 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.renameTabGroup', async (item: any) => {
+			console.log('Rename Tab Group command triggered.');
+			if (item.contextValue !== 'group') {
+				// If it's not a group, we don't need to proceed further
+				console.log(`The clicked item is not a group: ${item.label}`);
+				return;
+			}
+			const group: Group = item; // We now know this is a Group
+
+			if (typeof group.label !== 'string') {
+				// If the label is not a string, we don't need to proceed further
+				console.log('The label of the group is not a string.');
+				return;
+			}
+
+			let newName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+			if (!newName || newName.trim() === '') {
+				vscode.window.showErrorMessage('Invalid group name. Please try again.');
+				return;
+			}
+			treeDataProvider.renameGroup(group.id, newName);  
+		})
+	);
 }
 
 export function deactivate() { }

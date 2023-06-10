@@ -183,4 +183,26 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             console.error(error);
         }
     }
+
+    async renameGroup(groupId: string, newName: string): Promise<void> {
+        try {
+            const response = await axios.patch('http://localhost:3002/tabGroups/' + groupId, {
+                newName: newName
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${TokenManager.getToken()}` // Assuming TokenManager has a getToken method to get the saved token
+                }
+            });
+
+            if (response.status === 200) {
+                console.log('Group renamed successfully: ', response.data);
+                // Here you might want to refresh your tree data, for example by re-fetching the group data
+                await this.fetchGroups();
+            } else {
+                console.log('Failed to rename group: ', response.data);
+            }
+        } catch (err) {
+            console.error('Failed to rename group: ', err);
+        }
+    }
 }

@@ -23,7 +23,7 @@
       {
         "command": "tabstronaut.openAllTabsInGroup",
         "category": "Tabstronaut",
-        "title": "Restore all Tabs in Group",
+        "title": "Restore Tab Group",
         "icon": "$(debug-continue-small)"
       },
       {
@@ -40,6 +40,12 @@
         "command": "tabstronaut.openProfileContextMenu",
         "category": "Tabstronaut",
         "title": "Open Context Menu"
+      },
+      {
+        "command": "tabstronaut.renameTabGroup",
+        "category": "Tabstronaut",
+        "title": "Rename Tab Group",
+        "icon": "$(pencil)"
       }
     ],
     "views": {
@@ -62,6 +68,11 @@
       "view/item/context": [
         {
           "command": "tabstronaut.openAllTabsInGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline"
+        },
+        {
+          "command": "tabstronaut.renameTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline"
         }
