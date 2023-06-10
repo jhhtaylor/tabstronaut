@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 export class Group extends vscode.TreeItem {
     items: vscode.TreeItem[] = [];
@@ -10,9 +11,11 @@ export class Group extends vscode.TreeItem {
         this.id = id || ''; // If id is undefined, set it as an empty string
     }
 
-    addItem(label: string) {
-        const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+    addItem(filePath: string) {
+        const baseName = path.basename(filePath); // Extract the base name from the file path
+        const item = new vscode.TreeItem(baseName, vscode.TreeItemCollapsibleState.None);
         item.iconPath = new vscode.ThemeIcon('file');
+        item.description = filePath; // Add this line to store the full path in description property
         this.items.push(item);
     }
 }

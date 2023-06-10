@@ -166,7 +166,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const group: Group = item; // We now know this is a Group
 
 			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].label as string;
+				const filePath = group.items[i].description as string;  // use description here
 				if (filePath) {
 					try {
 						const document = await vscode.workspace.openTextDocument(filePath);

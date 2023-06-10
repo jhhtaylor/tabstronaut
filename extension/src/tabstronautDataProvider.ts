@@ -68,8 +68,8 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return this.groups;
     }
 
-    async addToGroup(groupName: string, tabLabel: string) {
-        console.log(`Attempting to add tab with label: ${tabLabel} to group with name: ${groupName}`);
+    async addToGroup(groupName: string, filePath: string) {
+        console.log(`Attempting to add tab with label: ${filePath} to group with name: ${groupName}`);
 
         let group = this.getGroup(groupName);
         if (!group) {
@@ -81,10 +81,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         }
 
         // Update the group in the DB
-        const groupId = group?.id; // You'll need to fetch and store the group's DB id when fetching groups
+        const groupId = group?.id;
         if (group && groupId) {
-            await this.updateGroup(Number(groupId), tabLabel); // Send only the new tab's label
-            group?.addItem(tabLabel);
+            await this.updateGroup(Number(groupId), filePath);
+            group?.addItem(filePath);  // Make sure we're using filePath here, not tabLabel
             this._onDidChangeTreeData.fire();
         }
         console.log(`Tab added to group: ${JSON.stringify(group)}`);
