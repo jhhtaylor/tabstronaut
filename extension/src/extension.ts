@@ -26,25 +26,20 @@ export function activate(context: vscode.ExtensionContext) {
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
-				//const fileName = path.basename(filePath);
 
 				let groupName: string | undefined;
-				if (treeDataProvider.getGroups().length === 0) {
+				let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...']; // Always add these options to the top of the list
+				options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label)); // Then add the group names
+				groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
+				if (!groupName) {
+					return;
+				}
+				if (groupName === 'New Group from Current Tab...') {
 					groupName = await getGroupName();
-				} else {
-					let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...']; // Add the options to the top of the list
-					options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label)); // Then add the group names
-					groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
-					if (!groupName) {
-						return;
-					}
-					if (groupName === 'New Group from Current Tab...') {
-						groupName = await getGroupName();
-					}
-					if (groupName === 'New Group from All Tabs...') {
-						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
-						return;
-					}
+				}
+				if (groupName === 'New Group from All Tabs...') {
+					vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
+					return;
 				}
 
 				if (groupName) {
