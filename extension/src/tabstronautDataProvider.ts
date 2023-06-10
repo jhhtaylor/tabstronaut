@@ -205,4 +205,25 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             console.error('Failed to rename group: ', err);
         }
     }
+
+    async deleteGroup(groupId: string): Promise<void> {
+        try {
+            const response = await axios.delete('http://localhost:3002/tabGroups/' + groupId, {
+                headers: {
+                    'Authorization': `Bearer ${TokenManager.getToken()}` // Assuming TokenManager has a getToken method to get the saved token
+                }
+            });
+
+            if (response.status === 200) {
+                console.log('Group deleted successfully: ', response.data);
+                // Here you might want to refresh your tree data, for example by re-fetching the group data
+                await this.fetchGroups();
+            } else {
+                console.log('Failed to delete group: ', response.data);
+            }
+        } catch (err) {
+            console.error('Failed to delete group: ', err);
+        }
+    }
+
 }

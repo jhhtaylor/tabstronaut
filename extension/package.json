@@ -27,6 +27,18 @@
         "icon": "$(debug-continue-small)"
       },
       {
+        "command": "tabstronaut.renameTabGroup",
+        "category": "Tabstronaut",
+        "title": "Rename Tab Group",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "tabstronaut.deleteTabGroup",
+        "category": "Tabstronaut",
+        "title": "Delete Tab Group",
+        "icon": "$(close)"
+      },
+      {
         "command": "tabstronaut.authenticate",
         "category": "Tabstronaut",
         "title": "Authenticate"
@@ -40,12 +52,6 @@
         "command": "tabstronaut.openProfileContextMenu",
         "category": "Tabstronaut",
         "title": "Open Context Menu"
-      },
-      {
-        "command": "tabstronaut.renameTabGroup",
-        "category": "Tabstronaut",
-        "title": "Rename Tab Group",
-        "icon": "$(pencil)"
       }
     ],
     "views": {
@@ -73,6 +79,11 @@
         },
         {
           "command": "tabstronaut.renameTabGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline"
+        },
+        {
+          "command": "tabstronaut.deleteTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline"
         }

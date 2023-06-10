@@ -200,6 +200,29 @@ export function activate(context: vscode.ExtensionContext) {
 			treeDataProvider.renameGroup(group.id, newName);
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.deleteTabGroup', async (item: any) => {
+			console.log('Delete Tab Group command triggered.');
+			if (item.contextValue !== 'group') {
+				// If it's not a group, we don't need to proceed further
+				console.log(`The clicked item is not a group: ${item.label}`);
+				return;
+			}
+			const group: Group = item; // We now know this is a Group
+
+			// Confirm from the user if they really want to delete
+			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this group?' });
+
+			if (!shouldDelete || shouldDelete === 'No') {
+				console.log('Delete operation cancelled by the user.');
+				return;
+			}
+
+			// Delete the group
+			treeDataProvider.deleteGroup(group.id);
+		})
+	);
 }
 
 export function deactivate() { }
