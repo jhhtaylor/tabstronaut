@@ -26,25 +26,20 @@ export function activate(context: vscode.ExtensionContext) {
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
-				//const fileName = path.basename(filePath);
 
 				let groupName: string | undefined;
-				if (treeDataProvider.getGroups().length === 0) {
+				let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...']; // Always add these options to the top of the list
+				options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label)); // Then add the group names
+				groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
+				if (!groupName) {
+					return;
+				}
+				if (groupName === 'New Group from Current Tab...') {
 					groupName = await getGroupName();
-				} else {
-					let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...']; // Add the options to the top of the list
-					options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label)); // Then add the group names
-					groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
-					if (!groupName) {
-						return;
-					}
-					if (groupName === 'New Group from Current Tab...') {
-						groupName = await getGroupName();
-					}
-					if (groupName === 'New Group from All Tabs...') {
-						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
-						return;
-					}
+				}
+				if (groupName === 'New Group from All Tabs...') {
+					vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
+					return;
 				}
 
 				if (groupName) {
@@ -113,6 +108,12 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
+			let initialTab = vscode.window.activeTextEditor;
+			let initialTabFilePath = initialTab?.document.fileName;
+
+			// Focus the first editor in the group before starting
+			await vscode.commands.executeCommand('workbench.action.firstEditorInGroup');
+
 			let startingTab = vscode.window.activeTextEditor;
 			if (!startingTab) {
 				// If there are no editors open, there's nothing to do
@@ -126,17 +127,26 @@ export function activate(context: vscode.ExtensionContext) {
 			do {
 				if (editor) {
 					const filePath = editor.document.fileName;
-					const fileName = path.basename(filePath);
 
-					if (!addedFiles.has(fileName)) {
-						await treeDataProvider.addToGroup(groupName, fileName);
-						addedFiles.add(fileName);
+					if (!addedFiles.has(filePath)) {
+						await treeDataProvider.addToGroup(groupName, filePath);
+						addedFiles.add(filePath);
 					}
 				}
 
 				await vscode.commands.executeCommand('workbench.action.nextEditor');
 				editor = vscode.window.activeTextEditor;
 			} while (editor && editor.document.fileName !== startFilePath);
+
+			// Iterate through all tabs to refocus on initial tab
+			if (initialTabFilePath) {
+				editor = vscode.window.activeTextEditor;
+				startFilePath = editor?.document.fileName || '';
+				while (editor && editor.document.fileName !== initialTabFilePath) {
+					await vscode.commands.executeCommand('workbench.action.nextEditor');
+					editor = vscode.window.activeTextEditor;
+				}
+			}
 		})
 	);
 
@@ -151,7 +161,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const group: Group = item; // We now know this is a Group
 
 			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].label as string;
+				const filePath = group.items[i].description as string;  // use description here
 				if (filePath) {
 					try {
 						const document = await vscode.workspace.openTextDocument(filePath);
@@ -159,9 +169,58 @@ export function activate(context: vscode.ExtensionContext) {
 					} catch (error) {
 						console.error(`Failed to open file: ${filePath}`);
 						console.error(error);
+						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
 					}
 				}
 			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.renameTabGroup', async (item: any) => {
+			console.log('Rename Tab Group command triggered.');
+			if (item.contextValue !== 'group') {
+				// If it's not a group, we don't need to proceed further
+				console.log(`The clicked item is not a group: ${item.label}`);
+				return;
+			}
+			const group: Group = item; // We now know this is a Group
+
+			if (typeof group.label !== 'string') {
+				// If the label is not a string, we don't need to proceed further
+				console.log('The label of the group is not a string.');
+				return;
+			}
+
+			let newName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+			if (!newName || newName.trim() === '') {
+				vscode.window.showErrorMessage('Invalid group name. Please try again.');
+				return;
+			}
+			treeDataProvider.renameGroup(group.id, newName);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.deleteTabGroup', async (item: any) => {
+			console.log('Delete Tab Group command triggered.');
+			if (item.contextValue !== 'group') {
+				// If it's not a group, we don't need to proceed further
+				console.log(`The clicked item is not a group: ${item.label}`);
+				return;
+			}
+			const group: Group = item; // We now know this is a Group
+
+			// Confirm from the user if they really want to delete
+			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this group?' });
+
+			if (!shouldDelete || shouldDelete === 'No') {
+				console.log('Delete operation cancelled by the user.');
+				return;
+			}
+
+			// Delete the group
+			treeDataProvider.deleteGroup(group.id);
 		})
 	);
 }

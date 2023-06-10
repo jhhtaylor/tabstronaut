@@ -44,7 +44,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             const group = new Group(label, groupId);
 
             // Then we can add this group to our groups array
-            this.groups.push(group);
+            this.groups.unshift(group);
 
             this._onDidChangeTreeData.fire();
 
@@ -68,8 +68,8 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return this.groups;
     }
 
-    async addToGroup(groupName: string, tabLabel: string) {
-        console.log(`Attempting to add tab with label: ${tabLabel} to group with name: ${groupName}`);
+    async addToGroup(groupName: string, filePath: string) {
+        console.log(`Attempting to add tab with label: ${filePath} to group with name: ${groupName}`);
 
         let group = this.getGroup(groupName);
         if (!group) {
@@ -81,10 +81,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         }
 
         // Update the group in the DB
-        const groupId = group?.id; // You'll need to fetch and store the group's DB id when fetching groups
+        const groupId = group?.id;
         if (group && groupId) {
-            await this.updateGroup(Number(groupId), tabLabel); // Send only the new tab's label
-            group?.addItem(tabLabel);
+            await this.updateGroup(Number(groupId), filePath);
+            group?.addItem(filePath);  // Make sure we're using filePath here, not tabLabel
             this._onDidChangeTreeData.fire();
         }
         console.log(`Tab added to group: ${JSON.stringify(group)}`);
@@ -106,35 +106,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
-    private getGithubIconPath(): string | null {
-        const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
-        if (!extension) {
-            console.error('Could not find extension');
-            return null;
-        }
-        const extensionDirectoryPath = extension.extensionPath;
-
-        let githubIconPath: string;
-        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark) {
-            console.log("Dark theme detected. Using light GitHub icon.");
-            githubIconPath = path.join(extensionDirectoryPath, 'media', 'github-mark-white.svg');
-        } else {
-            console.log("Light or high contrast theme detected. Using dark GitHub icon.");
-            githubIconPath = path.join(extensionDirectoryPath, 'media', 'github-mark.svg');
-        }
-
-        console.log('githubIconPath:', githubIconPath); // Debugging log
-        return githubIconPath;
-    }
-
     private createLoggedInItem(name?: string): vscode.TreeItem {
-        const githubIconPath = this.getGithubIconPath();
-        if (!githubIconPath) {
-            console.error('Could not get GitHub icon path');
-            const item = new vscode.TreeItem('Error: Could not get GitHub icon path', vscode.TreeItemCollapsibleState.None);
-            return item;
-        }
-
         if (!name) {
             console.log("No user name. Creating log in item.");
             const item = new vscode.TreeItem('Log in with GitHub', vscode.TreeItemCollapsibleState.None);
@@ -144,7 +116,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             };
 
             // set the icon to the github logo
-            item.iconPath = vscode.Uri.file(githubIconPath);
+            item.iconPath = new vscode.ThemeIcon('github-inverted');
             return item;
         }
 
@@ -175,14 +147,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             });
 
             this.groups = response.data.tabGroups.map((groupData: any) => {
-                // Here I'm assuming that groupData.id holds the correct id
-                // If not, you need to replace it with the correct property
                 const group = new Group(groupData.name, groupData.id);
                 groupData.tabs.forEach((tabData: any) => {
                     group.addItem(tabData.name);
                 });
                 return group;
-            });
+            }).reverse();
 
             this._onDidChangeTreeData.fire();
         } catch (error) {
@@ -213,4 +183,47 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             console.error(error);
         }
     }
+
+    async renameGroup(groupId: string, newName: string): Promise<void> {
+        try {
+            const response = await axios.patch('http://localhost:3002/tabGroups/' + groupId, {
+                newName: newName
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${TokenManager.getToken()}` // Assuming TokenManager has a getToken method to get the saved token
+                }
+            });
+
+            if (response.status === 200) {
+                console.log('Group renamed successfully: ', response.data);
+                // Here you might want to refresh your tree data, for example by re-fetching the group data
+                await this.fetchGroups();
+            } else {
+                console.log('Failed to rename group: ', response.data);
+            }
+        } catch (err) {
+            console.error('Failed to rename group: ', err);
+        }
+    }
+
+    async deleteGroup(groupId: string): Promise<void> {
+        try {
+            const response = await axios.delete('http://localhost:3002/tabGroups/' + groupId, {
+                headers: {
+                    'Authorization': `Bearer ${TokenManager.getToken()}` // Assuming TokenManager has a getToken method to get the saved token
+                }
+            });
+
+            if (response.status === 200) {
+                console.log('Group deleted successfully: ', response.data);
+                // Here you might want to refresh your tree data, for example by re-fetching the group data
+                await this.fetchGroups();
+            } else {
+                console.log('Failed to delete group: ', response.data);
+            }
+        } catch (err) {
+            console.error('Failed to delete group: ', err);
+        }
+    }
+
 }

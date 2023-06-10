@@ -23,8 +23,20 @@
       {
         "command": "tabstronaut.openAllTabsInGroup",
         "category": "Tabstronaut",
-        "title": "Restore all Tabs in Group",
+        "title": "Restore Tab Group",
         "icon": "$(debug-continue-small)"
+      },
+      {
+        "command": "tabstronaut.renameTabGroup",
+        "category": "Tabstronaut",
+        "title": "Rename Tab Group",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "tabstronaut.deleteTabGroup",
+        "category": "Tabstronaut",
+        "title": "Delete Tab Group",
+        "icon": "$(close)"
       },
       {
         "command": "tabstronaut.authenticate",
@@ -62,6 +74,16 @@
       "view/item/context": [
         {
           "command": "tabstronaut.openAllTabsInGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline"
+        },
+        {
+          "command": "tabstronaut.renameTabGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline"
+        },
+        {
+          "command": "tabstronaut.deleteTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline"
         }
