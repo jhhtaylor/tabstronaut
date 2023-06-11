@@ -80,6 +80,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             }
         }
 
+        // Check if tab already exists in the group
+        if (group.items.some(item => item.description === filePath)) {
+            vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
+            return;
+        }
+
         // Update the group in the DB
         const groupId = group?.id;
         if (group && groupId) {
