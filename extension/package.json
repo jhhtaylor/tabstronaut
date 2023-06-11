@@ -36,7 +36,7 @@
         "command": "tabstronaut.deleteTabGroup",
         "category": "Tabstronaut",
         "title": "Delete Tab Group",
-        "icon": "$(close)"
+        "icon": "$(trash)"
       },
       {
         "command": "tabstronaut.authenticate",
