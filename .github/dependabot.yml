@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/extension"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "[Dependabot]"
+      include: "scope"
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "[Dependabot]"
+      include: "scope"
