@@ -7,7 +7,7 @@ import { TokenManager } from './TokenManager';
 import { apiBaseUrl } from './constants';
 
 async function getGithubSVG(): Promise<string> {
-    const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
+    const extension = vscode.extensions.getExtension('Jon Taylor.tabstronaut');
     if (!extension) {
         console.error('Could not find extension');
         throw new Error('Could not find extension');
@@ -19,7 +19,7 @@ async function getGithubSVG(): Promise<string> {
 }
 
 async function getAuthPageHTML(): Promise<string> {
-    const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
+    const extension = vscode.extensions.getExtension('Jon Taylor.tabstronaut');
     if (!extension) {
         console.error('Could not find extension');
         throw new Error('Could not find extension');
