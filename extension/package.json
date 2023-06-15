@@ -75,17 +75,17 @@
         {
           "command": "tabstronaut.openAllTabsInGroup",
           "when": "view == tabstronaut && viewItem == group",
-          "group": "inline"
+          "group": "inline@0"
         },
         {
           "command": "tabstronaut.renameTabGroup",
           "when": "view == tabstronaut && viewItem == group",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "command": "tabstronaut.deleteTabGroup",
           "when": "view == tabstronaut && viewItem == group",
-          "group": "inline"
+          "group": "inline@2"
         }
       ]
     }

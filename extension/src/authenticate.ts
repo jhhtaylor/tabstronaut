@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { apiBaseUrl } from './constants';
 import * as polka from "polka";
-import { TokenManager } from './TokenManager';
 import axios from 'axios';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
+import { TokenManager } from './TokenManager';
+import { apiBaseUrl } from './constants';
 
 async function getGithubSVG(): Promise<string> {
     const extension = vscode.extensions.getExtension('tabstronaut.tabstronaut');
@@ -80,7 +80,6 @@ async function getCurrentUser(): Promise<{ name: string } | null> {
             return null;
         }
 
-        //console.log(token);
 
         const response = await axios.get(`${apiBaseUrl}/me`, {
             headers: { authorization: `Bearer ${token}` }
