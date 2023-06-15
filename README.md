@@ -2,7 +2,7 @@
 
 <table>
   <tr>
-    <td><img src="media/Tabstronaut.png" alt="Tabstronaut" width="200"></td>
+    <td><img src="extension/media/Tabstronaut.png" alt="Tabstronaut" width="200"></td>
     <td valign="middle" style="padding-left: 20px;">A cosmic solution to group VS Code editor tabs 👩‍🚀🪐</td>
   </tr>
 </table>
@@ -11,7 +11,7 @@ This is the README for the "Tabstronaut" extension, a convenient tool that helps
 
 ## Features
 
-![Tabstronaut in action](media/tabstronaut-demo.gif)
+![Tabstronaut in action](extension/media/tabstronaut-demo.gif)
 
 The "Tabstronaut" extension has the following features:
 
