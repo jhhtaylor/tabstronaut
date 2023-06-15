@@ -171,7 +171,6 @@ const main = async () => {
     });
 
     app.post('/tabGroups', async (req, res) => {
-        console.log("Received name: ", req.body.name);
         const { name } = req.body;
 
         const authHeader = req.headers.authorization;

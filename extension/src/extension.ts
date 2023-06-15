@@ -22,7 +22,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
-			console.log('Add Current Tab command triggered.');
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
@@ -51,7 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("tabstronaut.authenticate", async () => {
-			console.log('Authenticate command triggered.');
 			try {
 				const user = await authenticate();
 				if (user) {
@@ -61,15 +59,14 @@ export function activate(context: vscode.ExtensionContext) {
 					await treeDataProvider.fetchGroups();
 				}
 			} catch (err) {
-				console.log(err);
+				console.error(err);
+				vscode.window.showErrorMessage(`Authentication failed. Please check your network connection and try again. If the problem persists, check if the credentials you're using for authentication are valid.`);
 			}
 		})
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("tabstronaut.openProfileContextMenu", async (item: vscode.TreeItem) => {
-			console.log('Open Context Menu command triggered.');
-
 			if (item.contextValue === "loggedInUser") {
 				const choice = await vscode.window.showQuickPick(["Log out"], {
 					placeHolder: "Select an action"
@@ -84,7 +81,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
-			console.log('Logout command triggered for user:', name);
 			TokenManager.setToken("");
 			loggedInUser = undefined;
 			treeDataProvider.setLoggedInContext('');
@@ -149,9 +145,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openAllTabsInGroup', async (item: any) => {
-			console.log('Open All Tabs In Group command triggered.');
 			if (item.contextValue !== 'group') {
-				console.log(`The clicked item is not a group: ${item.label}`);
 				return;
 			}
 			const group: Group = item;
@@ -164,7 +158,6 @@ export function activate(context: vscode.ExtensionContext) {
 						await vscode.window.showTextDocument(document, { preview: false });
 					} catch (error) {
 						console.error(`Failed to open file: ${filePath}`);
-						console.error(error);
 						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
 					}
 				}
@@ -174,15 +167,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.renameTabGroup', async (item: any) => {
-			console.log('Rename Tab Group command triggered.');
 			if (item.contextValue !== 'group') {
-				console.log(`The clicked item is not a group: ${item.label}`);
 				return;
 			}
 			const group: Group = item;
 
 			if (typeof group.label !== 'string') {
-				console.log('The label of the group is not a string.');
 				return;
 			}
 
@@ -197,9 +187,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.deleteTabGroup', async (item: any) => {
-			console.log('Delete Tab Group command triggered.');
 			if (item.contextValue !== 'group') {
-				console.log(`The clicked item is not a group: ${item.label}`);
 				return;
 			}
 			const group: Group = item;
@@ -207,7 +195,6 @@ export function activate(context: vscode.ExtensionContext) {
 			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this group?' });
 
 			if (!shouldDelete || shouldDelete === 'No') {
-				console.log('Delete operation cancelled by the user.');
 				return;
 			}
 
