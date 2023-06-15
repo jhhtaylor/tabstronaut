@@ -28,7 +28,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     async addGroup(label: string): Promise<Group | undefined> {
         console.log(`Attempting to add group with label: ${label}`);
         try {
-            // Post to your backend to create a new group
             const response = await axios.post('http://localhost:3002/tabGroups', { name: label }, {
                 headers: {
                     Authorization: `Bearer ${TokenManager.getToken()}`,
@@ -37,13 +36,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
             console.log('addGroup response', response.data);
 
-            // Assuming the response data contains the new group's id 
             const groupId = response.data.newGroup.id;
 
-            // Now we can create a new group with the correct id
             const group = new Group(label, groupId);
 
-            // Then we can add this group to our groups array
             this.groups.unshift(group);
 
             this._onDidChangeTreeData.fire();
@@ -80,17 +76,15 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             }
         }
 
-        // Check if tab already exists in the group
         if (group.items.some(item => item.description === filePath)) {
             vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
             return;
         }
 
-        // Update the group in the DB
         const groupId = group?.id;
         if (group && groupId) {
             await this.updateGroup(Number(groupId), filePath);
-            group?.addItem(filePath);  // Make sure we're using filePath here, not tabLabel
+            group?.addItem(filePath);
             this._onDidChangeTreeData.fire();
         }
         console.log(`Tab added to group: ${JSON.stringify(group)}`);
@@ -121,7 +115,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 command: 'tabstronaut.authenticate'
             };
 
-            // set the icon to the github logo
             item.iconPath = new vscode.ThemeIcon('github-inverted');
             return item;
         }
@@ -182,7 +175,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
             console.log('updateGroup response', response.data);
 
-            // Fetch groups again after updating
             this.fetchGroups();
 
         } catch (error) {
@@ -196,13 +188,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 newName: newName
             }, {
                 headers: {
-                    'Authorization': `Bearer ${TokenManager.getToken()}` // Assuming TokenManager has a getToken method to get the saved token
+                    'Authorization': `Bearer ${TokenManager.getToken()}`
                 }
             });
 
             if (response.status === 200) {
                 console.log('Group renamed successfully: ', response.data);
-                // Here you might want to refresh your tree data, for example by re-fetching the group data
                 await this.fetchGroups();
             } else {
                 console.log('Failed to rename group: ', response.data);
@@ -216,13 +207,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         try {
             const response = await axios.delete('http://localhost:3002/tabGroups/' + groupId, {
                 headers: {
-                    'Authorization': `Bearer ${TokenManager.getToken()}` // Assuming TokenManager has a getToken method to get the saved token
+                    'Authorization': `Bearer ${TokenManager.getToken()}`
                 }
             });
 
             if (response.status === 200) {
                 console.log('Group deleted successfully: ', response.data);
-                // Here you might want to refresh your tree data, for example by re-fetching the group data
                 await this.fetchGroups();
             } else {
                 console.log('Failed to delete group: ', response.data);

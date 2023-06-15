@@ -28,7 +28,6 @@ const main = async () => {
         console.error(`Data Source initialization error`, err);
     }
 
-    //const user = await AppDataSource.manager.create(User, { name: "bob", githubId: "1" }).save();
 
     const app = express();
     app.use(cors());
@@ -173,7 +172,7 @@ const main = async () => {
 
     app.post('/tabGroups', async (req, res) => {
         console.log("Received name: ", req.body.name);
-        const { name } = req.body;  // Get the name from the request body 
+        const { name } = req.body;
 
         const authHeader = req.headers.authorization;
         if (!authHeader) {
@@ -209,12 +208,11 @@ const main = async () => {
             return;
         }
 
-        // Create new group and associate it with the user
         const newGroup = new TabGroup();
         newGroup.name = name;
         newGroup.creator = Promise.resolve(user);
 
-        await newGroup.save(); // Save new group to DB
+        await newGroup.save();
 
         res.status(201).send({ message: 'Tab group created successfully', newGroup });
     });
@@ -267,12 +265,11 @@ const main = async () => {
             return;
         }
 
-        // Create new tab and associate it with the tab group
         const newTab = new Tab();
         newTab.name = tabLabel;
         newTab.tabGroup = Promise.resolve(tabGroup);
 
-        await newTab.save(); // Save new tab to DB
+        await newTab.save();
 
         res.status(200).send({ message: 'Tab group updated successfully', tabGroup });
     });
@@ -378,15 +375,12 @@ const main = async () => {
             return;
         }
 
-        // Fetch tabs belonging to the tab group
         const tabs = await Tab.createQueryBuilder("tab")
             .where("tab.tabGroup = :tabGroupId", { tabGroupId: groupId })
             .getMany();
 
-        // Delete all tabs associated with the group
         await Tab.remove(tabs);
 
-        // Now delete the tab group
         await TabGroup.delete(groupId);
 
         res.status(200).send({ message: 'Tab group deleted successfully' });

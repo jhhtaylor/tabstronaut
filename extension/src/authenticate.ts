@@ -80,7 +80,6 @@ async function getCurrentUser(): Promise<{ name: string } | null> {
             return null;
         }
 
-        //console.log(token);
 
         const response = await axios.get(`${apiBaseUrl}/me`, {
             headers: { authorization: `Bearer ${token}` }

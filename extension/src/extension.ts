@@ -28,8 +28,8 @@ export function activate(context: vscode.ExtensionContext) {
 				const filePath = activeEditor.document.fileName;
 
 				let groupName: string | undefined;
-				let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...']; // Always add these options to the top of the list
-				options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label)); // Then add the group names
+				let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...'];
+				options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label));
 				groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
 				if (!groupName) {
 					return;
@@ -111,12 +111,10 @@ export function activate(context: vscode.ExtensionContext) {
 			let initialTab = vscode.window.activeTextEditor;
 			let initialTabFilePath = initialTab?.document.fileName;
 
-			// Focus the first editor in the group before starting
 			await vscode.commands.executeCommand('workbench.action.firstEditorInGroup');
 
 			let startingTab = vscode.window.activeTextEditor;
 			if (!startingTab) {
-				// If there are no editors open, there's nothing to do
 				return;
 			}
 
@@ -138,7 +136,6 @@ export function activate(context: vscode.ExtensionContext) {
 				editor = vscode.window.activeTextEditor;
 			} while (editor && editor.document.fileName !== startFilePath);
 
-			// Iterate through all tabs to refocus on initial tab
 			if (initialTabFilePath) {
 				editor = vscode.window.activeTextEditor;
 				startFilePath = editor?.document.fileName || '';
@@ -154,14 +151,13 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('tabstronaut.openAllTabsInGroup', async (item: any) => {
 			console.log('Open All Tabs In Group command triggered.');
 			if (item.contextValue !== 'group') {
-				// If it's not a group, we don't need to proceed further
 				console.log(`The clicked item is not a group: ${item.label}`);
 				return;
 			}
-			const group: Group = item; // We now know this is a Group
+			const group: Group = item;
 
 			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].description as string;  // use description here
+				const filePath = group.items[i].description as string;
 				if (filePath) {
 					try {
 						const document = await vscode.workspace.openTextDocument(filePath);
@@ -180,14 +176,12 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('tabstronaut.renameTabGroup', async (item: any) => {
 			console.log('Rename Tab Group command triggered.');
 			if (item.contextValue !== 'group') {
-				// If it's not a group, we don't need to proceed further
 				console.log(`The clicked item is not a group: ${item.label}`);
 				return;
 			}
-			const group: Group = item; // We now know this is a Group
+			const group: Group = item;
 
 			if (typeof group.label !== 'string') {
-				// If the label is not a string, we don't need to proceed further
 				console.log('The label of the group is not a string.');
 				return;
 			}
@@ -205,13 +199,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('tabstronaut.deleteTabGroup', async (item: any) => {
 			console.log('Delete Tab Group command triggered.');
 			if (item.contextValue !== 'group') {
-				// If it's not a group, we don't need to proceed further
 				console.log(`The clicked item is not a group: ${item.label}`);
 				return;
 			}
-			const group: Group = item; // We now know this is a Group
+			const group: Group = item;
 
-			// Confirm from the user if they really want to delete
 			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this group?' });
 
 			if (!shouldDelete || shouldDelete === 'No') {
@@ -219,7 +211,6 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			// Delete the group
 			treeDataProvider.deleteGroup(group.id);
 		})
 	);
