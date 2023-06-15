@@ -2,15 +2,15 @@ import 'reflect-metadata'
 require("dotenv-safe").config();
 import express from 'express';
 import { DataSource } from "typeorm";
-import { __prod__ } from './constants';
 import { join } from 'path';
-import { User } from "./entities/User";
-import { TabGroup } from "./entities/TabGroup";
-import { Tab } from "./entities/Tab";
 import { Strategy as GitHubStrategy } from "passport-github";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import { __prod__, apiBaseUrl } from './constants';
+import { User } from "./entities/User";
+import { TabGroup } from "./entities/TabGroup";
+import { Tab } from "./entities/Tab";
 
 const main = async () => {
     const AppDataSource = new DataSource({
@@ -43,7 +43,7 @@ const main = async () => {
             {
                 clientID: process.env.GITHUB_CLIENT_ID,
                 clientSecret: process.env.GITHUB_CLIENT_SECRET,
-                callbackURL: "http://localhost:3002/auth/github/callback"
+                callbackURL: `${apiBaseUrl}/auth/github/callback`
             },
             async (_, __, profile, cb) => {
                 let user = await User.findOne({ where: { githubId: profile.id } });

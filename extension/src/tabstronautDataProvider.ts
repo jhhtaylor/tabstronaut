@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { Group } from './models/Group';
-import { TokenManager } from "./TokenManager";
 import axios from 'axios';
 import * as path from 'path';
+import { Group } from './models/Group';
+import { TokenManager } from "./TokenManager";
+import { apiBaseUrl } from './constants';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -27,7 +28,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async addGroup(label: string): Promise<Group | undefined> {
         try {
-            const response = await axios.post('http://localhost:3002/tabGroups', { name: label }, {
+            const response = await axios.post(`${apiBaseUrl}/tabGroups`, { name: label }, {
                 headers: {
                     Authorization: `Bearer ${TokenManager.getToken()}`,
                 },
@@ -128,7 +129,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async fetchGroups() {
         try {
-            const response = await axios.get('http://localhost:3002/tabGroups', {
+            const response = await axios.get(`${apiBaseUrl}/tabGroups`, {
                 headers: {
                     Authorization: `Bearer ${TokenManager.getToken()}`,
                 },
@@ -156,7 +157,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async updateGroup(groupId: number, tabLabel: string) {
         try {
-            const response = await axios.put(`http://localhost:3002/tabGroups/${groupId}`, { tabLabel }, {
+            const response = await axios.put(`${apiBaseUrl}/tabGroups/${groupId}`, { tabLabel }, {
                 headers: {
                     Authorization: `Bearer ${TokenManager.getToken()}`,
                 },
@@ -172,7 +173,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async renameGroup(groupId: string, newName: string): Promise<void> {
         try {
-            const response = await axios.patch('http://localhost:3002/tabGroups/' + groupId, {
+            const response = await axios.patch(`${apiBaseUrl}/tabGroups/` + groupId, {
                 newName: newName
             }, {
                 headers: {
@@ -191,7 +192,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async deleteGroup(groupId: string): Promise<void> {
         try {
-            const response = await axios.delete('http://localhost:3002/tabGroups/' + groupId, {
+            const response = await axios.delete(`${apiBaseUrl}/tabGroups/` + groupId, {
                 headers: {
                     'Authorization': `Bearer ${TokenManager.getToken()}`
                 }
