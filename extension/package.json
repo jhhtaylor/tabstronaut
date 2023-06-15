@@ -3,6 +3,10 @@
   "displayName": "Tabstronaut",
   "publisher": "Jon Taylor",
   "description": "A cosmic solution to group VS Code editor tabs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jhhtaylor/tabstronaut"
+  },
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.78.0"
