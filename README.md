@@ -7,13 +7,13 @@
   </tr>
 </table>
 
-This is the README for the "Tabstronaut" extension, a convenient tool that helps manage your workspace tabs into organized groups for efficient access. This extension is easy to use, and adds a new dimension of organization to your workspace in Visual Studio Code.
+This is the README for the Tabstronaut extension, a convenient tool that helps manage your workspace tabs into organized groups for efficient access. This extension is easy to use, and adds a new dimension of organization to your workspace in Visual Studio Code.
 
 ## Features
 
 ![Tabstronaut in action](extension/media/tabstronaut-demo.gif)
 
-The "Tabstronaut" extension has the following features:
+The Tabstronaut extension has the following features:
 
 - User authentication for syncing tab groups across devices.
 - Creation of new groups from current tab or all tabs.
@@ -28,7 +28,7 @@ There are no specific requirements or dependencies for this extension.
 
 ## Extension Settings
 
-The "Tabstronaut" extension does not currently add any new settings to VS Code.
+The Tabstronaut extension does not currently add any new settings to VS Code.
 
 ## Known Issues
 
@@ -38,7 +38,7 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ### 1.0.0
 
-Initial release of "Tabstronaut".
+Initial release of Tabstronaut.
 
 ---
 
