@@ -8,7 +8,9 @@
     "type": "git",
     "url": "https://github.com/jhhtaylor/tabstronaut"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
+  "readme": "../README.md",
+  "license": "../LICENSE",
   "engines": {
     "vscode": "^1.78.0"
   },
