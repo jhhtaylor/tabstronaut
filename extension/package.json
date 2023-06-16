@@ -2,20 +2,42 @@
   "name": "tabstronaut",
   "displayName": "Tabstronaut",
   "publisher": "jhhtaylor",
+  "author": {
+    "name": "Jon Taylor",
+    "email": "jhhtaylor@gmail.com"
+  },
   "description": "A cosmic solution to group VS Code editor tabs",
   "icon": "media/Tabstronaut.png",
+  "galleryBanner": {
+    "color": "#FF914D",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/jhhtaylor/tabstronaut/blob/main/README.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/jhhtaylor/tabstronaut"
   },
-  "version": "1.0.2",
-  "readme": "../README.md",
-  "license": "../LICENSE",
+  "bugs": {
+    "url": "https://github.com/jhhtaylor/tabstronaut/issues",
+    "email": "jhhtaylor@gmail.com"
+  },
+  "version": "1.0.3",
   "engines": {
     "vscode": "^1.78.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Workspaces",
+    "Keymaps",
+    "Productivity"
+  ],
+  "keywords": [
+    "Tabs",
+    "Organization",
+    "Groups",
+    "Workspaces",
+    "Efficiency",
+    "Productivity"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
@@ -99,6 +121,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
+    "prepublish": "cp ../README.md ./README.md && cp ../LICENSE ./LICENSE",
     "compile": "webpack",
     "watch": "webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
