@@ -1,18 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { authenticate, getLoggedInUser } from "./authenticate";
 import { TabstronautDataProvider } from './tabstronautDataProvider';
-import { TokenManager } from "./TokenManager";
 import { Group } from './models/Group';
 
 let treeDataProvider: TabstronautDataProvider;
-let loggedInUser: string | undefined;
 let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function activate(context: vscode.ExtensionContext) {
-	TokenManager.globalState = context.globalState;
-
-	treeDataProvider = new TabstronautDataProvider();
+	treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
 	async function getGroupName(): Promise<string> {
@@ -35,6 +30,11 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				if (groupName === 'New Group from Current Tab...') {
 					groupName = await getGroupName();
+					const group = await treeDataProvider.addGroup(groupName);
+					if (!group) {
+						vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+						return;
+					}
 				}
 				if (groupName === 'New Group from All Tabs...') {
 					vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
@@ -48,53 +48,52 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.authenticate", async () => {
-			try {
-				const user = await authenticate();
-				if (user) {
-					loggedInUser = user.name;
-					treeDataProvider.setLoggedInContext(user.name);
+	// context.subscriptions.push(
+	// 	vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
+	// 		const activeEditor = vscode.window.activeTextEditor;
+	// 		if (activeEditor) {
+	// 			const filePath = activeEditor.document.fileName;
 
-					await treeDataProvider.fetchGroups();
-				}
-			} catch (err) {
-				console.error(err);
-				vscode.window.showErrorMessage(`Authentication failed. Please check your network connection and try again. If the problem persists, check if the credentials you're using for authentication are valid.`);
-			}
-		})
-	);
+	// 			console.log('Active editor found, file path:', filePath);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.openProfileContextMenu", async (item: vscode.TreeItem) => {
-			if (item.contextValue === "loggedInUser") {
-				const choice = await vscode.window.showQuickPick(["Log out"], {
-					placeHolder: "Select an action"
-				});
+	// 			let groupName: string | undefined;
+	// 			let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...'];
+	// 			options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label));
 
-				if (choice === "Log out") {
-					vscode.commands.executeCommand("tabstronaut.logout", item.label);
-				}
-			}
-		})
-	);
+	// 			console.log('Options for quick pick:', options);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
-			TokenManager.setToken("");
-			loggedInUser = undefined;
-			treeDataProvider.setLoggedInContext('');
-			treeDataProvider.clearGroups();
-		})
-	);
+	// 			groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
 
-	getLoggedInUser().then(async (user) => {
-		if (user) {
-			loggedInUser = user.name;
-			treeDataProvider.setLoggedInContext(user.name);
-			await treeDataProvider.fetchGroups();
-		}
-	});
+	// 			console.log('Selected group name:', groupName);
+
+	// 			if (!groupName) {
+	// 				return;
+	// 			}
+	// 			if (groupName === 'New Group from Current Tab...') {
+	// 				groupName = await getGroupName();
+	// 				const group = await treeDataProvider.addGroup(groupName);
+	// 				if (!group) {
+	// 					vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+	// 					return;
+	// 				}
+	// 			}
+
+	// 			if (groupName === 'New Group from All Tabs...') {
+	// 				vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
+	// 				return;
+	// 			}
+
+	// 			console.log('Final group name:', groupName);
+
+	// 			if (groupName) {
+	// 				treeDataProvider.addToGroup(groupName, filePath);
+	// 			}
+	// 		} else {
+	// 			console.log('No active editor found');
+	// 		}
+	// 	})
+	// );
+
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {

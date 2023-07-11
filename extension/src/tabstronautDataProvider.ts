@@ -1,210 +1,148 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
 import * as path from 'path';
 import { Group } from './models/Group';
-import { TokenManager } from "./TokenManager";
-import { apiBaseUrl } from './constants';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private groupsMap: Map<string, Group> = new Map();
 
-    private groups: Group[] = [];
-
-    private items: vscode.TreeItem[] = [];
-    private loggedInUser: string | null = null;
+    constructor(private workspaceState: vscode.Memento) { }
 
     getTreeItem(element: Group | vscode.TreeItem): vscode.TreeItem {
         return element;
     }
 
+
+    // getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
+    //     if (element instanceof Group) {
+    //         return Promise.resolve(element.items);
+    //     }
+    //     const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+    //     return Promise.resolve(groups);
+    // }
+    // getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
+    //     if (element instanceof Group) {
+    //         return Promise.resolve(element.items);
+    //     }
+    //     const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+    //     console.log('Returned groups:', groups.map(group => group.id));
+    //     return Promise.resolve(groups);
+    // }
+
+    // getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
+    //     if (element instanceof Group) {
+    //         return Promise.resolve(element.items);
+    //     }
+    //     const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+    //     return Promise.resolve(groups.map(group => new vscode.TreeItem(group.label as string)));
+    // }
+
     getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
         if (element instanceof Group) {
+            console.log('Items in group:', element.items.map(item => item.id));
             return Promise.resolve(element.items);
         }
-        const userItem = this.createLoggedInItem(this.loggedInUser || undefined);
-        return Promise.resolve([userItem, ...this.groups]);
+        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        console.log('Returned groups:', groups.map(group => group.id));
+        return Promise.resolve(groups);
     }
+
+
+
+    // async addGroup(label: string): Promise<Group | undefined> {
+    //     const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+    //     const newGroup = new Group(label, this.uuidv4());  // Use uuidv4() to generate a unique id
+    //     groups.push(newGroup);
+    //     await this.workspaceState.update('tabGroups', groups);
+    //     this._onDidChangeTreeData.fire();
+    //     return newGroup;
+    // }
 
     async addGroup(label: string): Promise<Group | undefined> {
-        try {
-            const response = await axios.post(`${apiBaseUrl}/tabGroups`, { name: label }, {
-                headers: {
-                    Authorization: `Bearer ${TokenManager.getToken()}`,
-                },
-            });
-
-            const groupId = response.data.newGroup.id;
-
-            const group = new Group(label, groupId);
-
-            this.groups.unshift(group);
-
-            this._onDidChangeTreeData.fire();
-
-            return group;
-        } catch (error) {
-            console.error('Error occurred while adding group:', error);
-            vscode.window.showErrorMessage(`Failed to add group with name: ${label}. Please try again with a different name. If the problem persists, please check your network connection and try again.`);
-            return undefined;
-        }
+        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        const newGroup = new Group(label, this.uuidv4());
+        groups.push(newGroup);
+        this.groupsMap.set(newGroup.id, newGroup);
+        await this.workspaceState.update('tabGroups', groups);
+        this._onDidChangeTreeData.fire();
+        return newGroup;
     }
 
+
     getGroup(groupName: string): Group | undefined {
-        let group = this.groups.find(g => g.label === groupName);
-        return group;
+        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        return groups.find(group => group.label === groupName);
     }
 
     public getGroups(): Group[] {
-        return this.groups;
+        return this.workspaceState.get<Group[]>('tabGroups', []);
     }
 
     async addToGroup(groupName: string, filePath: string) {
-        let group = this.getGroup(groupName);
-        if (!group) {
-            group = await this.addGroup(groupName);
-            if (!group) {
-                vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        const group = groups.find(group => group.label === groupName);
+        if (group) {
+            if (group.items.some(item => item.description === filePath)) {
+                vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
                 return;
             }
-        }
-
-        if (group.items.some(item => item.description === filePath)) {
-            vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
-            return;
-        }
-
-        const groupId = group?.id;
-        if (group && groupId) {
-            await this.updateGroup(Number(groupId), filePath);
-            group?.addItem(filePath);
+            group.addItem(filePath);
+            await this.workspaceState.update('tabGroups', groups);
             this._onDidChangeTreeData.fire();
         }
     }
 
-    addItem(label: string) {
-        const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-        item.iconPath = new vscode.ThemeIcon('file');
-        this.items.push(item);
-        this._onDidChangeTreeData.fire();
-    }
+    // async addToGroup(groupName: string, filePath: string) {
+    //     console.log(`addToGroup called with groupName: ${groupName} and filePath: ${filePath}`);
 
-    setLoggedInContext(name?: string) {
-        this.loggedInUser = name !== undefined ? name : null;
-        vscode.commands.executeCommand('setContext', 'isLoggedIn', !!this.loggedInUser);
-    }
+    //     const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+    //     const group = groups.find(group => group.label === groupName);
+
+    //     console.log(`Group found: ${group}`);
+
+    //     if (group) {
+    //         if (group.items.some(item => item.description === filePath)) {
+    //             vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
+    //             return;
+    //         }
+    //         group.addItem(filePath);
+    //         await this.workspaceState.update('tabGroups', groups);
+
+    //         console.log(`Group added to workspaceState: ${groups}`);
+
+    //         this._onDidChangeTreeData.fire();
+
+    //         console.log(`_onDidChangeTreeData.fire called`);
+    //     }
+    // }
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
-    private createLoggedInItem(name?: string): vscode.TreeItem {
-        if (!name) {
-            const item = new vscode.TreeItem('Log in with GitHub', vscode.TreeItemCollapsibleState.None);
-            item.command = {
-                title: 'Log in',
-                command: 'tabstronaut.authenticate'
-            };
-
-            item.iconPath = new vscode.ThemeIcon('github-inverted');
-            return item;
-        }
-
-        const item = new vscode.TreeItem(`${name}`, vscode.TreeItemCollapsibleState.None);
-        item.iconPath = new vscode.ThemeIcon('account');
-        item.contextValue = 'loggedInUser';
-        item.tooltip = `${name}`;
-        item.command = {
-            title: 'Logout',
-            command: 'tabstronaut.openProfileContextMenu',
-            arguments: [item]
-        };
-
-        return item;
-    }
-
-    getLoggedInUser(): string | null {
-        return this.loggedInUser;
-    }
-
-    async fetchGroups() {
-        try {
-            const response = await axios.get(`${apiBaseUrl}/tabGroups`, {
-                headers: {
-                    Authorization: `Bearer ${TokenManager.getToken()}`,
-                },
-            });
-
-            this.groups = response.data.tabGroups.map((groupData: any) => {
-                const group = new Group(groupData.name, groupData.id);
-                groupData.tabs.forEach((tabData: any) => {
-                    group.addItem(tabData.name);
-                });
-                return group;
-            }).reverse();
-
-            this._onDidChangeTreeData.fire();
-        } catch (error) {
-            console.error(error);
-            vscode.window.showErrorMessage(`Failed to fetch groups. Please try again. If the problem persists, please check your network connection and try again.`);
-        }
-    }
-
-    clearGroups() {
-        this.groups = [];
-        this._onDidChangeTreeData.fire();
-    }
-
-    async updateGroup(groupId: number, tabLabel: string) {
-        try {
-            const response = await axios.put(`${apiBaseUrl}/tabGroups/${groupId}`, { tabLabel }, {
-                headers: {
-                    Authorization: `Bearer ${TokenManager.getToken()}`,
-                },
-            });
-
-            this.fetchGroups();
-
-        } catch (error) {
-            console.error(error);
-            vscode.window.showErrorMessage(`Failed to update group. Please try again with a different name. If the problem persists, please check your network connection and try again.`);
-        }
-    }
-
     async renameGroup(groupId: string, newName: string): Promise<void> {
-        try {
-            const response = await axios.patch(`${apiBaseUrl}/tabGroups/` + groupId, {
-                newName: newName
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${TokenManager.getToken()}`
-                }
-            });
-
-            if (response.status === 200) {
-                await this.fetchGroups();
-            }
-        } catch (err) {
-            console.error('Failed to rename group: ', err);
-            vscode.window.showErrorMessage(`Failed to rename group. Please try again with a different name. If the problem persists, please check your network connection and try again.`);
+        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        const group = groups.find(group => group.id === groupId);
+        if (group) {
+            group.label = newName;
+            await this.workspaceState.update('tabGroups', groups);
+            this._onDidChangeTreeData.fire();
         }
     }
 
     async deleteGroup(groupId: string): Promise<void> {
-        try {
-            const response = await axios.delete(`${apiBaseUrl}/tabGroups/` + groupId, {
-                headers: {
-                    'Authorization': `Bearer ${TokenManager.getToken()}`
-                }
-            });
+        let groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        groups = groups.filter(group => group.id !== groupId);
+        await this.workspaceState.update('tabGroups', groups);
+        this._onDidChangeTreeData.fire();
+    }
 
-            if (response.status === 200) {
-                await this.fetchGroups();
-            }
-        } catch (err) {
-            console.error('Failed to delete group: ', err);
-            vscode.window.showErrorMessage(`Failed to delete group. Please try again. If the problem persists, please check your network connection and try again.`);
-        }
+    uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 
 }

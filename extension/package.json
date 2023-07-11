@@ -93,7 +93,7 @@
       "view/title": [
         {
           "command": "tabstronaut.openTabGroupContextMenu",
-          "when": "view == tabstronaut && isLoggedIn",
+          "when": "view == tabstronaut",
           "group": "navigation"
         }
       ],
