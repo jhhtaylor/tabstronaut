@@ -48,53 +48,6 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	// context.subscriptions.push(
-	// 	vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
-	// 		const activeEditor = vscode.window.activeTextEditor;
-	// 		if (activeEditor) {
-	// 			const filePath = activeEditor.document.fileName;
-
-	// 			console.log('Active editor found, file path:', filePath);
-
-	// 			let groupName: string | undefined;
-	// 			let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...'];
-	// 			options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label));
-
-	// 			console.log('Options for quick pick:', options);
-
-	// 			groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
-
-	// 			console.log('Selected group name:', groupName);
-
-	// 			if (!groupName) {
-	// 				return;
-	// 			}
-	// 			if (groupName === 'New Group from Current Tab...') {
-	// 				groupName = await getGroupName();
-	// 				const group = await treeDataProvider.addGroup(groupName);
-	// 				if (!group) {
-	// 					vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
-	// 					return;
-	// 				}
-	// 			}
-
-	// 			if (groupName === 'New Group from All Tabs...') {
-	// 				vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
-	// 				return;
-	// 			}
-
-	// 			console.log('Final group name:', groupName);
-
-	// 			if (groupName) {
-	// 				treeDataProvider.addToGroup(groupName, filePath);
-	// 			}
-	// 		} else {
-	// 			console.log('No active editor found');
-	// 		}
-	// 	})
-	// );
-
-
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {
 			let groupName: string | undefined = await getGroupName();
