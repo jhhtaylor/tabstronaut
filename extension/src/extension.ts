@@ -9,9 +9,15 @@ export function activate(context: vscode.ExtensionContext) {
 	treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
-	async function getGroupName(): Promise<string> {
+	async function getGroupName(): Promise<string | undefined> {
 		let groupName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
-		return groupName === undefined ? `Group ${treeDataProvider.getGroups().length + 1}` : groupName.trim() !== '' ? groupName : `Group ${treeDataProvider.getGroups().length + 1}`;
+		if (groupName === undefined) {
+			return undefined;
+		} else if (groupName.trim() === '') {
+			return `Group ${treeDataProvider.getGroups().length + 1}`;
+		} else {
+			return groupName;
+		}
 	}
 
 	context.subscriptions.push(
@@ -29,9 +35,13 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				if (groupName === 'New Group from Current Tab...') {
 					groupName = await getGroupName();
-					const group = await treeDataProvider.addGroup(groupName);
-					if (!group) {
-						vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+					if (groupName !== undefined) {
+						const group = await treeDataProvider.addGroup(groupName);
+						if (!group) {
+							vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+							return;
+						}
+					} else {
 						return;
 					}
 				}
