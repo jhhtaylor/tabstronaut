@@ -9,8 +9,12 @@ export function activate(context: vscode.ExtensionContext) {
 	treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
-	async function getGroupName(): Promise<string | undefined> {
-		let groupName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
+		const groupName: string | undefined = await vscode.window.showInputBox({
+			placeHolder: 'Enter new group name',
+			prompt: prompt,
+		});
+
 		if (groupName === undefined) {
 			return undefined;
 		} else if (groupName.trim() === '') {
@@ -18,6 +22,11 @@ export function activate(context: vscode.ExtensionContext) {
 		} else {
 			return groupName;
 		}
+	}
+
+	async function getGroupNameForAllToNewGroup(): Promise<string | undefined> {
+		const prompt = 'Please ensure that all non-source code file tabs are closed before proceeding.';
+		return await getGroupName(prompt);
 	}
 
 	context.subscriptions.push(
@@ -54,14 +63,14 @@ export function activate(context: vscode.ExtensionContext) {
 					treeDataProvider.addToGroup(groupName, filePath);
 				}
 			} else {
-				vscode.window.showWarningMessage('There needs to be at least one active editor tab to create a tab group. All editor tabs need to be a text files.');
+				vscode.window.showWarningMessage('To create a group, please ensure that at least one source code file tab is active and close all non-source code file tabs.');
 			}
 		})
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {
-			let groupName: string | undefined = await getGroupName();
+			let groupName: string | undefined = await getGroupNameForAllToNewGroup();
 
 			if (!groupName) {
 				return;
