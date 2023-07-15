@@ -16,6 +16,8 @@ export class Group extends vscode.TreeItem {
         const item = new vscode.TreeItem(baseName, vscode.TreeItemCollapsibleState.None);
         item.iconPath = new vscode.ThemeIcon('file');
         item.description = filePath;
+        item.id = this.id + filePath;
+        
         this.items.push(item);
     }
 }

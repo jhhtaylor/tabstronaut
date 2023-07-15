@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.0.3",
+  "version": "1.1.0",
   "engines": {
     "vscode": "^1.78.0"
   },
@@ -63,21 +63,6 @@
         "category": "Tabstronaut",
         "title": "Delete Tab Group",
         "icon": "$(trash)"
-      },
-      {
-        "command": "tabstronaut.authenticate",
-        "category": "Tabstronaut",
-        "title": "Authenticate"
-      },
-      {
-        "command": "tabstronaut.logout",
-        "category": "Tabstronaut",
-        "title": "Log out"
-      },
-      {
-        "command": "tabstronaut.openProfileContextMenu",
-        "category": "Tabstronaut",
-        "title": "Open Context Menu"
       }
     ],
     "views": {
@@ -93,7 +78,7 @@
       "view/title": [
         {
           "command": "tabstronaut.openTabGroupContextMenu",
-          "when": "view == tabstronaut && isLoggedIn",
+          "when": "view == tabstronaut",
           "group": "navigation"
         }
       ],

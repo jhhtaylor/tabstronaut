@@ -1,18 +1,12 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { authenticate, getLoggedInUser } from "./authenticate";
 import { TabstronautDataProvider } from './tabstronautDataProvider';
-import { TokenManager } from "./TokenManager";
 import { Group } from './models/Group';
 
 let treeDataProvider: TabstronautDataProvider;
-let loggedInUser: string | undefined;
 let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function activate(context: vscode.ExtensionContext) {
-	TokenManager.globalState = context.globalState;
-
-	treeDataProvider = new TabstronautDataProvider();
+	treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
 
 	async function getGroupName(): Promise<string> {
@@ -35,6 +29,11 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				if (groupName === 'New Group from Current Tab...') {
 					groupName = await getGroupName();
+					const group = await treeDataProvider.addGroup(groupName);
+					if (!group) {
+						vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+						return;
+					}
 				}
 				if (groupName === 'New Group from All Tabs...') {
 					vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
@@ -44,57 +43,11 @@ export function activate(context: vscode.ExtensionContext) {
 				if (groupName) {
 					treeDataProvider.addToGroup(groupName, filePath);
 				}
+			} else {
+				vscode.window.showInformationMessage('You need to have at least one active editor tab to create a tab group.');
 			}
 		})
 	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.authenticate", async () => {
-			try {
-				const user = await authenticate();
-				if (user) {
-					loggedInUser = user.name;
-					treeDataProvider.setLoggedInContext(user.name);
-
-					await treeDataProvider.fetchGroups();
-				}
-			} catch (err) {
-				console.error(err);
-				vscode.window.showErrorMessage(`Authentication failed. Please check your network connection and try again. If the problem persists, check if the credentials you're using for authentication are valid.`);
-			}
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.openProfileContextMenu", async (item: vscode.TreeItem) => {
-			if (item.contextValue === "loggedInUser") {
-				const choice = await vscode.window.showQuickPick(["Log out"], {
-					placeHolder: "Select an action"
-				});
-
-				if (choice === "Log out") {
-					vscode.commands.executeCommand("tabstronaut.logout", item.label);
-				}
-			}
-		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("tabstronaut.logout", async (name: string) => {
-			TokenManager.setToken("");
-			loggedInUser = undefined;
-			treeDataProvider.setLoggedInContext('');
-			treeDataProvider.clearGroups();
-		})
-	);
-
-	getLoggedInUser().then(async (user) => {
-		if (user) {
-			loggedInUser = user.name;
-			treeDataProvider.setLoggedInContext(user.name);
-			await treeDataProvider.fetchGroups();
-		}
-	});
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {
@@ -118,6 +71,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 			let editor: vscode.TextEditor | undefined = startingTab;
 			let startFilePath = startingTab.document.fileName;
+			const group = await treeDataProvider.addGroup(groupName);
+			if (!group) {
+				vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+				return;
+			}
 			do {
 				if (editor) {
 					const filePath = editor.document.fileName;
@@ -157,7 +115,6 @@ export function activate(context: vscode.ExtensionContext) {
 						const document = await vscode.workspace.openTextDocument(filePath);
 						await vscode.window.showTextDocument(document, { preview: false });
 					} catch (error) {
-						console.error(`Failed to open file: ${filePath}`);
 						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
 					}
 				}
