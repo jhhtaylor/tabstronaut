@@ -22,17 +22,14 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
         if (element instanceof Group) {
-            console.log('Items in group:', element.items.map(item => item.description));
             return Promise.resolve(element.items);
         }
 
         const groups = Array.from(this.groupsMap.values());
-        console.log('Returned groups:', groups.map(group => group.label));
         return Promise.resolve(groups);
     }
 
     async addGroup(label: string): Promise<Group | undefined> {
-        console.log('addGroup called');
         const newGroup = new Group(label, this.uuidv4());
         this.groupsMap.set(newGroup.id, newGroup);
         await this.updateWorkspaceState();
@@ -66,7 +63,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     async addToGroup(groupName: string, filePath: string) {
         const group = Array.from(this.groupsMap.values()).find(group => group.label === groupName);
         if (group) {
-            console.log(`Adding to group with filePath: ${filePath}, type: ${typeof filePath}`);
             if (group.items.some(item => item.description === filePath)) {
                 vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
                 return;

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 
@@ -116,7 +115,6 @@ export function activate(context: vscode.ExtensionContext) {
 						const document = await vscode.workspace.openTextDocument(filePath);
 						await vscode.window.showTextDocument(document, { preview: false });
 					} catch (error) {
-						console.error(`Failed to open file: ${filePath}`);
 						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
 					}
 				}
