@@ -7,7 +7,14 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private groupsMap: Map<string, Group> = new Map();
 
-    constructor(private workspaceState: vscode.Memento) { }
+    constructor(private workspaceState: vscode.Memento) {
+        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[] } }>('tabGroups', {});
+        for (const id in groupData) {
+            let newGroup = new Group(groupData[id].label, id);
+            groupData[id].items.forEach(filePath => newGroup.addItem(filePath));
+            this.groupsMap.set(id, newGroup);
+        }
+    }
 
     getTreeItem(element: Group | vscode.TreeItem): vscode.TreeItem {
         return element;
@@ -15,20 +22,20 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
         if (element instanceof Group) {
-            console.log('Items in group:', element.items.map(item => item.id));
+            console.log('Items in group:', element.items.map(item => item.description));
             return Promise.resolve(element.items);
         }
-        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
-        console.log('Returned groups:', groups.map(group => group.id));
+
+        const groups = Array.from(this.groupsMap.values());
+        console.log('Returned groups:', groups.map(group => group.label));
         return Promise.resolve(groups);
     }
 
     async addGroup(label: string): Promise<Group | undefined> {
-        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
+        console.log('addGroup called');
         const newGroup = new Group(label, this.uuidv4());
-        groups.push(newGroup);
         this.groupsMap.set(newGroup.id, newGroup);
-        await this.workspaceState.update('tabGroups', groups);
+        await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
         return newGroup;
     }
@@ -40,19 +47,27 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     public getGroups(): Group[] {
-        return this.workspaceState.get<Group[]>('tabGroups', []);
+        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[] } }>('tabGroups', {});
+        const groups: Group[] = [];
+        for (const id in groupData) {
+            const group = new Group(groupData[id].label, id);
+            groupData[id].items.forEach(filePath => group.addItem(filePath));
+            groups.push(group);
+        }
+        this._onDidChangeTreeData.fire();
+        return groups;
     }
 
-    async addToGroup(groupName: string, filePath: string) {
-        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
-        const group = groups.find(group => group.label === groupName);
+    async addToGroup(groupId: string, filePath: string) {
+        const group = this.groupsMap.get(groupId);
         if (group) {
+            console.log(`Adding to group with filePath: ${filePath}, type: ${typeof filePath}`);
             if (group.items.some(item => item.description === filePath)) {
                 vscode.window.showWarningMessage(`Tab ${path.basename(filePath)} is already in the group.`);
                 return;
             }
             group.addItem(filePath);
-            await this.workspaceState.update('tabGroups', groups);
+            await this.updateWorkspaceState();
             this._onDidChangeTreeData.fire();
         }
     }
@@ -62,19 +77,17 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async renameGroup(groupId: string, newName: string): Promise<void> {
-        const groups = this.workspaceState.get<Group[]>('tabGroups', []);
-        const group = groups.find(group => group.id === groupId);
+        const group = this.groupsMap.get(groupId);
         if (group) {
             group.label = newName;
-            await this.workspaceState.update('tabGroups', groups);
+            await this.updateWorkspaceState();
             this._onDidChangeTreeData.fire();
         }
     }
 
     async deleteGroup(groupId: string): Promise<void> {
-        let groups = this.workspaceState.get<Group[]>('tabGroups', []);
-        groups = groups.filter(group => group.id !== groupId);
-        await this.workspaceState.update('tabGroups', groups);
+        this.groupsMap.delete(groupId);
+        await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
     }
 
@@ -85,4 +98,17 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         });
     }
 
+    async updateWorkspaceState(): Promise<void> {
+        let groupData: { [key: string]: { label: string, items: string[] } } = {};
+        this.groupsMap.forEach((group, id) => {
+            if (typeof group.label === 'string') {
+                let items = group.items.map(item => item.description as string);
+                groupData[id] = { label: group.label, items: items };
+            } else {
+                vscode.window.showErrorMessage('Group label is not a string.');
+            }
+        });
+        await this.workspaceState.update('tabGroups', groupData);
+        this._onDidChangeTreeData.fire();
+    }
 }
