@@ -58,8 +58,8 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return groups;
     }
 
-    async addToGroup(groupId: string, filePath: string) {
-        const group = this.groupsMap.get(groupId);
+    async addToGroup(groupName: string, filePath: string) {
+        const group = Array.from(this.groupsMap.values()).find(group => group.label === groupName);
         if (group) {
             console.log(`Adding to group with filePath: ${filePath}, type: ${typeof filePath}`);
             if (group.items.some(item => item.description === filePath)) {
