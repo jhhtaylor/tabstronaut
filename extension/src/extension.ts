@@ -44,6 +44,8 @@ export function activate(context: vscode.ExtensionContext) {
 				if (groupName) {
 					treeDataProvider.addToGroup(groupName, filePath);
 				}
+			} else {
+				vscode.window.showInformationMessage('You need to have at least one active editor tab to create a tab group.');
 			}
 		})
 	);

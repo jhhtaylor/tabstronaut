@@ -40,6 +40,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return newGroup;
     }
 
+    uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
 
     getGroup(groupName: string): Group | undefined {
         const groups = this.workspaceState.get<Group[]>('tabGroups', []);
@@ -89,13 +95,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this.groupsMap.delete(groupId);
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
-    }
-
-    uuidv4() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
     }
 
     async updateWorkspaceState(): Promise<void> {
