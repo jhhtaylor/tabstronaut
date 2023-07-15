@@ -63,21 +63,6 @@
         "category": "Tabstronaut",
         "title": "Delete Tab Group",
         "icon": "$(trash)"
-      },
-      {
-        "command": "tabstronaut.authenticate",
-        "category": "Tabstronaut",
-        "title": "Authenticate"
-      },
-      {
-        "command": "tabstronaut.logout",
-        "category": "Tabstronaut",
-        "title": "Log out"
-      },
-      {
-        "command": "tabstronaut.openProfileContextMenu",
-        "category": "Tabstronaut",
-        "title": "Open Context Menu"
       }
     ],
     "views": {
