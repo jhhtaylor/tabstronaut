@@ -70,6 +70,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 			let editor: vscode.TextEditor | undefined = startingTab;
 			let startFilePath = startingTab.document.fileName;
+			const group = await treeDataProvider.addGroup(groupName);
+			if (!group) {
+				vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
+				return;
+			}
 			do {
 				if (editor) {
 					const filePath = editor.document.fileName;
