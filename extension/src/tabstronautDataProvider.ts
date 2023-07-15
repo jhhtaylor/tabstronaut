@@ -60,7 +60,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             groupData[id].items.forEach(filePath => group.addItem(filePath));
             groups.push(group);
         }
-        this._onDidChangeTreeData.fire();
         return groups;
     }
 
