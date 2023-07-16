@@ -35,32 +35,37 @@ export function activate(context: vscode.ExtensionContext) {
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
 
-				let groupName: string | undefined;
-				let options: string[] = ['New Group from Current Tab...', 'New Group from All Tabs...'];
-				options.push(...treeDataProvider.getGroups().map(group => typeof group.label === 'string' ? group.label : '').filter(label => label));
-				groupName = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
-				if (!groupName) {
-					return;
-				}
-				if (groupName === 'New Group from Current Tab...') {
-					groupName = await getGroupName();
-					if (groupName !== undefined) {
-						const group = await treeDataProvider.addGroup(groupName);
-						if (!group) {
-							vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
-							return;
-						}
-					} else {
-						return;
-					}
-				}
-				if (groupName === 'New Group from All Tabs...') {
-					vscode.commands.executeCommand('tabstronaut.addAllToNewGroup');
+				let group: { label: string, id?: string } | undefined;
+				let options: { label: string, id?: string }[] = [
+					{ label: 'New Group from Current Tab...' },
+					{ label: 'New Group from All Tabs...' }
+				];
+				options.push(...treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id })));
+				group = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
+				if (!group) {
 					return;
 				}
 
-				if (groupName) {
-					treeDataProvider.addToGroup(groupName, filePath);
+				if (group.label === 'New Group from Current Tab...' || group.label === 'New Group from All Tabs...') {
+					const newGroupName = await getGroupName();
+					if (newGroupName === undefined) {
+						return;
+					}
+					const groupId = await treeDataProvider.addGroup(newGroupName);
+					if (!groupId) {
+						vscode.window.showErrorMessage(`Failed to create group with name: ${newGroupName}`);
+						return;
+					}
+
+					if (group.label === 'New Group from Current Tab...') {
+						treeDataProvider.addToGroup(groupId, filePath);
+					} else if (group.label === 'New Group from All Tabs...') {
+						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
+					}
+				} else {
+					if (group.id) {
+						treeDataProvider.addToGroup(group.id, filePath);
+					}
 				}
 			} else {
 				vscode.window.showWarningMessage('To create a group, please ensure that at least one source code file tab is active and close all non-source code file tabs.');
@@ -69,13 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async () => {
-			let groupName: string | undefined = await getGroupNameForAllToNewGroup();
-
-			if (!groupName) {
-				return;
-			}
-
+		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async (groupId: string) => {
 			let initialTab = vscode.window.activeTextEditor;
 			let initialTabFilePath = initialTab?.document.fileName;
 
@@ -90,17 +89,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 			let editor: vscode.TextEditor | undefined = startingTab;
 			let startFilePath = startingTab.document.fileName;
-			const group = await treeDataProvider.addGroup(groupName);
-			if (!group) {
-				vscode.window.showErrorMessage(`Failed to create group with name: ${groupName}`);
-				return;
-			}
 			do {
 				if (editor) {
 					const filePath = editor.document.fileName;
 
 					if (!addedFiles.has(filePath)) {
-						await treeDataProvider.addToGroup(groupName, filePath);
+						await treeDataProvider.addToGroup(groupId, filePath);
 						addedFiles.add(filePath);
 					}
 				}
