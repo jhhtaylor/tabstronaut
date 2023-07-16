@@ -47,7 +47,13 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 
 				if (group.label === 'New Group from Current Tab...' || group.label === 'New Group from All Tabs...') {
-					const newGroupName = await getGroupName();
+					let newGroupName: string | undefined;
+					if (group.label === 'New Group from Current Tab...') {
+						newGroupName = await getGroupName();
+					} else if (group.label === 'New Group from All Tabs...') {
+						newGroupName = await getGroupNameForAllToNewGroup();
+					}
+
 					if (newGroupName === undefined) {
 						return;
 					}
