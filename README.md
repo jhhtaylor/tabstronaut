@@ -35,6 +35,10 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
+### 1.1.1
+
+In this update, we've enhanced Tabstronaut by ensuring groups are uniquely identified by IDs, allowing multiple groups with identical names. We've improved user prompts for the 'New Group from All Tabs...' option and fixed a bug to allow adding tabs to existing groups, streamlining your user experience.
+
 ### 1.1.0
 
 In our latest update, we've removed the need for GitHub authentication and Postgres server connections, making Tabstronaut quicker and more straightforward to use. We've also tailored tab groups to be workspace-specific, improving organization and focus. Enjoy a streamlined, hassle-free coding experience with Tabstronaut!
