@@ -99,7 +99,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 let items = group.items.map(item => item.description as string);
                 groupData[id] = { label: group.label, items: items };
             } else {
-                vscode.window.showErrorMessage('Group label is not a string.');
+                vscode.window.showErrorMessage('Invalid group name. Please try again.');
             }
         });
         await this.workspaceState.update('tabGroups', groupData);
