@@ -35,6 +35,10 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
+### 1.1.2
+
+In this update, we removed the "Invalid group name. Please try again" error message when the user cancels renaming a tab group.
+
 ### 1.1.1
 
 In this update, we've enhanced Tabstronaut by ensuring groups are uniquely identified by IDs, allowing multiple groups with identical names. We've improved user prompts for the 'New Group from All Tabs...' option and fixed a bug to allow adding tabs to existing groups, streamlining your user experience.

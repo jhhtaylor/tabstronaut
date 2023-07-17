@@ -153,6 +153,9 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			let newName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+			if (newName === undefined) {
+				return;
+			}
 			if (!newName || newName.trim() === '') {
 				vscode.window.showErrorMessage('Invalid group name. Please try again.');
 				return;
