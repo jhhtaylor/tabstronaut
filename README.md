@@ -35,6 +35,10 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
+### 1.1.4
+
+In this update, we added a bug fix for the sort order logic of Tab Groups with multiple workspaces.
+
 ### 1.1.3
 
 In this update, we added the ability to change the sort order of the Tab Groups.
