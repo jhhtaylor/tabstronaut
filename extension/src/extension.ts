@@ -152,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			let newName: string | undefined = await vscode.window.showInputBox({ prompt: 'Enter new group name:' });
+			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter new group name' });
 			if (newName === undefined) {
 				return;
 			}
