@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
-			placeHolder: 'Enter new group name',
+			placeHolder: 'Enter a new group name',
 			prompt: prompt,
 		});
 
@@ -152,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter new group name' });
+			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter a new group name' });
 			if (newName === undefined) {
 				return;
 			}
@@ -178,6 +178,37 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			treeDataProvider.deleteGroup(group.id);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.sortTabGroups', async () => {
+			let options: { label: string, id: string }[] = [
+				{ label: 'Sort by Date Added (Oldest First)', id: 'asc' },
+				{ label: 'Sort by Date Added (Newest First)', id: 'desc' }
+			];
+
+			const sortOrder = context.globalState.get<string>('tabstronaut.sortOrder') || 'asc';
+			const selected = options.find(o => o.id === sortOrder);
+			if (selected) {
+				selected.label = '✓ ' + selected.label;
+			}
+
+			const result: { label: string; id: string; } | undefined = await vscode.window.showQuickPick(options, { placeHolder: 'Select a sort order for the groups' });
+			if (result) {
+				if (selected) {
+					selected.label = selected.label.replace('✓ ', '');
+				}
+
+				context.globalState.update('tabstronaut.sortOrder', result.id);
+
+				const newSelected = options.find(o => o.id === result.id);
+				if (newSelected) {
+					newSelected.label = '✓ ' + newSelected.label;
+				}
+
+				treeDataProvider.sortGroups(result.id === 'desc');
+			}
 		})
 	);
 }

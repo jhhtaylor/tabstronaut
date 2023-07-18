@@ -47,6 +47,12 @@
         "icon": "$(plus)"
       },
       {
+        "command": "tabstronaut.sortTabGroups",
+        "category": "Tabstronaut",
+        "title": "Change Tab Group Sort Order",
+        "icon": "$(sort-precedence)"
+      },
+      {
         "command": "tabstronaut.openAllTabsInGroup",
         "category": "Tabstronaut",
         "title": "Restore Tab Group",
@@ -79,7 +85,12 @@
         {
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut",
-          "group": "navigation"
+          "group": "navigation@0"
+        },
+        {
+          "command": "tabstronaut.sortTabGroups",
+          "when": "view == tabstronaut",
+          "group": "navigation@1"
         }
       ],
       "view/item/context": [

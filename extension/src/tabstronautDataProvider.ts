@@ -6,14 +6,19 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private groupsMap: Map<string, Group> = new Map();
+    private groupSortOrder: boolean;
 
     constructor(private workspaceState: vscode.Memento) {
+        this.groupSortOrder = this.workspaceState.get('groupSortOrder', false);
+
         const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[] } }>('tabGroups', {});
         for (const id in groupData) {
             let newGroup = new Group(groupData[id].label, id);
             groupData[id].items.forEach(filePath => newGroup.addItem(filePath));
             this.groupsMap.set(id, newGroup);
         }
+
+        this.sortGroups(this.groupSortOrder);
     }
 
     getTreeItem(element: Group | vscode.TreeItem): vscode.TreeItem {
@@ -32,8 +37,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     async addGroup(label: string): Promise<string | undefined> {
         const newGroup = new Group(label, this.uuidv4());
         this.groupsMap.set(newGroup.id, newGroup);
+
+        this.sortGroups(this.groupSortOrder);
+
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
+
         return newGroup.id;
     }
 
@@ -103,6 +112,20 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             }
         });
         await this.workspaceState.update('tabGroups', groupData);
+        this._onDidChangeTreeData.fire();
+    }
+
+    public sortGroups(desc: boolean) {
+        this.groupSortOrder = desc;
+        this.workspaceState.update('groupSortOrder', this.groupSortOrder);
+
+        const sortedGroups = Array.from(this.groupsMap.values()).sort((a, b) => {
+            if (typeof a.label === "string" && typeof b.label === "string") {
+                return desc ? b.label.localeCompare(a.label) : a.label.localeCompare(b.label);
+            }
+            return 0;
+        });
+        this.groupsMap = new Map(sortedGroups.map(group => [group.id, group]));
         this._onDidChangeTreeData.fire();
     }
 }
