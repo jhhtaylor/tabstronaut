@@ -50,7 +50,7 @@
         "command": "tabstronaut.sortTabGroups",
         "category": "Tabstronaut",
         "title": "Change Tab Group sort order...",
-        "icon": "$(sort-precedence)"
+        "icon": "$(list-filter)"
       },
       {
         "command": "tabstronaut.openAllTabsInGroup",
