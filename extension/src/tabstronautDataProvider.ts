@@ -73,7 +73,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const group = this.groupsMap.get(groupId);
         if (group) {
             if (group.items.some(item => item.description === filePath)) {
-                vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this group.`);
+                vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
                 return;
             }
             group.addItem(filePath);
@@ -108,7 +108,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 let items = group.items.map(item => item.description as string);
                 groupData[id] = { label: group.label, items: items };
             } else {
-                vscode.window.showErrorMessage('Invalid group name. Please try again.');
+                vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
             }
         });
         await this.workspaceState.update('tabGroups', groupData);

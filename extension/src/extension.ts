@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
-			placeHolder: 'Enter a new group name',
+			placeHolder: 'Enter a new Tab Group name',
 			prompt: prompt,
 		});
 
@@ -29,28 +29,31 @@ export function activate(context: vscode.ExtensionContext) {
 		return await getGroupName(prompt);
 	}
 
+	type CustomQuickPickItem = vscode.QuickPickItem & { id?: string };
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
 			const activeEditor = vscode.window.activeTextEditor;
 			if (activeEditor) {
 				const filePath = activeEditor.document.fileName;
 
-				let group: { label: string, id?: string } | undefined;
-				let options: { label: string, id?: string }[] = [
-					{ label: 'New Group from Current Tab...' },
-					{ label: 'New Group from All Tabs...' }
+				let group: CustomQuickPickItem | undefined;
+				let options: CustomQuickPickItem[] = [
+					{ label: 'New Tab Group from current tab...' },
+					{ label: 'New Tab Group from all tabs...' },
+					{ label: '', kind: vscode.QuickPickItemKind.Separator }
 				];
 				options.push(...treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id })));
-				group = await vscode.window.showQuickPick(options, { placeHolder: 'Select a group' });
+				group = await vscode.window.showQuickPick(options, { placeHolder: 'Select a Tab Group' });
 				if (!group) {
 					return;
 				}
 
-				if (group.label === 'New Group from Current Tab...' || group.label === 'New Group from All Tabs...') {
+				if (group.label === 'New Tab Group from current tab...' || group.label === 'New Tab Group from all tabs...') {
 					let newGroupName: string | undefined;
-					if (group.label === 'New Group from Current Tab...') {
+					if (group.label === 'New Tab Group from current tab...') {
 						newGroupName = await getGroupName();
-					} else if (group.label === 'New Group from All Tabs...') {
+					} else if (group.label === 'New Tab Group from all tabs...') {
 						newGroupName = await getGroupNameForAllToNewGroup();
 					}
 
@@ -59,13 +62,13 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 					const groupId = await treeDataProvider.addGroup(newGroupName);
 					if (!groupId) {
-						vscode.window.showErrorMessage(`Failed to create group with name: ${newGroupName}`);
+						vscode.window.showErrorMessage(`Failed to create Tab Group with name: ${newGroupName}.`);
 						return;
 					}
 
-					if (group.label === 'New Group from Current Tab...') {
+					if (group.label === 'New Tab Group from current tab...') {
 						treeDataProvider.addToGroup(groupId, filePath);
-					} else if (group.label === 'New Group from All Tabs...') {
+					} else if (group.label === 'New Tab Group from all tabs...') {
 						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
 					}
 				} else {
@@ -74,7 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				}
 			} else {
-				vscode.window.showWarningMessage('To create a group, please ensure that at least one source code file tab is active and close all non-source code file tabs.');
+				vscode.window.showWarningMessage('To create a Tab Group, please ensure that at least one source code file tab is active and close all non-source code file tabs.');
 			}
 		})
 	);
@@ -152,12 +155,12 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter a new group name' });
+			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter a new Tab Group name' });
 			if (newName === undefined) {
 				return;
 			}
 			if (!newName || newName.trim() === '') {
-				vscode.window.showErrorMessage('Invalid group name. Please try again.');
+				vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
 				return;
 			}
 			treeDataProvider.renameGroup(group.id, newName);
@@ -171,7 +174,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const group: Group = item;
 
-			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this group?' });
+			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this Tab Group?' });
 
 			if (!shouldDelete || shouldDelete === 'No') {
 				return;
@@ -194,7 +197,7 @@ export function activate(context: vscode.ExtensionContext) {
 				selected.label = '✓ ' + selected.label;
 			}
 
-			const result: { label: string; id: string; } | undefined = await vscode.window.showQuickPick(options, { placeHolder: 'Select a sort order for the groups' });
+			const result: { label: string; id: string; } | undefined = await vscode.window.showQuickPick(options, { placeHolder: 'Select a sort order for the Tab Groups' });
 			if (result) {
 				if (selected) {
 					selected.label = selected.label.replace('✓ ', '');
