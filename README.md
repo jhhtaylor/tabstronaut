@@ -35,9 +35,13 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
+### 1.1.3
+
+In this update, we added the ability to change the sort order of the Tab Groups.
+
 ### 1.1.2
 
-In this update, we removed the "Invalid group name. Please try again" error message when the user cancels renaming a tab group.
+In this update, we removed the "Invalid Tab Group name. Please try again." error message when the user cancels renaming a Tab Group.
 
 ### 1.1.1
 
@@ -45,7 +49,7 @@ In this update, we've enhanced Tabstronaut by ensuring groups are uniquely ident
 
 ### 1.1.0
 
-In our latest update, we've removed the need for GitHub authentication and Postgres server connections, making Tabstronaut quicker and more straightforward to use. We've also tailored tab groups to be workspace-specific, improving organization and focus. Enjoy a streamlined, hassle-free coding experience with Tabstronaut!
+In our latest update, we've removed the need for GitHub authentication and Postgres server connections, making Tabstronaut quicker and more straightforward to use. We've also tailored Tab Groups to be workspace-specific, improving organization and focus. Enjoy a streamlined, hassle-free coding experience with Tabstronaut!
 
 ### 1.0.0
 
