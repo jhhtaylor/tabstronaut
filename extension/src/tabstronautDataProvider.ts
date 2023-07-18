@@ -12,6 +12,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return this._groupSortOrder;
     }
 
+    public set groupSortOrder(value: boolean) {
+        this._groupSortOrder = value;
+        this.refresh();
+    }
+
     constructor(private workspaceState: vscode.Memento) {
         this._groupSortOrder = this.workspaceState.get('groupSortOrder', false);
 

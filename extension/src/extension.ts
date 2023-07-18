@@ -199,7 +199,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{ label: 'Sort by Date Added (Newest First)', id: 'desc' }
 			];
 
-			const sortOrder = context.globalState.get<string>('tabstronaut.sortOrder') || 'asc';
+			const sortOrder = context.workspaceState.get<string>('groupSortOrder') || 'asc';
 			const selected = options.find(o => o.id === sortOrder);
 			if (selected) {
 				selected.label = '✓ ' + selected.label;
@@ -211,7 +211,8 @@ export function activate(context: vscode.ExtensionContext) {
 					selected.label = selected.label.replace('✓ ', '');
 				}
 
-				context.globalState.update('tabstronaut.sortOrder', result.id);
+				context.workspaceState.update('groupSortOrder', result.id);
+				treeDataProvider.groupSortOrder = (result.id === 'desc');
 
 				const newSelected = options.find(o => o.id === result.id);
 				if (newSelected) {
