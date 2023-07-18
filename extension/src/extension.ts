@@ -43,7 +43,15 @@ export function activate(context: vscode.ExtensionContext) {
 					{ label: 'New Tab Group from all tabs...' },
 					{ label: '', kind: vscode.QuickPickItemKind.Separator }
 				];
-				options.push(...treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id })));
+				let groupList = treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id }));
+				groupList.sort((a, b) => {
+					if (treeDataProvider.groupSortOrder) {
+						return b.label.localeCompare(a.label);
+					} else {
+						return a.label.localeCompare(b.label);
+					}
+				});
+				options.push(...groupList);
 				group = await vscode.window.showQuickPick(options, { placeHolder: 'Select a Tab Group' });
 				if (!group) {
 					return;

@@ -6,10 +6,14 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private groupsMap: Map<string, Group> = new Map();
-    private groupSortOrder: boolean;
+    private _groupSortOrder: boolean;
+
+    get groupSortOrder() {
+        return this._groupSortOrder;
+    }
 
     constructor(private workspaceState: vscode.Memento) {
-        this.groupSortOrder = this.workspaceState.get('groupSortOrder', false);
+        this._groupSortOrder = this.workspaceState.get('groupSortOrder', false);
 
         const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[] } }>('tabGroups', {});
         for (const id in groupData) {
@@ -18,7 +22,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             this.groupsMap.set(id, newGroup);
         }
 
-        this.sortGroups(this.groupSortOrder);
+        this.sortGroups(this._groupSortOrder);
     }
 
     getTreeItem(element: Group | vscode.TreeItem): vscode.TreeItem {
@@ -38,7 +42,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const newGroup = new Group(label, this.uuidv4());
         this.groupsMap.set(newGroup.id, newGroup);
 
-        this.sortGroups(this.groupSortOrder);
+        this.sortGroups(this._groupSortOrder);
 
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
@@ -116,8 +120,8 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     public sortGroups(desc: boolean) {
-        this.groupSortOrder = desc;
-        this.workspaceState.update('groupSortOrder', this.groupSortOrder);
+        this._groupSortOrder = desc;
+        this.workspaceState.update('groupSortOrder', this._groupSortOrder);
 
         const sortedGroups = Array.from(this.groupsMap.values()).sort((a, b) => {
             if (typeof a.label === "string" && typeof b.label === "string") {
