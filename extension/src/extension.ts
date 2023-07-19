@@ -194,30 +194,25 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.sortTabGroups', async () => {
-			let options: { label: string, id: string }[] = [
-				{ label: 'Sort by Date Added (Oldest First)', id: 'asc' },
-				{ label: 'Sort by Date Added (Newest First)', id: 'desc' }
-			];
-
 			const sortOrder = context.workspaceState.get<string>('groupSortOrder') || 'asc';
-			const selected = options.find(o => o.id === sortOrder);
-			if (selected) {
-				selected.label = '✓ ' + selected.label;
+
+			let options: { label: string, id: string }[];
+			if (sortOrder === 'asc') {
+				options = [
+					{ label: '✓ Sort by Date Added (Oldest First)', id: 'asc' },
+					{ label: 'Sort by Date Added (Newest First)', id: 'desc' }
+				];
+			} else {
+				options = [
+					{ label: 'Sort by Date Added (Oldest First)', id: 'asc' },
+					{ label: '✓ Sort by Date Added (Newest First)', id: 'desc' }
+				];
 			}
 
 			const result: { label: string; id: string; } | undefined = await vscode.window.showQuickPick(options, { placeHolder: 'Select a sort order for the Tab Groups' });
 			if (result) {
-				if (selected) {
-					selected.label = selected.label.replace('✓ ', '');
-				}
-
 				context.workspaceState.update('groupSortOrder', result.id);
 				treeDataProvider.groupSortOrder = (result.id === 'desc');
-
-				const newSelected = options.find(o => o.id === result.id);
-				if (newSelected) {
-					newSelected.label = '✓ ' + newSelected.label;
-				}
 
 				treeDataProvider.sortGroups(result.id === 'desc');
 			}
