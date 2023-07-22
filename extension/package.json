@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.1.6",
+  "version": "1.1.7",
   "engines": {
     "vscode": "^1.79.1"
   },
@@ -71,7 +71,7 @@
           "id": "tabstronaut",
           "name": "Tabstronaut",
           "contextualTitle": "Tabstronaut",
-          "icon": "$(sparkle)"
+          "icon": "media/icon.svg"
         }
       ]
     },
