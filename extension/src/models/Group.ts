@@ -17,7 +17,7 @@ export class Group extends vscode.TreeItem {
         item.iconPath = new vscode.ThemeIcon('file');
         item.description = filePath;
         item.id = this.id + filePath;
-        
+
         this.items.push(item);
     }
 }
