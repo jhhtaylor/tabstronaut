@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Group } from './models/Group';
+import { toRelativeTime } from './utils';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private groupsMap: Map<string, Group> = new Map();
+    private refreshIntervalId?: NodeJS.Timeout;
 
     constructor(private workspaceState: vscode.Memento) {
         const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime: string } }>('tabGroups', {});
@@ -13,6 +15,22 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             let newGroup = new Group(groupData[id].label, id, new Date(groupData[id].creationTime));
             groupData[id].items.forEach(filePath => newGroup.addItem(filePath));
             this.groupsMap.set(id, newGroup);
+        }
+
+        this.refreshIntervalId = setInterval(() => this.refreshCreationTimes(), 300000);
+    }
+
+    private refreshCreationTimes(): void {
+        this.groupsMap.forEach(group => {
+            group.description = toRelativeTime(group.creationTime);
+        });
+        this.refresh();
+    }
+
+    public clearRefreshInterval(): void {
+        if (this.refreshIntervalId) {
+            clearInterval(this.refreshIntervalId);
+            this.refreshIntervalId = undefined;
         }
     }
 
