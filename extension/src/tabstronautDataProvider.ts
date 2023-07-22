@@ -8,9 +8,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     private groupsMap: Map<string, Group> = new Map();
 
     constructor(private workspaceState: vscode.Memento) {
-        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[] } }>('tabGroups', {});
+        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime: string } }>('tabGroups', {});
         for (const id in groupData) {
-            let newGroup = new Group(groupData[id].label, id);
+            let newGroup = new Group(groupData[id].label, id, new Date(groupData[id].creationTime));
             groupData[id].items.forEach(filePath => newGroup.addItem(filePath));
             this.groupsMap.set(id, newGroup);
         }
@@ -59,10 +59,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     public getGroups(): Group[] {
-        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[] } }>('tabGroups', {});
+        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime: string } }>('tabGroups', {});
         const groups: Group[] = [];
         for (const id in groupData) {
-            const group = new Group(groupData[id].label, id);
+            const group = new Group(groupData[id].label, id, new Date(groupData[id].creationTime));
             groupData[id].items.forEach(filePath => group.addItem(filePath));
             groups.push(group);
         }
@@ -102,11 +102,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async updateWorkspaceState(): Promise<void> {
-        let groupData: { [key: string]: { label: string, items: string[] } } = {};
+        let groupData: { [key: string]: { label: string, items: string[], creationTime: string } } = {};
         this.groupsMap.forEach((group, id) => {
             if (typeof group.label === 'string') {
                 let items = group.items.map(item => item.description as string);
-                groupData[id] = { label: group.label, items: items };
+                groupData[id] = { label: group.label, items: items, creationTime: group.creationTime.toISOString() };
             } else {
                 vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
             }
