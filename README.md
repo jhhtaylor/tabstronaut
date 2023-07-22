@@ -35,9 +35,9 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
-### 1.1.5
+### 1.1.6
 
-In this update, we added the ability to change the sort order of the Tab Groups.
+In our latest release, we've enriched Tab Groups with real-time timestamps. Additionally, we've reorganized them in descending order, ensuring the newest groups are prominently displayed at the top for your convenience.
 
 ### 1.1.2
 
