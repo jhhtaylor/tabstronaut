@@ -77,10 +77,13 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     public getGroups(): Group[] {
-        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime: string } }>('tabGroups', {});
+        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime?: string } }>('tabGroups', {});
         const groups: Group[] = [];
         for (const id in groupData) {
-            const group = new Group(groupData[id].label, id, new Date(groupData[id].creationTime));
+            const creationTime = groupData[id].creationTime
+                ? new Date(groupData[id].creationTime as string)
+                : new Date();
+            const group = new Group(groupData[id].label, id, creationTime);
             groupData[id].items.forEach(filePath => group.addItem(filePath));
             groups.push(group);
         }
