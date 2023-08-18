@@ -30,3 +30,16 @@ export function toRelativeTime(date: Date): string {
 
     return "just now";
 }
+
+export function getTrimmedDirectoryPath(filePath: string): string {
+    const segments = filePath.split('/');
+    if (segments.length > 0) {
+        segments.shift();
+    }
+    if (segments.length > 0) {
+        segments.pop();
+    }
+    const modifiedPath = segments.join('/');
+
+    return modifiedPath;
+}
