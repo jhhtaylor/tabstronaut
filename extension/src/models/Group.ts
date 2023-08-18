@@ -15,11 +15,11 @@ export class Group extends vscode.TreeItem {
         this.description = toRelativeTime(this.creationTime);
     }
 
-
     addItem(filePath: string) {
         const baseName = path.basename(filePath);
         const item = new vscode.TreeItem(baseName, vscode.TreeItemCollapsibleState.None);
-        item.iconPath = new vscode.ThemeIcon('file');
+
+        item.resourceUri = vscode.Uri.file(filePath);
         item.description = filePath;
         item.id = this.id + filePath;
 
