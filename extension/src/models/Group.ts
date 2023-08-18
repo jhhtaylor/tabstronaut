@@ -15,19 +15,6 @@ export class Group extends vscode.TreeItem {
         this.description = toRelativeTime(this.creationTime);
     }
 
-    getTrimmedDirectoryPath(filePath: string): string {
-        const segments = filePath.split('/');
-        if (segments.length > 0) {
-            segments.shift();
-        }
-        if (segments.length > 0) {
-            segments.pop();
-        }
-        const modifiedPath = segments.join('/');
-
-        return modifiedPath;
-    }
-
     addItem(filePath: string) {
         const baseName = path.basename(filePath);
         let relativePath = vscode.workspace.asRelativePath(filePath, true);
