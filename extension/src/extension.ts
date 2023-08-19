@@ -131,7 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const group: Group = item;
 
 			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].description as string;
+				const filePath = group.items[i].resourceUri?.path as string;
 				if (filePath) {
 					try {
 						const document = await vscode.workspace.openTextDocument(filePath);

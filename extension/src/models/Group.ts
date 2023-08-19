@@ -16,6 +16,10 @@ export class Group extends vscode.TreeItem {
     }
 
     addItem(filePath: string) {
+        if (!filePath) {
+            vscode.window.showErrorMessage('Filepath is corrupted. You may need to delete the group and try again.');
+            return;
+        }
         const baseName = path.basename(filePath);
         let relativePath = vscode.workspace.asRelativePath(filePath, true);
         relativePath = getTrimmedDirectoryPath(relativePath);

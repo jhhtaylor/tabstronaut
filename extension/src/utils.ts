@@ -43,3 +43,8 @@ export function getTrimmedDirectoryPath(filePath: string): string {
 
     return modifiedPath;
 }
+
+export function normalizePath(p: string): string {
+    let normalizedPath = p.replace(/\\/g, '/');
+    return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
+}
