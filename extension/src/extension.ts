@@ -205,10 +205,18 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
+		const currentEditor = vscode.window.activeTextEditor;
+
+		let isCurrentActiveTab = false;
+		if (currentEditor && item.resourceUri) {
+			isCurrentActiveTab = currentEditor.document.uri.fsPath === item.resourceUri.fsPath;
+		}
+
 		if (item.resourceUri) {
 			try {
 				const document = await vscode.workspace.openTextDocument(item.resourceUri);
-				await vscode.window.showTextDocument(document, { preview: fromButton });
+				const preview = !isCurrentActiveTab && fromButton;
+				await vscode.window.showTextDocument(document, { preview: preview });
 			} catch (error) {
 				vscode.window.showErrorMessage(`Failed to open file: ${item.resourceUri.fsPath}. Please check if the file exists and try again.`);
 			}
