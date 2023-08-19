@@ -1,3 +1,6 @@
+import * as vscode from 'vscode';
+import * as path from 'path';
+
 export function toRelativeTime(date: Date): string {
     if (!(date instanceof Date) || isNaN(date.getTime())) {
         return "";
@@ -42,6 +45,16 @@ export function getTrimmedDirectoryPath(filePath: string): string {
     const modifiedPath = segments.join('/');
 
     return modifiedPath;
+}
+
+export function getRelativeDescription(filePath: string): string {
+    let relativePath = vscode.workspace.asRelativePath(filePath, true);
+
+    if (path.isAbsolute(relativePath)) {
+        return '.. (External)';
+    }
+
+    return getTrimmedDirectoryPath(relativePath);
 }
 
 export function normalizePath(p: string): string {

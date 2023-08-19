@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { toRelativeTime, getTrimmedDirectoryPath } from '../utils';
+import { toRelativeTime, getRelativeDescription } from '../utils';
 
 export class Group extends vscode.TreeItem {
     items: vscode.TreeItem[] = [];
@@ -21,8 +21,7 @@ export class Group extends vscode.TreeItem {
             return;
         }
         const baseName = path.basename(filePath);
-        let relativePath = vscode.workspace.asRelativePath(filePath, true);
-        relativePath = getTrimmedDirectoryPath(relativePath);
+        const relativePath = getRelativeDescription(filePath);
 
         const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);
         item.resourceUri = vscode.Uri.file(filePath);
