@@ -32,7 +32,7 @@ export class Group extends vscode.TreeItem {
         item.groupId = this.id;
 
         item.command = {
-            command: 'tabstronaut.openSpecificTab',
+            command: 'tabstronaut.previewSpecificTab',
             title: 'Open Specific Tab',
             arguments: [item]
         };

@@ -47,7 +47,7 @@
         "icon": "$(plus)"
       },
       {
-        "command": "tabstronaut.openAllTabsInGroup",
+        "command": "tabstronaut.restoreAllTabsInGroup",
         "category": "Tabstronaut",
         "title": "Restore Tab Group",
         "icon": "$(debug-continue-small)"
@@ -65,7 +65,13 @@
         "icon": "$(trash)"
       },
       {
-        "command": "tabstronaut.openSpecificTab",
+        "command": "tabstronaut.previewSpecificTab",
+        "category": "Tabstronaut",
+        "title": "Preview Tab",
+        "icon": "$(debug-continue-small)"
+      },
+      {
+        "command": "tabstronaut.restoreSpecificTab",
         "category": "Tabstronaut",
         "title": "Restore Tab",
         "icon": "$(debug-continue-small)"
@@ -108,7 +114,7 @@
           "group": "inline@0"
         },
         {
-          "command": "tabstronaut.openAllTabsInGroup",
+          "command": "tabstronaut.restoreAllTabsInGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@1"
         },
@@ -123,7 +129,7 @@
           "group": "inline@3"
         },
         {
-          "command": "tabstronaut.openSpecificTab",
+          "command": "tabstronaut.restoreSpecificTab",
           "when": "view == tabstronaut && viewItem == tab",
           "group": "inline@0"
         },
