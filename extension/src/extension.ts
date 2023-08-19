@@ -216,7 +216,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('tabstronaut.addCurrentTabToGroup', async (group: Group) => {
 			const activeEditor = vscode.window.activeTextEditor;
 			if (!activeEditor) {
-				vscode.window.showWarningMessage('No current tab to add to Tab Group.');
+				vscode.window.showWarningMessage('No current tab to add to Tab Group or current tab is a non-source code file.');
 				return;
 			}
 
