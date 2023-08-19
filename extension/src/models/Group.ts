@@ -24,13 +24,13 @@ export class Group extends vscode.TreeItem {
         let relativePath = vscode.workspace.asRelativePath(filePath, true);
         relativePath = getTrimmedDirectoryPath(relativePath);
 
-        const item = new vscode.TreeItem(baseName, vscode.TreeItemCollapsibleState.None);
+        const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);
         item.resourceUri = vscode.Uri.file(filePath);
         item.description = relativePath;
         item.id = this.id + filePath;
         item.contextValue = 'tab';
+        item.groupId = this.id;
 
-        // Add the command to open the tab when the item is clicked
         item.command = {
             command: 'tabstronaut.openSpecificTab',
             title: 'Open Specific Tab',
@@ -39,4 +39,8 @@ export class Group extends vscode.TreeItem {
 
         this.items.push(item);
     }
+}
+
+class TabItem extends vscode.TreeItem {
+    groupId?: string;
 }

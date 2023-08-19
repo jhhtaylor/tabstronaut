@@ -168,13 +168,13 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.deleteTabGroup', async (item: any) => {
+		vscode.commands.registerCommand('tabstronaut.removeTabGroup', async (item: any) => {
 			if (item.contextValue !== 'group') {
 				return;
 			}
 			const group: Group = item;
 
-			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this Tab Group?' });
+			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to remove this Tab Group?' });
 
 			if (!shouldDelete || shouldDelete === 'No') {
 				return;
@@ -199,6 +199,16 @@ export function activate(context: vscode.ExtensionContext) {
 					vscode.window.showErrorMessage(`Failed to open file: ${item.resourceUri.fsPath}. Please check if the file exists and try again.`);
 				}
 			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.removeSpecificTab', async (item: any) => {
+			if (item.contextValue !== 'tab') {
+				return;
+			}
+
+			treeDataProvider.removeFromGroup(item.groupId, item.resourceUri?.path);
 		})
 	);
 }

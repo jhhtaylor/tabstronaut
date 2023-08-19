@@ -125,6 +125,20 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
+    async removeFromGroup(groupId: string, filePath: string): Promise<void> {
+        const group = this.groupsMap.get(groupId);
+        if (!group || !filePath) return;
+
+        group.items = group.items.filter(item => item.resourceUri?.path !== filePath);
+
+        if (group.items.length === 0) {
+            this.groupsMap.delete(groupId);
+        }
+
+        await this.updateWorkspaceState();
+        this._onDidChangeTreeData.fire();
+    }
+
     async updateWorkspaceState(): Promise<void> {
         let groupData: { [key: string]: { label: string, items: string[], creationTime: string } } = {};
         this.groupsMap.forEach((group, id) => {

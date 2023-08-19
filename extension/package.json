@@ -59,9 +59,9 @@
         "icon": "$(pencil)"
       },
       {
-        "command": "tabstronaut.deleteTabGroup",
+        "command": "tabstronaut.removeTabGroup",
         "category": "Tabstronaut",
-        "title": "Delete Tab Group...",
+        "title": "Remove Tab Group...",
         "icon": "$(trash)"
       },
       {
@@ -69,6 +69,12 @@
         "category": "Tabstronaut",
         "title": "Restore Tab",
         "icon": "$(debug-continue-small)"
+      },
+      {
+        "command": "tabstronaut.removeSpecificTab",
+        "category": "Tabstronaut",
+        "title": "Remove Tab from Tab Group",
+        "icon": "$(trash)"
       }
     ],
     "views": {
@@ -101,7 +107,7 @@
           "group": "inline@1"
         },
         {
-          "command": "tabstronaut.deleteTabGroup",
+          "command": "tabstronaut.removeTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
         },
@@ -109,6 +115,11 @@
           "command": "tabstronaut.openSpecificTab",
           "when": "view == tabstronaut && viewItem == tab",
           "group": "inline@0"
+        },
+        {
+          "command": "tabstronaut.removeSpecificTab",
+          "when": "view == tabstronaut && viewItem == tab",
+          "group": "inline@1"
         }
       ]
     }
