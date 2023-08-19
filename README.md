@@ -37,7 +37,7 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ### 1.1.9
 
-In this update, when renaming a Tab Group, the previous name is auto-filled as the value. Additionally, when clicking a file name, the file is previewed instead of restored.
+In this update, when renaming a Tab Group, the previous name is auto-filled as the value. Additionally, when clicking a file name, the file is previewed instead of restored. Finally, Tab descriptions cater to files outside of the current workspace.
 
 ### 1.1.8
 
