@@ -36,6 +36,9 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 ## Release Notes
 
 ### 1.1.7
+In this update, we added file icons based on the user's File Icon Theme, relative paths instead of absolute paths shown in Tab descriptions, the ability to click a Tab to restore it and ability to remove a single Tab from a Tab Group. Enjoy using Tabstronaut!
+
+### 1.1.7
 
 In our latest release, we've enriched Tab Groups with real-time timestamps. Additionally, we've reorganized them in descending order, ensuring the newest groups are prominently displayed at the top for your convenience.
 
