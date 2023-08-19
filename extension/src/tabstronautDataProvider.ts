@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Group } from './models/Group';
-import { toRelativeTime } from './utils';
+import { toRelativeTime, normalizePath } from './utils';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -92,15 +92,18 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async addToGroup(groupId: string, filePath: string) {
         const group = this.groupsMap.get(groupId);
-        if (group) {
-            if (group.items.some(item => item.description === filePath)) {
-                vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
-                return;
-            }
-            group.addItem(filePath);
-            await this.updateWorkspaceState();
-            this._onDidChangeTreeData.fire();
+        if (!group) return;
+
+        const normalizedFilePath = normalizePath(filePath);
+
+        if (group.items.some(item => normalizePath(item.resourceUri?.path || '') === normalizedFilePath)) {
+            vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
+            return;
         }
+
+        group.addItem(filePath);
+        await this.updateWorkspaceState();
+        this._onDidChangeTreeData.fire();
     }
 
     refresh(): void {
@@ -122,11 +125,25 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
+    async removeFromGroup(groupId: string, filePath: string): Promise<void> {
+        const group = this.groupsMap.get(groupId);
+        if (!group || !filePath) return;
+
+        group.items = group.items.filter(item => item.resourceUri?.path !== filePath);
+
+        if (group.items.length === 0) {
+            this.groupsMap.delete(groupId);
+        }
+
+        await this.updateWorkspaceState();
+        this._onDidChangeTreeData.fire();
+    }
+
     async updateWorkspaceState(): Promise<void> {
         let groupData: { [key: string]: { label: string, items: string[], creationTime: string } } = {};
         this.groupsMap.forEach((group, id) => {
             if (typeof group.label === 'string') {
-                let items = group.items.map(item => item.description as string);
+                let items = group.items.map(item => item.resourceUri?.path as string);
                 groupData[id] = { label: group.label, items: items, creationTime: group.creationTime.toISOString() };
             } else {
                 vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
