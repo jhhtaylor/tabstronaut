@@ -155,7 +155,11 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter a new Tab Group name' });
+			let newName: string | undefined = await vscode.window.showInputBox({
+				placeHolder: 'Enter a new Tab Group name',
+				value: group.label,
+				valueSelection: [0, group.label.length]
+			});
 			if (newName === undefined) {
 				return;
 			}
