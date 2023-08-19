@@ -28,6 +28,7 @@ export class Group extends vscode.TreeItem {
         item.resourceUri = vscode.Uri.file(filePath);
         item.description = relativePath;
         item.id = this.id + filePath;
+        item.contextValue = 'tab';
 
         this.items.push(item);
     }

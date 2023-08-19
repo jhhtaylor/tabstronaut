@@ -63,6 +63,12 @@
         "category": "Tabstronaut",
         "title": "Delete Tab Group...",
         "icon": "$(trash)"
+      },
+      {
+        "command": "tabstronaut.openSpecificTab",
+        "category": "Tabstronaut",
+        "title": "Restore Tab",
+        "icon": "$(debug-continue-small)"
       }
     ],
     "views": {
@@ -98,6 +104,11 @@
           "command": "tabstronaut.deleteTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
+        },
+        {
+          "command": "tabstronaut.openSpecificTab",
+          "when": "view == tabstronaut && viewItem == tab",
+          "group": "inline@0"
         }
       ]
     }

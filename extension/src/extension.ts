@@ -183,6 +183,24 @@ export function activate(context: vscode.ExtensionContext) {
 			treeDataProvider.deleteGroup(group.id);
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.openSpecificTab', async (item: any) => {
+
+			if (item.contextValue !== 'tab') {
+				return;
+			}
+
+			if (item.resourceUri) {
+				try {
+					const document = await vscode.workspace.openTextDocument(item.resourceUri);
+					await vscode.window.showTextDocument(document, { preview: false });
+				} catch (error) {
+					vscode.window.showErrorMessage(`Failed to open file: ${item.resourceUri.fsPath}. Please check if the file exists and try again.`);
+				}
+			}
+		})
+	);
 }
 
 export function deactivate() {
