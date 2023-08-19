@@ -35,8 +35,13 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
+### 1.1.9
+
+In this update, when renaming a Tab Group, the previous name is auto-filled as the value. Additionally, when clicking a file name, the file is previewed instead of restored.
+
 ### 1.1.8
-In this update, we added file icons based on the user's File Icon Theme, relative paths instead of absolute paths shown in Tab descriptions, the ability to click a Tab to restore it and the ability to remove a single Tab from a Tab Group. Enjoy using Tabstronaut!
+
+In this update, we added file icons based on the user's File Icon Theme, relative paths instead of absolute paths shown in Tab descriptions, the ability to click a Tab to restore it, and the ability to remove a single Tab from a Tab Group. Enjoy using Tabstronaut!
 
 ### 1.1.7
 
