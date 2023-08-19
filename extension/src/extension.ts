@@ -124,14 +124,14 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.openAllTabsInGroup', async (item: any) => {
+		vscode.commands.registerCommand('tabstronaut.restoreAllTabsInGroup', async (item: any) => {
 			if (item.contextValue !== 'group') {
 				return;
 			}
 			const group: Group = item;
 
 			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].description as string;
+				const filePath = group.items[i].resourceUri?.path as string;
 				if (filePath) {
 					try {
 						const document = await vscode.workspace.openTextDocument(filePath);
@@ -155,7 +155,11 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			let newName: string | undefined = await vscode.window.showInputBox({ placeHolder: 'Enter a new Tab Group name' });
+			let newName: string | undefined = await vscode.window.showInputBox({
+				placeHolder: 'Enter a new Tab Group name',
+				value: group.label,
+				valueSelection: [0, group.label.length]
+			});
 			if (newName === undefined) {
 				return;
 			}
@@ -168,13 +172,13 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.deleteTabGroup', async (item: any) => {
+		vscode.commands.registerCommand('tabstronaut.removeTabGroup', async (item: any) => {
 			if (item.contextValue !== 'group') {
 				return;
 			}
 			const group: Group = item;
 
-			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to delete this Tab Group?' });
+			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to remove this Tab Group?' });
 
 			if (!shouldDelete || shouldDelete === 'No') {
 				return;
@@ -183,6 +187,67 @@ export function activate(context: vscode.ExtensionContext) {
 			treeDataProvider.deleteGroup(group.id);
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.previewSpecificTab', async (item: any) => {
+			handleOpenTab(item, true);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.restoreSpecificTab', async (item: any) => {
+			handleOpenTab(item, false);
+		})
+	);
+
+	async function handleOpenTab(item: any, fromButton: boolean) {
+		if (item.contextValue !== 'tab') {
+			return;
+		}
+
+		const currentEditor = vscode.window.activeTextEditor;
+
+		let isCurrentActiveTab = false;
+		if (currentEditor && item.resourceUri) {
+			isCurrentActiveTab = currentEditor.document.uri.fsPath === item.resourceUri.fsPath;
+		}
+
+		if (item.resourceUri) {
+			try {
+				const document = await vscode.workspace.openTextDocument(item.resourceUri);
+				const preview = !isCurrentActiveTab && fromButton;
+				await vscode.window.showTextDocument(document, { preview: preview });
+			} catch (error) {
+				vscode.window.showErrorMessage(`Failed to open file: ${item.resourceUri.fsPath}. Please check if the file exists and try again.`);
+			}
+		}
+	}
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.removeSpecificTab', async (item: any) => {
+			if (item.contextValue !== 'tab') {
+				return;
+			}
+
+			treeDataProvider.removeFromGroup(item.groupId, item.resourceUri?.path);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.addCurrentTabToGroup', async (group: Group) => {
+			const activeEditor = vscode.window.activeTextEditor;
+			if (!activeEditor) {
+				vscode.window.showWarningMessage('No current tab to add to Tab Group or current tab is a non-source code file.');
+				return;
+			}
+
+			const filePath = activeEditor.document.fileName;
+			if (group.id) {
+				treeDataProvider.addToGroup(group.id, filePath);
+			}
+		})
+	);
+
 }
 
 export function deactivate() {
