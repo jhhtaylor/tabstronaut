@@ -211,6 +211,22 @@ export function activate(context: vscode.ExtensionContext) {
 			treeDataProvider.removeFromGroup(item.groupId, item.resourceUri?.path);
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.addCurrentTabToGroup', async (group: Group) => {
+			const activeEditor = vscode.window.activeTextEditor;
+			if (!activeEditor) {
+				vscode.window.showWarningMessage('No current tab to add to Tab Group.');
+				return;
+			}
+
+			const filePath = activeEditor.document.fileName;
+			if (group.id) {
+				treeDataProvider.addToGroup(group.id, filePath);
+			}
+		})
+	);
+
 }
 
 export function deactivate() {

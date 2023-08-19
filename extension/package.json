@@ -75,6 +75,12 @@
         "category": "Tabstronaut",
         "title": "Remove Tab from Tab Group",
         "icon": "$(trash)"
+      },
+      {
+        "command": "tabstronaut.addCurrentTabToGroup",
+        "category": "Tabstronaut",
+        "title": "Add current tab to Tab Group",
+        "icon": "$(plus)"
       }
     ],
     "views": {
@@ -97,19 +103,24 @@
       ],
       "view/item/context": [
         {
-          "command": "tabstronaut.openAllTabsInGroup",
+          "command": "tabstronaut.addCurrentTabToGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@0"
         },
         {
-          "command": "tabstronaut.renameTabGroup",
+          "command": "tabstronaut.openAllTabsInGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@1"
         },
         {
-          "command": "tabstronaut.removeTabGroup",
+          "command": "tabstronaut.renameTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
+        },
+        {
+          "command": "tabstronaut.removeTabGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline@3"
         },
         {
           "command": "tabstronaut.openSpecificTab",
