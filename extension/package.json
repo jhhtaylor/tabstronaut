@@ -53,9 +53,9 @@
         "icon": "$(debug-continue-small)"
       },
       {
-        "command": "tabstronaut.renameTabGroup",
+        "command": "tabstronaut.editTabGroup",
         "category": "Tabstronaut",
-        "title": "Rename Tab Group...",
+        "title": "Edit Tab Group...",
         "icon": "$(pencil)"
       },
       {
@@ -119,7 +119,7 @@
           "group": "inline@1"
         },
         {
-          "command": "tabstronaut.renameTabGroup",
+          "command": "tabstronaut.editTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
         },
