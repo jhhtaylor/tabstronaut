@@ -61,3 +61,23 @@ export function normalizePath(p: string): string {
     let normalizedPath = p.replace(/\\/g, '/');
     return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
 }
+
+const COLORS = [
+    "charts.red", "charts.orange", "charts.yellow", "charts.green",
+    "charts.blue", "charts.purple", "charts.pink", "charts.brown",
+    "terminal.ansiBrightBlue", "terminal.ansiBrightCyan",
+    "terminal.ansiBrightGreen", "terminal.ansiBrightMagenta",
+    "terminal.ansiBrightRed", "terminal.ansiBrightYellow",
+    "terminal.ansiCyan", "terminal.ansiGreen", "terminal.ansiMagenta",
+    "terminal.ansiRed", "terminal.ansiYellow", "terminal.ansiBlue"
+];
+
+export function getColorById(id: string): vscode.ThemeColor {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = (hash << 5) - hash + id.charCodeAt(i);
+        hash |= 0; // Convert to a 32-bit integer
+    }
+    const colorName = COLORS[Math.abs(hash) % COLORS.length];
+    return new vscode.ThemeColor(colorName);
+}

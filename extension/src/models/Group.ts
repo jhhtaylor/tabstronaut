@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { toRelativeTime, getRelativeDescription } from '../utils';
+import { toRelativeTime, getRelativeDescription, getColorById } from '../utils';
 
 export class Group extends vscode.TreeItem {
     items: vscode.TreeItem[] = [];
@@ -13,6 +13,7 @@ export class Group extends vscode.TreeItem {
         this.id = id || '';
         this.creationTime = creationTime || new Date();
         this.description = toRelativeTime(this.creationTime);
+        this.iconPath = new vscode.ThemeIcon('circle-filled', getColorById(this.id));
     }
 
     addItem(filePath: string) {
