@@ -155,7 +155,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const newName = await getNewGroupName(group);
 		if (newName === undefined) return;
 
-		const selectedColorOption = await selectColorOption();
+		const selectedColorOption = await selectColorOption(group.colorName);
 		if (selectedColorOption) {
 			treeDataProvider.renameGroup(group.id, newName, selectedColorOption.colorValue);
 		}
@@ -170,17 +170,19 @@ export function activate(context: vscode.ExtensionContext) {
 			valueSelection: [0, currentLabel.length]
 		});
 
-		if (!newName || newName.trim() === '') {
+		if (newName === undefined) return undefined;
+		if (newName.trim() === '') {
 			vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
 			return undefined;
 		}
+
 		return newName;
 	};
 
-	const selectColorOption = async () => {
+	const selectColorOption = async (currentColorName: string) => {
 		const colorOptions = COLORS.map((color, index) => ({
 			label: COLOR_LABELS[index] || color,
-			description: '',
+			description: currentColorName === color ? '●' : '',
 			colorValue: color,
 			color: new vscode.ThemeColor(color)
 		}));
@@ -191,7 +193,7 @@ export function activate(context: vscode.ExtensionContext) {
 	};
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.renameTabGroup', renameTabGroupCommand)
+		vscode.commands.registerCommand('tabstronaut.editTabGroup', renameTabGroupCommand)
 	);
 
 	context.subscriptions.push(
