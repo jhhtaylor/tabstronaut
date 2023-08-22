@@ -13,7 +13,7 @@ export class Group extends vscode.TreeItem {
         this.id = id || '';
         this.creationTime = creationTime || new Date();
         this.description = toRelativeTime(this.creationTime);
-        this.iconPath = new vscode.ThemeIcon('circle-filled', getColorById(this.id));
+        this.iconPath = new vscode.ThemeIcon('circle-large-filled', getColorById(this.id));
     }
 
     addItem(filePath: string) {

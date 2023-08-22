@@ -110,10 +110,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
-    async renameGroup(groupId: string, newName: string): Promise<void> {
+    async renameGroup(groupId: string, newName: string, newColor: vscode.ThemeColor): Promise<void> {
         const group = this.groupsMap.get(groupId);
         if (group) {
             group.label = newName;
+            group.iconPath = new vscode.ThemeIcon('circle-large-filled', newColor); // Apply the new color here
             await this.updateWorkspaceState();
             this._onDidChangeTreeData.fire();
         }

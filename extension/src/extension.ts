@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
+import { COLORS, COLOR_LABELS } from './utils';
 
 let treeDataProvider: TabstronautDataProvider;
 let treeView: vscode.TreeView<vscode.TreeItem>;
@@ -167,7 +168,21 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
 				return;
 			}
-			treeDataProvider.renameGroup(group.id, newName);
+			const colorOptions = COLORS.map((color, index) => ({
+				label: COLOR_LABELS[index] || color, // Using COLOR_LABELS to provide a user-friendly name
+				description: '',
+				color: new vscode.ThemeColor(color)
+			}));
+
+			const selectedColorOption = await vscode.window.showQuickPick(colorOptions, {
+				placeHolder: 'Choose a color for the group'
+			});
+
+			if (!selectedColorOption) {
+				return;
+			}
+
+			treeDataProvider.renameGroup(group.id, newName, selectedColorOption.color);
 		})
 	);
 

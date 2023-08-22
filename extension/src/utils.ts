@@ -62,14 +62,22 @@ export function normalizePath(p: string): string {
     return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
 }
 
-const COLORS = [
-    "charts.red", "charts.orange", "charts.yellow", "charts.green",
-    "charts.blue", "charts.purple", "charts.pink", "charts.brown",
-    "terminal.ansiBrightBlue", "terminal.ansiBrightCyan",
-    "terminal.ansiBrightGreen", "terminal.ansiBrightMagenta",
-    "terminal.ansiBrightRed", "terminal.ansiBrightYellow",
-    "terminal.ansiCyan", "terminal.ansiGreen", "terminal.ansiMagenta",
-    "terminal.ansiRed", "terminal.ansiYellow", "terminal.ansiBlue"
+export const COLORS = [
+    "terminal.ansiRed",
+    "terminal.ansiYellow",
+    "terminal.ansiMagenta",
+    "terminal.ansiBlue",
+    "terminal.ansiCyan",
+    "terminal.ansiGreen",
+];
+
+export const COLOR_LABELS = [
+    "Red",
+    "Yellow",
+    "Magenta",
+    "Blue",
+    "Cyan",
+    "Green",
 ];
 
 export function getColorById(id: string): vscode.ThemeColor {
