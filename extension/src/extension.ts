@@ -145,45 +145,53 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	const renameTabGroupCommand = async (item: any) => {
+		if (item.contextValue !== 'group' || typeof item.label !== 'string') {
+			return;
+		}
+
+		const group: Group = item;
+
+		const newName = await getNewGroupName(group);
+		if (newName === undefined) return;
+
+		const selectedColorOption = await selectColorOption();
+		if (selectedColorOption) {
+			treeDataProvider.renameGroup(group.id, newName, selectedColorOption.colorValue);
+		}
+	};
+
+	const getNewGroupName = async (group: Group): Promise<string | undefined> => {
+		const currentLabel = typeof group.label === 'string' ? group.label : group.label?.label || '';
+
+		const newName = await vscode.window.showInputBox({
+			placeHolder: 'Enter a new Tab Group name',
+			value: currentLabel,
+			valueSelection: [0, currentLabel.length]
+		});
+
+		if (!newName || newName.trim() === '') {
+			vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
+			return undefined;
+		}
+		return newName;
+	};
+
+	const selectColorOption = async () => {
+		const colorOptions = COLORS.map((color, index) => ({
+			label: COLOR_LABELS[index] || color,
+			description: '',
+			colorValue: color,
+			color: new vscode.ThemeColor(color)
+		}));
+
+		return await vscode.window.showQuickPick(colorOptions, {
+			placeHolder: 'Select a new color for the Tab Group'
+		});
+	};
+
 	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.renameTabGroup', async (item: any) => {
-			if (item.contextValue !== 'group') {
-				return;
-			}
-			const group: Group = item;
-
-			if (typeof group.label !== 'string') {
-				return;
-			}
-
-			let newName: string | undefined = await vscode.window.showInputBox({
-				placeHolder: 'Enter a new Tab Group name',
-				value: group.label,
-				valueSelection: [0, group.label.length]
-			});
-			if (newName === undefined) {
-				return;
-			}
-			if (!newName || newName.trim() === '') {
-				vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
-				return;
-			}
-			const colorOptions = COLORS.map((color, index) => ({
-				label: COLOR_LABELS[index] || color, // Using COLOR_LABELS to provide a user-friendly name
-				description: '',
-				color: new vscode.ThemeColor(color)
-			}));
-
-			const selectedColorOption = await vscode.window.showQuickPick(colorOptions, {
-				placeHolder: 'Choose a color for the group'
-			});
-
-			if (!selectedColorOption) {
-				return;
-			}
-
-			treeDataProvider.renameGroup(group.id, newName, selectedColorOption.color);
-		})
+		vscode.commands.registerCommand('tabstronaut.renameTabGroup', renameTabGroupCommand)
 	);
 
 	context.subscriptions.push(

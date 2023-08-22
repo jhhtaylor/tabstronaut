@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Group } from './models/Group';
-import { toRelativeTime, normalizePath } from './utils';
+import { toRelativeTime, normalizePath, COLORS } from './utils';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -10,9 +10,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     private refreshIntervalId?: NodeJS.Timeout;
 
     constructor(private workspaceState: vscode.Memento) {
-        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime: string } }>('tabGroups', {});
+        const groupData = this.workspaceState.get<{ [id: string]: { label: string, items: string[], creationTime: string, colorName: string } }>('tabGroups', {});
         for (const id in groupData) {
-            let newGroup = new Group(groupData[id].label, id, new Date(groupData[id].creationTime));
+            let newGroup = new Group(groupData[id].label, id, new Date(groupData[id].creationTime), groupData[id].colorName);
             groupData[id].items.forEach(filePath => newGroup.addItem(filePath));
             this.groupsMap.set(id, newGroup);
         }
@@ -110,11 +110,12 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
-    async renameGroup(groupId: string, newName: string, newColor: vscode.ThemeColor): Promise<void> {
+    async renameGroup(groupId: string, newName: string, newColor: string): Promise<void> {
         const group = this.groupsMap.get(groupId);
         if (group) {
             group.label = newName;
-            group.iconPath = new vscode.ThemeIcon('circle-large-filled', newColor); // Apply the new color here
+            group.colorName = COLORS.includes(newColor) ? newColor : COLORS[0];
+            group.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(group.colorName));
             await this.updateWorkspaceState();
             this._onDidChangeTreeData.fire();
         }
@@ -149,11 +150,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async updateWorkspaceState(): Promise<void> {
-        let groupData: { [key: string]: { label: string, items: string[], creationTime: string } } = {};
+        let groupData: { [key: string]: { label: string, items: string[], creationTime: string, colorName: string } } = {};
         this.groupsMap.forEach((group, id) => {
             if (typeof group.label === 'string') {
                 let items = group.items.map(item => item.resourceUri?.path as string);
-                groupData[id] = { label: group.label, items: items, creationTime: group.creationTime.toISOString() };
+                groupData[id] = { label: group.label, items: items, creationTime: group.creationTime.toISOString(), colorName: group.colorName };
             } else {
                 vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
             }
