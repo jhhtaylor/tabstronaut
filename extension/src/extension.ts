@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
-			placeHolder: 'Enter a new Tab Group name',
+			placeHolder: 'Enter a new Tab Group name. Use no input for default name.',
 			prompt: prompt,
 		});
 
@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (newGroupName === undefined) {
 			return;
 		}
-		
+
 		const selectedColorOption = await selectColorOption(DEFAULT_COLOR);
 		if (!selectedColorOption) {
 			return;
@@ -204,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}));
 
 		return await vscode.window.showQuickPick(colorOptions, {
-			placeHolder: 'Select a new color for the Tab Group'
+			placeHolder: 'Select a new color for the Tab Group. Use no input for default color.'
 		});
 	};
 
