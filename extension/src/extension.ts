@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
-import { COLORS, COLOR_LABELS } from './utils';
+import { DEFAULT_COLOR, COLORS, COLOR_LABELS } from './utils';
 
 let treeDataProvider: TabstronautDataProvider;
 let treeView: vscode.TreeView<vscode.TreeItem>;
@@ -61,7 +61,14 @@ export function activate(context: vscode.ExtensionContext) {
 					if (newGroupName === undefined) {
 						return;
 					}
-					const groupId = await treeDataProvider.addGroup(newGroupName);
+
+					const selectedColorOption = await selectColorOption(DEFAULT_COLOR);
+					if (!selectedColorOption) {
+						return;
+					}
+					const groupColor = selectedColorOption?.colorValue || DEFAULT_COLOR;
+
+					const groupId = await treeDataProvider.addGroup(newGroupName, groupColor);
 					if (!groupId) {
 						vscode.window.showErrorMessage(`Failed to create Tab Group with name: ${newGroupName}.`);
 						return;
