@@ -32,60 +32,69 @@ export function activate(context: vscode.ExtensionContext) {
 
 	type CustomQuickPickItem = vscode.QuickPickItem & { id?: string };
 
+	async function selectTabGroup(): Promise<CustomQuickPickItem | undefined> {
+		let options: CustomQuickPickItem[] = [
+			{ label: 'New Tab Group from current tab...' },
+			{ label: 'New Tab Group from all tabs...' },
+			{ label: '', kind: vscode.QuickPickItemKind.Separator }
+		];
+		options.push(...treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id })));
+		return await vscode.window.showQuickPick(options, { placeHolder: 'Select a Tab Group' });
+	}
+
+	async function handleNewGroupCreation(groupLabel: string, filePath: string): Promise<void> {
+		let newGroupName: string | undefined;
+		if (groupLabel === 'New Tab Group from current tab...') {
+			newGroupName = await getGroupName();
+		} else if (groupLabel === 'New Tab Group from all tabs...') {
+			newGroupName = await getGroupNameForAllToNewGroup();
+		}
+		if (newGroupName === undefined) {
+			return;
+		}
+		
+		const selectedColorOption = await selectColorOption(DEFAULT_COLOR);
+		if (!selectedColorOption) {
+			return;
+		}
+		const groupColor = selectedColorOption?.colorValue || DEFAULT_COLOR;
+
+		const groupId = await treeDataProvider.addGroup(newGroupName, groupColor);
+		if (!groupId) {
+			vscode.window.showErrorMessage(`Failed to create Tab Group with name: ${newGroupName}.`);
+			return;
+		}
+
+		if (groupLabel === 'New Tab Group from current tab...') {
+			treeDataProvider.addToGroup(groupId, filePath);
+		} else if (groupLabel === 'New Tab Group from all tabs...') {
+			vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
+		}
+	}
+
+	async function handleAddToExistingGroup(groupId: string, filePath: string): Promise<void> {
+		treeDataProvider.addToGroup(groupId, filePath);
+	}
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
 			const activeEditor = vscode.window.activeTextEditor;
-			if (activeEditor) {
-				const filePath = activeEditor.document.fileName;
-
-				let group: CustomQuickPickItem | undefined;
-				let options: CustomQuickPickItem[] = [
-					{ label: 'New Tab Group from current tab...' },
-					{ label: 'New Tab Group from all tabs...' },
-					{ label: '', kind: vscode.QuickPickItemKind.Separator }
-				];
-				options.push(...treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id })));
-				group = await vscode.window.showQuickPick(options, { placeHolder: 'Select a Tab Group' });
-				if (!group) {
-					return;
-				}
-
-				if (group.label === 'New Tab Group from current tab...' || group.label === 'New Tab Group from all tabs...') {
-					let newGroupName: string | undefined;
-					if (group.label === 'New Tab Group from current tab...') {
-						newGroupName = await getGroupName();
-					} else if (group.label === 'New Tab Group from all tabs...') {
-						newGroupName = await getGroupNameForAllToNewGroup();
-					}
-
-					if (newGroupName === undefined) {
-						return;
-					}
-
-					const selectedColorOption = await selectColorOption(DEFAULT_COLOR);
-					if (!selectedColorOption) {
-						return;
-					}
-					const groupColor = selectedColorOption?.colorValue || DEFAULT_COLOR;
-
-					const groupId = await treeDataProvider.addGroup(newGroupName, groupColor);
-					if (!groupId) {
-						vscode.window.showErrorMessage(`Failed to create Tab Group with name: ${newGroupName}.`);
-						return;
-					}
-
-					if (group.label === 'New Tab Group from current tab...') {
-						treeDataProvider.addToGroup(groupId, filePath);
-					} else if (group.label === 'New Tab Group from all tabs...') {
-						vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-					}
-				} else {
-					if (group.id) {
-						treeDataProvider.addToGroup(group.id, filePath);
-					}
-				}
-			} else {
+			if (!activeEditor) {
 				vscode.window.showWarningMessage('To create a Tab Group, please ensure that at least one source code file tab is active and close all non-source code file tabs.');
+				return;
+			}
+
+			const filePath = activeEditor.document.fileName;
+			const selectedGroup = await selectTabGroup();
+
+			if (!selectedGroup) {
+				return;
+			}
+
+			if (selectedGroup.label === 'New Tab Group from current tab...' || selectedGroup.label === 'New Tab Group from all tabs...') {
+				await handleNewGroupCreation(selectedGroup.label, filePath);
+			} else if (selectedGroup.id) {
+				await handleAddToExistingGroup(selectedGroup.id, filePath);
 			}
 		})
 	);
