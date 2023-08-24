@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { toRelativeTime, getRelativeDescription, getColorHash, COLORS } from '../utils';
+import { getRelativeTime, getRelativeDescription, getColorHash, COLORS } from '../utils';
 
 export class Group extends vscode.TreeItem {
     items: vscode.TreeItem[] = [];
@@ -13,7 +13,7 @@ export class Group extends vscode.TreeItem {
         this.contextValue = 'group';
         this.id = id;
         this.creationTime = creationTime;
-        this.description = toRelativeTime(this.creationTime);
+        this.description = getRelativeTime(this.creationTime);
         this.colorName = colorName || COLORS[Math.abs(getColorHash(this.id)) % COLORS.length];
         this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(this.colorName));
     }

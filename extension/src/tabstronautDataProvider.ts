@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Group } from './models/Group';
-import { uuidv4, toRelativeTime, normalizePath, COLORS } from './utils';
+import { getUuidv4, getRelativeTime, getNormalizedPath, COLORS } from './utils';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -22,7 +22,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     private refreshCreationTimes(): void {
         this.groupsMap.forEach(group => {
-            group.description = toRelativeTime(group.creationTime);
+            group.description = getRelativeTime(group.creationTime);
         });
         this.refresh();
     }
@@ -48,7 +48,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async addGroup(label: string, colorName?: string): Promise<string | undefined> {
-        const newGroup = new Group(label, uuidv4(), new Date(), colorName);
+        const newGroup = new Group(label, getUuidv4(), new Date(), colorName);
 
         const newGroupsMap = new Map<string, Group>();
         newGroupsMap.set(newGroup.id, newGroup);
@@ -87,9 +87,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const group = this.groupsMap.get(groupId);
         if (!group) return;
 
-        const normalizedFilePath = normalizePath(filePath);
+        const normalizedFilePath = getNormalizedPath(filePath);
 
-        if (group.items.some(item => normalizePath(item.resourceUri?.path || '') === normalizedFilePath)) {
+        if (group.items.some(item => getNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath)) {
             vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
             return;
         }

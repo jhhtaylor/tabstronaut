@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-export function uuidv4() {
+export function getUuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
 
-export function toRelativeTime(date: Date): string {
+export function getRelativeTime(date: Date): string {
     if (!(date instanceof Date) || isNaN(date.getTime())) {
         return "";
     }
@@ -64,7 +64,7 @@ export function getRelativeDescription(filePath: string): string {
     return getTrimmedDirectoryPath(relativePath);
 }
 
-export function normalizePath(p: string): string {
+export function getNormalizedPath(p: string): string {
     let normalizedPath = p.replace(/\\/g, '/');
     return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
 }
