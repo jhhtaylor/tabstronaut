@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Group } from './models/Group';
-import { toRelativeTime, normalizePath, COLORS } from './utils';
+import { uuidv4, toRelativeTime, normalizePath, COLORS } from './utils';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -48,7 +48,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async addGroup(label: string, colorName?: string): Promise<string | undefined> {
-        const newGroup = new Group(label, this.uuidv4(), new Date(), colorName);
+        const newGroup = new Group(label, uuidv4(), new Date(), colorName);
 
         const newGroupsMap = new Map<string, Group>();
         newGroupsMap.set(newGroup.id, newGroup);
@@ -62,13 +62,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
         return newGroup.id;
-    }
-
-    uuidv4() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
     }
 
     getGroup(groupName: string): Group | undefined {
