@@ -69,10 +69,8 @@ export function generateNormalizedPath(p: string): string {
     return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
 }
 
-export const DEFAULT_COLOR = "terminal.ansiRed";
-
 export const COLORS = [
-    DEFAULT_COLOR,
+    "terminal.ansiRed",
     "terminal.ansiYellow",
     "terminal.ansiMagenta",
     "terminal.ansiBlue",

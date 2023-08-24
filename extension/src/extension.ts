@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
-import { DEFAULT_COLOR, COLORS, COLOR_LABELS } from './utils';
+import { COLORS, COLOR_LABELS } from './utils';
 
 let treeDataProvider: TabstronautDataProvider;
 let treeView: vscode.TreeView<vscode.TreeItem>;
