@@ -87,6 +87,11 @@
         "category": "Tabstronaut",
         "title": "Add current tab to Tab Group",
         "icon": "$(plus)"
+      },
+      {
+        "command": "tabstronaut.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)"
       }
     ],
     "views": {
@@ -105,6 +110,11 @@
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut",
           "group": "navigation@0"
+        },
+        {
+          "command": "tabstronaut.collapseAll",
+          "when": "view == tabstronaut",
+          "group": "navigation@1"
         }
       ],
       "view/item/context": [

@@ -307,6 +307,9 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.collapseAll', () => vscode.commands.executeCommand('list.collapseAll'))
+	);
 }
 
 export function deactivate() {
