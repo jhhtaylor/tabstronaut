@@ -30,7 +30,7 @@ You can move the Tabstronaut extension to many parts of the VS Code UI, such as 
 
 ![Close all tabs](extension/media/tabstronaut-demo-4.gif)
 
-You can close all tabs by right-clicking any tab and clicking 'Close All' or pressing `Ctrl+K W`
+You can close all tabs by right-clicking any tab and clicking 'Close All' or pressing `Ctrl+K W`.
 
 ## Requirements
 
