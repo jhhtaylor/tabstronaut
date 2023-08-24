@@ -11,7 +11,7 @@ The Tabstronaut extension is a convenient tool that helps manage your workspace 
 
 ## Features
 
-![Tabstronaut in action](extension/media/tabstronaut-demo.gif)
+![Tabstronaut in action](extension/media/tabstronaut-demo-3.gif)
 
 The Tabstronaut extension has the following features:
 
@@ -20,6 +20,12 @@ The Tabstronaut extension has the following features:
 - Ability to open all tabs in a group.
 - Renaming of groups.
 - Deletion of groups.
+
+## Tips
+
+![customize Tabstronaut's location](extension/media/tabstronaut-demo-2.gif)
+
+You can move the Tabstronaut extension to many parts of the VS Code UI, such as the Sidebars and Panel.
 
 ## Requirements
 
