@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { getRelativeTime, getRelativeDescription, getColorHash, COLORS } from '../utils';
+import { generateRelativeTime, generateRelativeDescription, generateColorHash, COLORS } from '../utils';
 
 export class Group extends vscode.TreeItem {
     items: vscode.TreeItem[] = [];
@@ -13,14 +13,14 @@ export class Group extends vscode.TreeItem {
         this.contextValue = 'group';
         this.id = id;
         this.creationTime = creationTime;
-        this.description = getRelativeTime(this.creationTime);
-        this.colorName = colorName || COLORS[Math.abs(getColorHash(this.id)) % COLORS.length];
+        this.description = generateRelativeTime(this.creationTime);
+        this.colorName = colorName || COLORS[Math.abs(generateColorHash(this.id)) % COLORS.length];
         this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(this.colorName));
     }
 
     private createTabItem(filePath: string): TabItem {
         const baseName = path.basename(filePath);
-        const relativePath = getRelativeDescription(filePath);
+        const relativePath = generateRelativeDescription(filePath);
         const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);
         item.resourceUri = vscode.Uri.file(filePath);
         item.description = relativePath;

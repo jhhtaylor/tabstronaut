@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-export function getUuidv4() {
+export function generateUuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
 
-export function getRelativeTime(date: Date): string {
+export function generateRelativeTime(date: Date): string {
     if (!(date instanceof Date) || isNaN(date.getTime())) {
         return "";
     }
@@ -41,7 +41,7 @@ export function getRelativeTime(date: Date): string {
     return "just now";
 }
 
-export function getTrimmedDirectoryPath(filePath: string): string {
+export function generateTrimmedDirectoryPath(filePath: string): string {
     const segments = filePath.split('/');
     if (segments.length > 0) {
         segments.shift();
@@ -54,17 +54,17 @@ export function getTrimmedDirectoryPath(filePath: string): string {
     return modifiedPath;
 }
 
-export function getRelativeDescription(filePath: string): string {
+export function generateRelativeDescription(filePath: string): string {
     let relativePath = vscode.workspace.asRelativePath(filePath, true);
 
     if (path.isAbsolute(relativePath)) {
         return '.. (External)';
     }
 
-    return getTrimmedDirectoryPath(relativePath);
+    return generateTrimmedDirectoryPath(relativePath);
 }
 
-export function getNormalizedPath(p: string): string {
+export function generateNormalizedPath(p: string): string {
     let normalizedPath = p.replace(/\\/g, '/');
     return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
 }
@@ -89,7 +89,7 @@ export const COLOR_LABELS = [
     "Green",
 ];
 
-export function getColorHash(id: string): number {
+export function generateColorHash(id: string): number {
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
         hash = (hash << 5) - hash + id.charCodeAt(i);

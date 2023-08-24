@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Group } from './models/Group';
-import { getUuidv4, getRelativeTime, getNormalizedPath, COLORS } from './utils';
+import { generateUuidv4, generateRelativeTime, generateNormalizedPath, COLORS } from './utils';
 
 export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
@@ -22,7 +22,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     private refreshCreationTimes(): void {
         this.groupsMap.forEach(group => {
-            group.description = getRelativeTime(group.creationTime);
+            group.description = generateRelativeTime(group.creationTime);
         });
         this.refresh();
     }
@@ -48,7 +48,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     async addGroup(label: string, colorName?: string): Promise<string | undefined> {
-        const newGroup = new Group(label, getUuidv4(), new Date(), colorName);
+        const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
 
         const newGroupsMap = new Map<string, Group>();
         newGroupsMap.set(newGroup.id, newGroup);
@@ -87,9 +87,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const group = this.groupsMap.get(groupId);
         if (!group) return;
 
-        const normalizedFilePath = getNormalizedPath(filePath);
+        const normalizedFilePath = generateNormalizedPath(filePath);
 
-        if (group.items.some(item => getNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath)) {
+        if (group.items.some(item => generateNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath)) {
             vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
             return;
         }
