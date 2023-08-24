@@ -46,7 +46,7 @@ There are no known issues at the moment. If you encounter a bug, please open an 
 
 ## Release Notes
 
-For a detailed list of all updates in bullet point format, see our [Changelog](extension/CHANGELOG.md).
+For a detailed list of all updates in bullet point format, see our [Change Log](extension/CHANGELOG.md).
 
 ---
 
