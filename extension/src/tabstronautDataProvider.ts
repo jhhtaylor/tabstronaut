@@ -38,12 +38,23 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return element;
     }
 
+    private createInstructionItem(): vscode.TreeItem {
+        const instructionItem = new vscode.TreeItem('Click the \'+\' icon to create a new Tab Group');
+        instructionItem.contextValue = 'instruction';
+        instructionItem.iconPath = new vscode.ThemeIcon('info');
+        return instructionItem;
+    }
+
     getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
         if (element instanceof Group) {
             return Promise.resolve(element.items);
         }
 
         const groups = Array.from(this.groupsMap.values());
+        if (groups.length === 0) {
+            return Promise.resolve([this.createInstructionItem()]);
+        }
+
         return Promise.resolve(groups);
     }
 
