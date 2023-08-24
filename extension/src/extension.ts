@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
-			placeHolder: 'Enter a new Tab Group name. Use no input for default name.',
+			placeHolder: 'Enter a Tab Group name. Press \'Enter\' without typing to use the default.',
 			prompt: prompt,
 		});
 
@@ -60,7 +60,6 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		// Determine the default color based on the current number of groups modulo the number of COLORS
 		const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
 
 		const selectedColorOption = await selectColorOption(defaultColor) as ColorOption | undefined;
@@ -213,19 +212,17 @@ export function activate(context: vscode.ExtensionContext) {
 			color: new vscode.ThemeColor(color)
 		}));
 
-		// Find the default color option without removing it from the array
 		const defaultColorOptionIndex = colorOptions.findIndex(option => option.colorValue === currentColorName);
 		const defaultColorOption = colorOptions[defaultColorOptionIndex];
 
-		// Construct a new array with a copy of the default color first, a separator, and then all colors (including the default)
 		const reorderedOptions = [
-			{ ...defaultColorOption },  // Clone the default color option
+			{ ...defaultColorOption, description: '' },
 			{ label: '', kind: vscode.QuickPickItemKind.Separator },
 			...colorOptions
 		];
 
 		return await vscode.window.showQuickPick(reorderedOptions, {
-			placeHolder: 'Select a new color for the Tab Group. Use no input for default color.'
+			placeHolder: 'Choose a Tab Group color. Press \'Enter\' without changing to use the default.'
 		});
 	};
 
