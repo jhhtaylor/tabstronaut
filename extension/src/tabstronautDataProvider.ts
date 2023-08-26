@@ -46,7 +46,6 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
-        const showPaths = vscode.workspace.getConfiguration().get('tabstronaut.addPaths');
         if (element instanceof Group) {
             return Promise.resolve(element.items);
         }
