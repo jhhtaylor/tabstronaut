@@ -4,7 +4,6 @@ import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS } from './utils';
 
 let treeDataProvider: TabstronautDataProvider;
-let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function activate(context: vscode.ExtensionContext) {
 	const treeDataProvider = new TabstronautDataProvider(context.workspaceState);
