@@ -310,6 +310,13 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.collapseAll', () => vscode.commands.executeCommand('list.collapseAll'))
 	);
+
+	vscode.workspace.onDidChangeConfiguration(e => {
+		if (e.affectsConfiguration('tabstronaut.addPaths')) {
+			treeDataProvider.rebuildAndRefresh();
+			vscode.window.showInformationMessage('Tabstronaut paths setting updated. Tab Groups refreshed.');
+		}
+	});
 }
 
 export function deactivate() {

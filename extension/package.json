@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.1.10",
+  "version": "1.1.11",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -149,6 +149,16 @@
           "group": "inline@1"
         }
       ]
+    },
+    "configuration": {
+      "title": "Tabstronaut",
+      "properties": {
+        "tabstronaut.addPaths": {
+          "type": "boolean",
+          "default": true,
+          "description": "Display file paths as tab descriptions."
+        }
+      }
     }
   },
   "scripts": {

@@ -23,7 +23,8 @@ export class Group extends vscode.TreeItem {
         const relativePath = generateRelativeDescription(filePath);
         const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);
         item.resourceUri = vscode.Uri.file(filePath);
-        item.description = relativePath;
+        const ADD_PATHS_SETTING: boolean = vscode.workspace.getConfiguration('tabstronaut').get('addPaths', true);
+        item.description = ADD_PATHS_SETTING ? relativePath : '';
         item.id = this.id + filePath;
         item.contextValue = 'tab';
         item.groupId = this.id;

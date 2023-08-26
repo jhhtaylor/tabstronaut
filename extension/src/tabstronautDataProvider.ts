@@ -46,6 +46,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     getChildren(element?: Group | vscode.TreeItem): Thenable<(Group | vscode.TreeItem)[]> {
+        const showPaths = vscode.workspace.getConfiguration().get('tabstronaut.addPaths');
         if (element instanceof Group) {
             return Promise.resolve(element.items);
         }
@@ -112,6 +113,16 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
+    }
+
+    rebuildAndRefresh(): void {
+        this.groupsMap.forEach(group => {
+            const items = [...group.items];
+            group.items = [];
+            items.forEach(itemPath => group.addItem(itemPath.resourceUri?.path as string));
+        });
+
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     async renameGroup(groupId: string, newName: string, newColor: string): Promise<void> {
