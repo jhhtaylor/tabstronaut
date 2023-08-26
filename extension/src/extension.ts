@@ -7,8 +7,24 @@ let treeDataProvider: TabstronautDataProvider;
 let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function activate(context: vscode.ExtensionContext) {
-	treeDataProvider = new TabstronautDataProvider(context.workspaceState);
-	treeView = vscode.window.createTreeView('tabstronaut', { treeDataProvider });
+	const treeDataProvider = new TabstronautDataProvider(context.workspaceState);
+
+	const treeView = vscode.window.createTreeView('tabstronaut', {
+		treeDataProvider: treeDataProvider,
+		showCollapseAll: true
+	});
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.collapseAll', async () => {
+			const firstGroup = treeDataProvider.getFirstGroup();
+			if (!firstGroup) {
+				return;
+			}
+
+			await treeView.reveal(firstGroup, { select: false, focus: true, expand: false });
+			vscode.commands.executeCommand('list.collapseAll');
+		})
+	);
 
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
@@ -305,10 +321,6 @@ export function activate(context: vscode.ExtensionContext) {
 				treeDataProvider.addToGroup(group.id, filePath);
 			}
 		})
-	);
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand('tabstronaut.collapseAll', () => vscode.commands.executeCommand('list.collapseAll'))
 	);
 
 	vscode.workspace.onDidChangeConfiguration(e => {

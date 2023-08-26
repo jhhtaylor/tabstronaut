@@ -163,6 +163,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this._onDidChangeTreeData.fire();
     }
 
+    public getFirstGroup(): Group | undefined {
+        return Array.from(this.groupsMap.values())[0];
+    }
+
     async updateWorkspaceState(): Promise<void> {
         let groupData: { [key: string]: { label: string, items: string[], creationTime: string, colorName: string } } = {};
         this.groupsMap.forEach((group, id) => {
