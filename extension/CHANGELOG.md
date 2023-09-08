@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.1.12]
+
+- Renamed files are tracked in Tabs.
+
 ## [1.1.11]
 
 - Added a setting to toggle the file paths in the description of Tabs.
