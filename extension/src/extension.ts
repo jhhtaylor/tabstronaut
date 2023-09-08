@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS } from './utils';
@@ -178,7 +179,7 @@ export function activate(context: vscode.ExtensionContext) {
 						const document = await vscode.workspace.openTextDocument(filePath);
 						await vscode.window.showTextDocument(document, { preview: false });
 					} catch (error) {
-						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
+						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
 					}
 				}
 			}
@@ -292,7 +293,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const preview = !isCurrentActiveTab && fromButton;
 				await vscode.window.showTextDocument(document, { preview: preview });
 			} catch (error) {
-				vscode.window.showErrorMessage(`Failed to open file: ${item.resourceUri.fsPath}. Please check if the file exists and try again.`);
+				vscode.window.showErrorMessage(`Failed to open \'${path.basename(item.resourceUri.fsPath)}\'. Please check if the file exists and try again.`);
 			}
 		}
 	}
