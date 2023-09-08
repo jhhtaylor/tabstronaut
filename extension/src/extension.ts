@@ -328,6 +328,12 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Tabstronaut paths setting updated. Tab Groups refreshed.');
 		}
 	});
+
+	vscode.workspace.onDidRenameFiles(event => {
+		for (const file of event.files) {
+			treeDataProvider.handleFileRename(file.oldUri.fsPath, file.newUri.fsPath);
+		}
+	});
 }
 
 export function deactivate() {

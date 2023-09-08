@@ -65,7 +65,12 @@ export function generateRelativeDescription(filePath: string): string {
 }
 
 export function generateNormalizedPath(p: string): string {
-    let normalizedPath = p.replace(/\\/g, '/');
+    let normalizedPath = p.replace(/\\/g, '/').toLowerCase();
+
+    if (normalizedPath.endsWith('/')) {
+        normalizedPath = normalizedPath.slice(0, -1);
+    }
+
     return normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
 }
 

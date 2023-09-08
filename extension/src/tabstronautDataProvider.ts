@@ -180,4 +180,28 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         await this.workspaceState.update('tabGroups', groupData);
         this._onDidChangeTreeData.fire();
     }
+
+    handleFileRename(oldPath: string, newPath: string) {
+        oldPath = generateNormalizedPath(oldPath);
+        newPath = generateNormalizedPath(newPath);
+
+        this.groupsMap.forEach(group => {
+            for (let i = 0; i < group.items.length; i++) {
+                const item = group.items[i];
+                const itemPath = item.resourceUri?.path;
+
+                if (itemPath && generateNormalizedPath(itemPath) === oldPath) {
+                    item.resourceUri = vscode.Uri.file(newPath);
+
+                    item.label = path.basename(newPath);
+
+                    this.refresh();
+                    return;
+                }
+            }
+        });
+
+        this.updateWorkspaceState().catch(err => {
+        });
+    }
 }
