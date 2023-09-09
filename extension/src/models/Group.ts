@@ -38,7 +38,7 @@ export class Group extends vscode.TreeItem {
 
     addItem(filePath: string) {
         if (!filePath) {
-            vscode.window.showErrorMessage('Cannot interpret file path. You may need to delete the Tab Group and try again.');
+            vscode.window.showErrorMessage(`Can't interpret file path. You may need to delete the Tab Group and try again.`);
             return;
         }
         this.items.push(this.createTabItem(filePath));

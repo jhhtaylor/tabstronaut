@@ -191,7 +191,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
 
 			if (!group) {
-				vscode.window.showWarningMessage(`There isn't a Tab Group that matches keybinding Ctrl+Alt+${groupNumber}.`);
+				vscode.window.showWarningMessage(`There isn't a Tab Group that matches restore keybinding ${groupNumber}.`);
 				return;
 			}
 
