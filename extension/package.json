@@ -151,6 +151,14 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "tabstronaut.openTabGroupContextMenu",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t",
+        "when": "editorTextFocus"
+      }
+    ],
     "configuration": {
       "title": "Tabstronaut",
       "properties": {
