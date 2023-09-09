@@ -185,6 +185,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         oldPath = generateNormalizedPath(oldPath);
         newPath = generateNormalizedPath(newPath);
 
+        let found = false;
         this.groupsMap.forEach(group => {
             for (let i = 0; i < group.items.length; i++) {
                 const item = group.items[i];
@@ -192,16 +193,18 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
                 if (itemPath && generateNormalizedPath(itemPath) === oldPath) {
                     item.resourceUri = vscode.Uri.file(newPath);
-
                     item.label = path.basename(newPath);
+                    item.id = generateUuidv4();
 
-                    this.refresh();
-                    return;
+                    found = true;
+                    break;
                 }
             }
+
+            if (found) return;
         });
 
-        this.updateWorkspaceState().catch(err => {
-        });
+        this.updateWorkspaceState().catch(err => { });
+        this.refresh();
     }
 }
