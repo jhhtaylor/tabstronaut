@@ -207,4 +207,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this.updateWorkspaceState().catch(err => { });
         this.refresh();
     }
+
+    getGroupByOrder(order: number): Group {
+        const allGroups: Group[] = this.getGroups();
+        return allGroups[order - 1];
+    }
 }

@@ -154,9 +154,71 @@
     "keybindings": [
       {
         "command": "tabstronaut.openTabGroupContextMenu",
-        "key": "ctrl+alt+t",
-        "mac": "cmd+alt+t",
-        "when": "editorTextFocus"
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a"
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+1",
+        "args": [
+          1
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+2",
+        "args": [
+          2
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+3",
+        "args": [
+          3
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+4",
+        "args": [
+          4
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+5",
+        "args": [
+          5
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+6",
+        "args": [
+          6
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+7",
+        "args": [
+          7
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+8",
+        "args": [
+          8
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+9",
+        "args": [
+          9
+        ]
       }
     ],
     "configuration": {

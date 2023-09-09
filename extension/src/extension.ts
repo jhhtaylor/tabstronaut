@@ -186,6 +186,27 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.restoreTabsByGroupNumber', async (groupNumber: number) => {
+			const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
+			if (!group || group.contextValue !== 'group') {
+				return;
+			}
+
+			for (let i = 0; i < group.items.length; i++) {
+				const filePath = group.items[i].resourceUri?.path as string;
+				if (filePath) {
+					try {
+						const document = await vscode.workspace.openTextDocument(filePath);
+						await vscode.window.showTextDocument(document, { preview: false });
+					} catch (error) {
+						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
+					}
+				}
+			}
+		})
+	);
+
 	const renameTabGroupCommand = async (item: any) => {
 		if (item.contextValue !== 'group' || typeof item.label !== 'string') {
 			return;
