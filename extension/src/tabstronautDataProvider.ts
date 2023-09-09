@@ -210,6 +210,13 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     getGroupByOrder(order: number): Group {
         const allGroups: Group[] = this.getGroups();
-        return allGroups[order - 1];
+
+        const isDescending = vscode.workspace.getConfiguration('tabstronaut').get<boolean>('keybindingOrder', true);
+
+        if (isDescending) {
+            return allGroups[order - 1];
+        } else {
+            return allGroups[allGroups.length - order];
+        }
     }
 }

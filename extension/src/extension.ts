@@ -347,7 +347,10 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('tabstronaut.addPaths')) {
 			treeDataProvider.rebuildAndRefresh();
-			vscode.window.showInformationMessage('Tabstronaut paths setting updated. Tab Groups refreshed.');
+			vscode.window.showInformationMessage('Tabstronaut paths setting updated.');
+		}
+		if (e.affectsConfiguration('tabstronaut.keybindingOrder')) {
+			vscode.window.showInformationMessage('Tabstronaut key binding order setting updated.');
 		}
 	});
 

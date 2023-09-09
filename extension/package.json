@@ -227,7 +227,12 @@
         "tabstronaut.addPaths": {
           "type": "boolean",
           "default": true,
-          "description": "Display file paths as tab descriptions."
+          "description": "Display file paths as Tab descriptions."
+        },
+        "tabstronaut.keybindingOrder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set key bindings for restoring Tab Groups in descending order (e.g., Group 2 -> ctrl+alt+1, Group 1 -> ctrl+alt+2). If unchecked, bindings will be in ascending order."
         }
       }
     }
