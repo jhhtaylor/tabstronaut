@@ -107,6 +107,17 @@
           "group": "navigation@0"
         }
       ],
+      "editor/title/context": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu",
+          "group": "10_tabstronaut"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu"
+        }
+      ],
       "view/item/context": [
         {
           "command": "tabstronaut.addCurrentTabToGroup",
