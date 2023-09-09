@@ -189,7 +189,13 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.restoreTabsByGroupNumber', async (groupNumber: number) => {
 			const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
-			if (!group || group.contextValue !== 'group') {
+
+			if (!group) {
+				vscode.window.showWarningMessage(`There isn't a Tab Group that matches keybinding Ctrl+Alt+${groupNumber}.`);
+				return;
+			}
+
+			if (group.contextValue !== 'group') {
 				return;
 			}
 
