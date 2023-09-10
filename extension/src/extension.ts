@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS } from './utils';
@@ -10,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const treeView = vscode.window.createTreeView('tabstronaut', {
 		treeDataProvider: treeDataProvider,
-		showCollapseAll: true
+		showCollapseAll: false
 	});
 
 	context.subscriptions.push(
@@ -22,6 +23,22 @@ export function activate(context: vscode.ExtensionContext) {
 
 			await treeView.reveal(firstGroup, { select: false, focus: true, expand: false });
 			vscode.commands.executeCommand('list.collapseAll');
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.confirmCloseAllEditors', async () => {
+			const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
+
+			if (shouldConfirm) {
+				let shouldClose: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to close all open editor tabs?' });
+
+				if (!shouldClose || shouldClose === 'No') {
+					return;
+				}
+			}
+
+			vscode.commands.executeCommand('workbench.action.closeAllEditors');
 		})
 	);
 
@@ -178,7 +195,34 @@ export function activate(context: vscode.ExtensionContext) {
 						const document = await vscode.workspace.openTextDocument(filePath);
 						await vscode.window.showTextDocument(document, { preview: false });
 					} catch (error) {
-						vscode.window.showErrorMessage(`Failed to open file: ${filePath}. Please check if the file exists and try again.`);
+						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
+					}
+				}
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.restoreTabsByGroupNumber', async (groupNumber: number) => {
+			const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
+
+			if (!group) {
+				vscode.window.showWarningMessage(`There isn't a Tab Group that matches restore keybinding ${groupNumber}.`);
+				return;
+			}
+
+			if (group.contextValue !== 'group') {
+				return;
+			}
+
+			for (let i = 0; i < group.items.length; i++) {
+				const filePath = group.items[i].resourceUri?.path as string;
+				if (filePath) {
+					try {
+						const document = await vscode.workspace.openTextDocument(filePath);
+						await vscode.window.showTextDocument(document, { preview: false });
+					} catch (error) {
+						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
 					}
 				}
 			}
@@ -252,10 +296,14 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const group: Group = item;
 
-			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to remove this Tab Group?' });
+			const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
 
-			if (!shouldDelete || shouldDelete === 'No') {
-				return;
+			if (shouldConfirm) {
+				let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to remove this Tab Group?' });
+
+				if (!shouldDelete || shouldDelete === 'No') {
+					return;
+				}
 			}
 
 			treeDataProvider.deleteGroup(group.id);
@@ -292,7 +340,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const preview = !isCurrentActiveTab && fromButton;
 				await vscode.window.showTextDocument(document, { preview: preview });
 			} catch (error) {
-				vscode.window.showErrorMessage(`Failed to open file: ${item.resourceUri.fsPath}. Please check if the file exists and try again.`);
+				vscode.window.showErrorMessage(`Failed to open \'${path.basename(item.resourceUri.fsPath)}\'. Please check if the file exists and try again.`);
 			}
 		}
 	}
@@ -325,7 +373,19 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('tabstronaut.addPaths')) {
 			treeDataProvider.rebuildAndRefresh();
-			vscode.window.showInformationMessage('Tabstronaut paths setting updated. Tab Groups refreshed.');
+			vscode.window.showInformationMessage('Tabstronaut paths setting updated.');
+		}
+		if (e.affectsConfiguration('tabstronaut.keybindingOrder')) {
+			vscode.window.showInformationMessage('Tabstronaut key binding order setting updated.');
+		}
+		if (e.affectsConfiguration('tabstronaut.confirmRemoveAndClose')) {
+			vscode.window.showInformationMessage('Tabstronaut show confirmation setting updated.');
+		}
+	});
+
+	vscode.workspace.onDidRenameFiles(event => {
+		for (const file of event.files) {
+			treeDataProvider.handleFileRename(file.oldUri.fsPath, file.newUri.fsPath);
 		}
 	});
 }

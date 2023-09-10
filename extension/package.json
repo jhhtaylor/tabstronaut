@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.1.11",
+  "version": "1.1.12",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -47,6 +47,18 @@
         "icon": "$(plus)"
       },
       {
+        "command": "tabstronaut.collapseAll",
+        "category": "Tabstronaut",
+        "title": "Collapse all Tab Groups",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "tabstronaut.confirmCloseAllEditors",
+        "category": "Tabstronaut",
+        "title": "Close all open editor tabs",
+        "icon": "$(chrome-close)"
+      },
+      {
         "command": "tabstronaut.restoreAllTabsInGroup",
         "category": "Tabstronaut",
         "title": "Restore Tab Group",
@@ -61,7 +73,7 @@
       {
         "command": "tabstronaut.removeTabGroup",
         "category": "Tabstronaut",
-        "title": "Remove Tab Group...",
+        "title": "Remove Tab Group",
         "icon": "$(trash)"
       },
       {
@@ -105,6 +117,27 @@
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut",
           "group": "navigation@0"
+        },
+        {
+          "command": "tabstronaut.collapseAll",
+          "when": "view == tabstronaut",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tabstronaut.confirmCloseAllEditors",
+          "when": "view == tabstronaut",
+          "group": "navigation@2"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu",
+          "group": "10_tabstronaut"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu"
         }
       ],
       "view/item/context": [
@@ -140,13 +173,93 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "tabstronaut.openTabGroupContextMenu",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a"
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+1",
+        "args": [
+          1
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+2",
+        "args": [
+          2
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+3",
+        "args": [
+          3
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+4",
+        "args": [
+          4
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+5",
+        "args": [
+          5
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+6",
+        "args": [
+          6
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+7",
+        "args": [
+          7
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+8",
+        "args": [
+          8
+        ]
+      },
+      {
+        "command": "tabstronaut.restoreTabsByGroupNumber",
+        "key": "ctrl+alt+9",
+        "args": [
+          9
+        ]
+      }
+    ],
     "configuration": {
       "title": "Tabstronaut",
       "properties": {
         "tabstronaut.addPaths": {
           "type": "boolean",
           "default": true,
-          "description": "Display file paths as tab descriptions."
+          "description": "Display file paths as Tab descriptions."
+        },
+        "tabstronaut.keybindingOrder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set key bindings for restoring Tab Groups in descending order (e.g., Group 2 -> ctrl+alt+1, Group 1 -> ctrl+alt+2). If unchecked, bindings will be in ascending order."
+        },
+        "tabstronaut.confirmRemoveAndClose": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask for confirmation before removing Tab Groups or closing all editor tabs."
         }
       }
     }

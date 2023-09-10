@@ -18,7 +18,7 @@ export class Group extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(this.colorName));
     }
 
-    private createTabItem(filePath: string): TabItem {
+    createTabItem(filePath: string): TabItem {
         const baseName = path.basename(filePath);
         const relativePath = generateRelativeDescription(filePath);
         const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);
@@ -38,7 +38,7 @@ export class Group extends vscode.TreeItem {
 
     addItem(filePath: string) {
         if (!filePath) {
-            vscode.window.showErrorMessage('Cannot interpret file path. You may need to delete the Tab Group and try again.');
+            vscode.window.showErrorMessage(`Can't interpret file path. You may need to delete the Tab Group and try again.`);
             return;
         }
         this.items.push(this.createTabItem(filePath));

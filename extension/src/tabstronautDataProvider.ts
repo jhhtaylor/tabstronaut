@@ -58,6 +58,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return Promise.resolve(groups);
     }
 
+    getParent(element: Group): vscode.ProviderResult<Group> {
+        return null;
+    }
+
     async addGroup(label: string, colorName?: string): Promise<string | undefined> {
         const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
 
@@ -99,13 +103,33 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         if (!group) return;
 
         const normalizedFilePath = generateNormalizedPath(filePath);
+        const fileName = path.basename(filePath);
+        const newItemId = groupId + filePath;
 
-        if (group.items.some(item => generateNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath)) {
-            vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
-            return;
+        const existingItem = group.items.find(item => generateNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath);
+
+        let itemPosition: number | null = null;
+
+        if (existingItem) {
+            vscode.window.showWarningMessage(`${fileName} is already in this Tab Group.`);
+            if (existingItem.id === newItemId) {
+                return;
+            } else {
+                const existingItemIndex = group.items.findIndex(item => item.id === existingItem.id);
+                if (existingItemIndex !== -1) {
+                    itemPosition = existingItemIndex;
+                    group.items.splice(existingItemIndex, 1);
+                }
+            }
         }
 
-        group.addItem(filePath);
+        const newItem = group.createTabItem(filePath);
+        if (itemPosition !== null) {
+            group.items.splice(itemPosition, 0, newItem);
+        } else {
+            group.items.push(newItem);
+        }
+
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
     }
@@ -145,7 +169,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const group = this.groupsMap.get(groupId);
         if (!group || !filePath) return;
 
-        if (group.items.length === 1 && group.items[0].resourceUri?.path === filePath) {
+        const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
+
+        if (group.items.length === 1 && group.items[0].resourceUri?.path === filePath && shouldConfirm) {
             const shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'This is the last Tab in the Tab Group. Removing this Tab will also remove the Tab Group. Proceed?' });
 
             if (!shouldDelete || shouldDelete === 'No') {
@@ -179,5 +205,44 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         });
         await this.workspaceState.update('tabGroups', groupData);
         this._onDidChangeTreeData.fire();
+    }
+
+    handleFileRename(oldPath: string, newPath: string) {
+        oldPath = generateNormalizedPath(oldPath);
+        newPath = generateNormalizedPath(newPath);
+
+        let found = false;
+        this.groupsMap.forEach(group => {
+            for (let i = 0; i < group.items.length; i++) {
+                const item = group.items[i];
+                const itemPath = item.resourceUri?.path;
+
+                if (itemPath && generateNormalizedPath(itemPath) === oldPath) {
+                    item.resourceUri = vscode.Uri.file(newPath);
+                    item.label = path.basename(newPath);
+                    item.id = generateUuidv4();
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) return;
+        });
+
+        this.updateWorkspaceState().catch(err => { });
+        this.refresh();
+    }
+
+    getGroupByOrder(order: number): Group {
+        const allGroups: Group[] = this.getGroups();
+
+        const isDescending = vscode.workspace.getConfiguration('tabstronaut').get<boolean>('keybindingOrder', true);
+
+        if (isDescending) {
+            return allGroups[order - 1];
+        } else {
+            return allGroups[allGroups.length - order];
+        }
     }
 }
