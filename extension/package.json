@@ -55,7 +55,7 @@
       {
         "command": "tabstronaut.confirmCloseAllEditors",
         "category": "Tabstronaut",
-        "title": "Close all open editor tabs...",
+        "title": "Close all open editor tabs",
         "icon": "$(chrome-close)"
       },
       {
@@ -73,7 +73,7 @@
       {
         "command": "tabstronaut.removeTabGroup",
         "category": "Tabstronaut",
-        "title": "Remove Tab Group...",
+        "title": "Remove Tab Group",
         "icon": "$(trash)"
       },
       {
