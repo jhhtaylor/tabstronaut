@@ -149,7 +149,9 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         const group = this.groupsMap.get(groupId);
         if (!group || !filePath) return;
 
-        if (group.items.length === 1 && group.items[0].resourceUri?.path === filePath) {
+        const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
+
+        if (group.items.length === 1 && group.items[0].resourceUri?.path === filePath && shouldConfirm) {
             const shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'This is the last Tab in the Tab Group. Removing this Tab will also remove the Tab Group. Proceed?' });
 
             if (!shouldDelete || shouldDelete === 'No') {

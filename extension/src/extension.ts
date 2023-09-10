@@ -26,6 +26,23 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.confirmCloseAllEditors', async () => {
+			const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
+
+			if (shouldConfirm) {
+				let shouldClose: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to close all open editor tabs?' });
+
+				if (!shouldClose || shouldClose === 'No') {
+					return;
+				}
+			}
+
+			vscode.commands.executeCommand('workbench.action.closeAllEditors');
+		})
+	);
+
+
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
 			placeHolder: 'Enter a Tab Group name. Press \'Enter\' without typing to use the default.',
@@ -280,10 +297,14 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const group: Group = item;
 
-			let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to remove this Tab Group?' });
+			const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
 
-			if (!shouldDelete || shouldDelete === 'No') {
-				return;
+			if (shouldConfirm) {
+				let shouldDelete: string | undefined = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Are you sure you want to remove this Tab Group?' });
+
+				if (!shouldDelete || shouldDelete === 'No') {
+					return;
+				}
 			}
 
 			treeDataProvider.deleteGroup(group.id);
@@ -357,6 +378,9 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		if (e.affectsConfiguration('tabstronaut.keybindingOrder')) {
 			vscode.window.showInformationMessage('Tabstronaut key binding order setting updated.');
+		}
+		if (e.affectsConfiguration('tabstronaut.confirmRemoveAndClose')) {
+			vscode.window.showInformationMessage('Tabstronaut show confirmation setting updated.');
 		}
 	});
 

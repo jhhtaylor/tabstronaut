@@ -53,9 +53,9 @@
         "icon": "$(collapse-all)"
       },
       {
-        "command": "workbench.action.closeAllEditors",
+        "command": "tabstronaut.confirmCloseAllEditors",
         "category": "Tabstronaut",
-        "title": "Close all open editor tabs",
+        "title": "Close all open editor tabs...",
         "icon": "$(chrome-close)"
       },
       {
@@ -124,7 +124,7 @@
           "group": "navigation@1"
         },
         {
-          "command": "workbench.action.closeAllEditors",
+          "command": "tabstronaut.confirmCloseAllEditors",
           "when": "view == tabstronaut",
           "group": "navigation@2"
         }
@@ -255,6 +255,11 @@
           "type": "boolean",
           "default": true,
           "description": "Set key bindings for restoring Tab Groups in descending order (e.g., Group 2 -> ctrl+alt+1, Group 1 -> ctrl+alt+2). If unchecked, bindings will be in ascending order."
+        },
+        "tabstronaut.confirmRemoveAndClose": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask for confirmation before removing Tab Groups or closing all editor tabs."
         }
       }
     }
