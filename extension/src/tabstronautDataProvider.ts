@@ -103,13 +103,33 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         if (!group) return;
 
         const normalizedFilePath = generateNormalizedPath(filePath);
+        const fileName = path.basename(filePath);
+        const newItemId = groupId + filePath;
 
-        if (group.items.some(item => generateNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath)) {
-            vscode.window.showWarningMessage(`${path.basename(filePath)} is already in this Tab Group.`);
-            return;
+        const existingItem = group.items.find(item => generateNormalizedPath(item.resourceUri?.path || '') === normalizedFilePath);
+
+        let itemPosition: number | null = null;
+
+        if (existingItem) {
+            vscode.window.showWarningMessage(`${fileName} is already in this Tab Group.`);
+            if (existingItem.id === newItemId) {
+                return;
+            } else {
+                const existingItemIndex = group.items.findIndex(item => item.id === existingItem.id);
+                if (existingItemIndex !== -1) {
+                    itemPosition = existingItemIndex;
+                    group.items.splice(existingItemIndex, 1);
+                }
+            }
         }
 
-        group.addItem(filePath);
+        const newItem = group.createTabItem(filePath);
+        if (itemPosition !== null) {
+            group.items.splice(itemPosition, 0, newItem);
+        } else {
+            group.items.push(newItem);
+        }
+
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
     }

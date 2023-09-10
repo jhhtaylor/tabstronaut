@@ -18,7 +18,7 @@ export class Group extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(this.colorName));
     }
 
-    private createTabItem(filePath: string): TabItem {
+    createTabItem(filePath: string): TabItem {
         const baseName = path.basename(filePath);
         const relativePath = generateRelativeDescription(filePath);
         const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);

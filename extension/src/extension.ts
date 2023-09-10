@@ -42,7 +42,6 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-
 	async function getGroupName(prompt: string | undefined = undefined): Promise<string | undefined> {
 		const groupName: string | undefined = await vscode.window.showInputBox({
 			placeHolder: 'Enter a Tab Group name. Press \'Enter\' without typing to use the default.',
