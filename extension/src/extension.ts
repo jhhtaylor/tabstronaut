@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const treeView = vscode.window.createTreeView('tabstronaut', {
 		treeDataProvider: treeDataProvider,
-		showCollapseAll: true
+		showCollapseAll: false
 	});
 
 	context.subscriptions.push(

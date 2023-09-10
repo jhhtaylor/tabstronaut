@@ -58,6 +58,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         return Promise.resolve(groups);
     }
 
+    getParent(element: Group): vscode.ProviderResult<Group> {
+        return null;
+    }
+
     async addGroup(label: string, colorName?: string): Promise<string | undefined> {
         const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
 

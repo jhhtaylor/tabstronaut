@@ -47,6 +47,12 @@
         "icon": "$(plus)"
       },
       {
+        "command": "tabstronaut.collapseAll",
+        "category": "Tabstronaut",
+        "title": "Collapse all Tab Groups",
+        "icon": "$(collapse-all)"
+      },
+      {
         "command": "workbench.action.closeAllEditors",
         "category": "Tabstronaut",
         "title": "Close all open editor tabs",
@@ -113,9 +119,14 @@
           "group": "navigation@0"
         },
         {
-          "command": "workbench.action.closeAllEditors",
+          "command": "tabstronaut.collapseAll",
           "when": "view == tabstronaut",
           "group": "navigation@1"
+        },
+        {
+          "command": "workbench.action.closeAllEditors",
+          "when": "view == tabstronaut",
+          "group": "navigation@2"
         }
       ],
       "editor/title/context": [
