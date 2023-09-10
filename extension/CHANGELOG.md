@@ -2,6 +2,15 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.1.13]
+
+- Added option to open tab group context menu from keybinding, the right-click menu and the 'More Actions...' menu
+- Added keybindings to restore tab groups.
+- Added setting to change order of restore keybindings.
+- Added close all button.
+- Add settings option to remove confirmation modals.
+- Added bug fixes
+
 ## [1.1.12]
 
 - Renamed files are tracked in Tabs.

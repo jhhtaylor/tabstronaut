@@ -24,13 +24,40 @@ The Tabstronaut extension offers these enhanced features:
 
 ## Tips
 
+### Quick Access to Tabstronaut's Context Menu
+
+You can quickly access the Tabstronaut's context menu without having to right-click. Simply press **`Ctrl+Alt+A`** on Windows/Linux or **`Cmd+Alt+A`** on macOS. You can also open this menu from the title bar of the Tabstronaut view, the right-click menu or the 'More Actions...' menu.
+
+### Instantly Restore Tab Groups with Keybindings
+
+Tabstronaut now supports keybindings to swiftly restore tab groups. Here's how to make the most out of them:
+
+- **Restore the First Tab Group**: **`Ctrl+Alt+1`** (or **`Cmd+Alt+1`** on macOS)
+- **Restore the Second Tab Group**: **`Ctrl+Alt+2`** (or **`Cmd+Alt+2`** on macOS)
+- **Restore the Third Tab Group**: **`Ctrl+Alt+3`** (or **`Cmd+Alt+3`** on macOS)
+- ... and so on, up to the ninth group with **`Ctrl+Alt+9`** (or **`Cmd+Alt+9`** on macOS).
+
+### Customize Tabstronaut's location
+
 ![Customize Tabstronaut's location](extension/media/tabstronaut-demo-2.gif)
 
 You can move the Tabstronaut extension to many parts of the VS Code UI, such as the Sidebars and Panel.
 
+### Close all tabs
+
 ![Close all tabs](extension/media/tabstronaut-demo-4.gif)
 
-You can close all tabs by right-clicking any tab and clicking 'Close All' or pressing `Ctrl+K W`.
+You can close all tabs by clicking the 'close all editor tabs' button in the title bar of the Tabstronaut view, right-clicking any tab and clicking 'Close All' or pressing `Ctrl+K W`.
+
+### VS Code Settings
+
+To tailor Tabstronaut to your preferences:
+
+1. Open **VS Code Settings**: **`Ctrl+Shift+P`** ➡️ "Preferences: Open Settings (UI)".
+2. Search for "Tabstronaut".
+3. Adjust the provided settings such as "Display file paths as Tab descriptions", "Set key bindings for restoring Tab Groups", and confirmation preferences.
+
+Your changes will be saved automatically.
 
 ## Requirements
 
