@@ -117,26 +117,50 @@ export function activate(context: vscode.ExtensionContext) {
 		treeDataProvider.addToGroup(groupId, filePath);
 	}
 
+	async function handleTabGroupAction(filePath: string) {
+		const selectedGroup = await selectTabGroup();
+
+		if (!selectedGroup) {
+			return;
+		}
+
+		if (selectedGroup.label === 'New Tab Group from current tab...' || selectedGroup.label === 'New Tab Group from all tabs...') {
+			await handleNewGroupCreation(selectedGroup.label, filePath);
+		} else if (selectedGroup.id) {
+			await handleAddToExistingGroup(selectedGroup.id, filePath);
+		}
+	}
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
 			const activeEditor = vscode.window.activeTextEditor;
 			if (!activeEditor) {
-				vscode.window.showWarningMessage('To create a Tab Group, please ensure that at least one source code file tab is active and close all non-source code file tabs.');
+				vscode.window.showWarningMessage(`Can't add this selection to a Tab Group. Please ensure that at least one source code file tab is active and close all non-source code file tabs.`);
 				return;
 			}
-
 			const filePath = activeEditor.document.fileName;
-			const selectedGroup = await selectTabGroup();
+			await handleTabGroupAction(filePath);
+		})
+	);
 
-			if (!selectedGroup) {
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenuFromEditorTabRightClick', async (contextSelection: vscode.Uri) => {
+			const INVALID_TAB_MESSAGE = `Can't add this selection to a Tab Group. Please ensure you're selecting a valid source code file tab.`;
+			const filePath = contextSelection.fsPath;
+
+			try {
+				const document = await vscode.workspace.openTextDocument(contextSelection);
+
+				if (document.uri.scheme !== 'file') {
+					vscode.window.showWarningMessage(INVALID_TAB_MESSAGE);
+					return;
+				}
+			} catch (error) {
+				vscode.window.showWarningMessage(INVALID_TAB_MESSAGE);
 				return;
 			}
 
-			if (selectedGroup.label === 'New Tab Group from current tab...' || selectedGroup.label === 'New Tab Group from all tabs...') {
-				await handleNewGroupCreation(selectedGroup.label, filePath);
-			} else if (selectedGroup.id) {
-				await handleAddToExistingGroup(selectedGroup.id, filePath);
-			}
+			await handleTabGroupAction(filePath);
 		})
 	);
 

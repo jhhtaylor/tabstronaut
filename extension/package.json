@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.1.13",
+  "version": "1.1.14",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -42,6 +42,12 @@
     "commands": [
       {
         "command": "tabstronaut.openTabGroupContextMenu",
+        "category": "Tabstronaut",
+        "title": "Add to Tab Group...",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
         "category": "Tabstronaut",
         "title": "Add to Tab Group...",
         "icon": "$(plus)"
@@ -131,7 +137,7 @@
       ],
       "editor/title/context": [
         {
-          "command": "tabstronaut.openTabGroupContextMenu",
+          "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
           "group": "10_tabstronaut"
         }
       ],
