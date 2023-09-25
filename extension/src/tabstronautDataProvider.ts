@@ -208,8 +208,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     }
 
     handleFileRename(oldPath: string, newPath: string) {
-        oldPath = generateNormalizedPath(oldPath);
-        newPath = generateNormalizedPath(newPath);
+        const normalizedOldPath = generateNormalizedPath(oldPath);
 
         let found = false;
         this.groupsMap.forEach(group => {
@@ -217,7 +216,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 const item = group.items[i];
                 const itemPath = item.resourceUri?.path;
 
-                if (itemPath && generateNormalizedPath(itemPath) === oldPath) {
+                if (itemPath && generateNormalizedPath(itemPath) === normalizedOldPath) {
                     item.resourceUri = vscode.Uri.file(newPath);
                     item.label = path.basename(newPath);
                     item.id = generateUuidv4();
