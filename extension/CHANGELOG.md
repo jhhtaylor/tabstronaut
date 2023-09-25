@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.1.15]
+
+- Improved file renaming logic to maintain original case in tab titles.
+
 ## [1.1.14]
 
 - Option to open tab group context menu from right-click menu now selects the clicked tab, not the active tab.
