@@ -288,7 +288,7 @@
     "@types/node": "20.x",
     "@types/polka": "^0.5.4",
     "@types/vscode": "^1.80.0",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^5.60.1",
     "@vscode/test-electron": "^2.3.4",
     "concurrently": "^8.2.0",
