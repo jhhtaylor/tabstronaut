@@ -405,6 +405,9 @@ export function activate(context: vscode.ExtensionContext) {
 		if (e.affectsConfiguration('tabstronaut.confirmRemoveAndClose')) {
 			vscode.window.showInformationMessage('Tabstronaut show confirmation setting updated.');
 		}
+		if (e.affectsConfiguration('tabstronaut.moveGroupOnTabChange')) {
+			vscode.window.showInformationMessage('Tabstronaut move Tab Group on Tab add, edit or remove setting updated.');
+		}
 	});
 
 	vscode.workspace.onDidRenameFiles(event => {
