@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.1.16]
+
+- A Tab Group is moved to the top of the list and its timestamp is reset when a Tab is added, edited or removed.
+- Added a "More Options" button in the Tabstronaut title bar for quick access to key actions including "Get Started", "Settings", "Feedback", and "Support".
+
 ## [1.1.15]
 
 - Improved file renaming logic to maintain original case in tab titles.

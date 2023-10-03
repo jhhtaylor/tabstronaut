@@ -51,23 +51,23 @@ You can move the Tabstronaut extension to many parts of the VS Code UI, such as 
 
 You can close all tabs by clicking the 'close all editor tabs' button in the title bar of the Tabstronaut view, right-clicking any tab and clicking 'Close All' or pressing `Ctrl+K W`.
 
-### VS Code Settings
-
-To tailor Tabstronaut to your preferences:
-
-1. Open **VS Code Settings**: **`Ctrl+Shift+P`** ➡️ "Preferences: Open Settings (UI)".
-2. Search for "Tabstronaut".
-3. Adjust the provided settings such as "Display file paths as Tab descriptions", "Set key bindings for restoring Tab Groups", and confirmation preferences.
-
-Your changes will be saved automatically.
-
 ## Requirements
 
 There are no specific requirements or dependencies for this extension.
 
 ## Extension Settings
 
-The Tabstronaut extension does not currently add any new settings to VS Code.
+To tailor Tabstronaut to your preferences:
+
+1. Click the "..." (More Options...) button in the Tabstronaut title bar and click "Settings".
+
+OR
+
+1. Open **VS Code Settings**: **`Ctrl+Shift+P`** ➡️ "Preferences: Open Settings (UI)".
+2. Search for "Tabstronaut".
+3. Adjust the provided settings such as "Display file paths as Tab descriptions", "Set key bindings for restoring Tab Groups", "Move Group On Tab Change", and confirmation preferences.
+
+Your changes will be saved automatically.
 
 ## Known Issues
 
