@@ -122,7 +122,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 }
             }
         } else {
-            const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveGroupOnTabChange', true);
+            const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveTabGroupOnTabChange', true);
             if (shouldMoveGroup) {
                 this.moveGroupToTopAndUpdateTimestamp(groupId);
             }
@@ -176,7 +176,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             group.colorName = COLORS.includes(newColor) ? newColor : COLORS[0];
             group.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(group.colorName));
 
-            const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveGroupOnTabChange', true);
+            const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveTabGroupOnTabChange', true);
             if (shouldMoveGroup && (isNameChanged || isColorChanged)) {
                 this.moveGroupToTopAndUpdateTimestamp(groupId);
             }
@@ -208,7 +208,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
         group.items = group.items.filter(item => item.resourceUri?.path !== filePath);
 
-        const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveGroupOnTabChange', true);
+        const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveTabGroupOnTabChange', true);
         if (group.items.length > 0 && shouldMoveGroup) {
             this.moveGroupToTopAndUpdateTimestamp(groupId);
         } else if (group.items.length === 0) {

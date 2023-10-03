@@ -278,7 +278,7 @@
           "default": true,
           "description": "Ask for confirmation before removing Tab Groups or closing all editor tabs."
         },
-        "tabstronaut.moveGroupOnTabChange": {
+        "tabstronaut.moveTabGroupOnTabChange": {
           "type": "boolean",
           "default": true,
           "description": "Move the Tab Group to the top and reset its timestamp when a tab is added, edited or removed."
