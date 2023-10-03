@@ -105,6 +105,12 @@
         "category": "Tabstronaut",
         "title": "Add current tab to Tab Group",
         "icon": "$(plus)"
+      },
+      {
+        "command": "tabstronaut.showMoreOptions",
+        "category": "Tabstronaut",
+        "title": "More Options...",
+        "icon": "$(more)"
       }
     ],
     "views": {
@@ -133,6 +139,11 @@
           "command": "tabstronaut.confirmCloseAllEditors",
           "when": "view == tabstronaut",
           "group": "navigation@2"
+        },
+        {
+          "command": "tabstronaut.showMoreOptions",
+          "when": "view == tabstronaut",
+          "group": "navigation@3"
         }
       ],
       "editor/title/context": [
