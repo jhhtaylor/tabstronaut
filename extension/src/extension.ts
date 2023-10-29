@@ -405,11 +405,33 @@ export function activate(context: vscode.ExtensionContext) {
 		if (e.affectsConfiguration('tabstronaut.confirmRemoveAndClose')) {
 			vscode.window.showInformationMessage('Tabstronaut show confirmation setting updated.');
 		}
+		if (e.affectsConfiguration('tabstronaut.moveTabGroupOnTabChange')) {
+			vscode.window.showInformationMessage('Tabstronaut move Tab Group on Tab add, edit or remove setting updated.');
+		}
 	});
 
 	vscode.workspace.onDidRenameFiles(event => {
 		for (const file of event.files) {
 			treeDataProvider.handleFileRename(file.oldUri.fsPath, file.newUri.fsPath);
+		}
+	});
+
+	vscode.commands.registerCommand('tabstronaut.showMoreOptions', async () => {
+		const picked = await vscode.window.showQuickPick(['Get Started', 'Settings', 'Feedback', 'Support'], { placeHolder: 'Select an option' });
+
+		switch (picked) {
+			case 'Get Started':
+				await vscode.commands.executeCommand('extension.open', 'jhhtaylor.tabstronaut');
+				break;
+			case 'Settings':
+				await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:jhhtaylor.tabstronaut');
+				break;
+			case 'Feedback':
+				await vscode.env.openExternal(vscode.Uri.parse('https://github.com/jhhtaylor/tabstronaut/issues'));
+				break;
+			case 'Support':
+				await vscode.env.openExternal(vscode.Uri.parse('https://www.buymeacoffee.com/jhhtaylor'));
+				break;
 		}
 	});
 }
