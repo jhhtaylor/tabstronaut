@@ -121,6 +121,11 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                     group.items.splice(existingItemIndex, 1);
                 }
             }
+        } else {
+            const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveTabGroupOnTabChange', true);
+            if (shouldMoveGroup) {
+                this.moveGroupToTopAndUpdateTimestamp(groupId);
+            }
         }
 
         const newItem = group.createTabItem(filePath);
@@ -133,6 +138,19 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         await this.updateWorkspaceState();
         this._onDidChangeTreeData.fire();
     }
+
+    private moveGroupToTopAndUpdateTimestamp(groupId: string) {
+        const group = this.groupsMap.get(groupId);
+        if (!group) return;
+
+        this.groupsMap.delete(groupId);
+        const newGroupsMap = new Map([[groupId, group], ...this.groupsMap.entries()]);
+        this.groupsMap = newGroupsMap;
+
+        group.creationTime = new Date();
+        group.description = generateRelativeTime(group.creationTime);
+    }
+
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
@@ -151,9 +169,18 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
     async renameGroup(groupId: string, newName: string, newColor: string): Promise<void> {
         const group = this.groupsMap.get(groupId);
         if (group) {
+            const isNameChanged = group.label !== newName;
+            const isColorChanged = group.colorName !== newColor;
+
             group.label = newName;
             group.colorName = COLORS.includes(newColor) ? newColor : COLORS[0];
             group.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(group.colorName));
+
+            const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveTabGroupOnTabChange', true);
+            if (shouldMoveGroup && (isNameChanged || isColorChanged)) {
+                this.moveGroupToTopAndUpdateTimestamp(groupId);
+            }
+
             await this.updateWorkspaceState();
             this._onDidChangeTreeData.fire();
         }
@@ -181,7 +208,10 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
         group.items = group.items.filter(item => item.resourceUri?.path !== filePath);
 
-        if (group.items.length === 0) {
+        const shouldMoveGroup = vscode.workspace.getConfiguration('tabstronaut').get('moveTabGroupOnTabChange', true);
+        if (group.items.length > 0 && shouldMoveGroup) {
+            this.moveGroupToTopAndUpdateTimestamp(groupId);
+        } else if (group.items.length === 0) {
             this.groupsMap.delete(groupId);
         }
 
