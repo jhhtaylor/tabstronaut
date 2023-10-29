@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.1.17]
+
+- Updated commands to be hidden from the command palette for a cleaner user experience.
+
 ## [1.1.16]
 
 - A Tab Group is moved to the top of the list and its timestamp is reset when a Tab is added, edited or removed.

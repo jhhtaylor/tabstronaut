@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.1.16",
+  "version": "1.1.17",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -187,6 +187,56 @@
           "command": "tabstronaut.removeSpecificTab",
           "when": "view == tabstronaut && viewItem == tab",
           "group": "inline@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tabstronaut.openTabGroupContextMenu",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.collapseAll",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.confirmCloseAllEditors",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.restoreAllTabsInGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.editTabGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.removeTabGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.previewSpecificTab",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.restoreSpecificTab",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.removeSpecificTab",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.addCurrentTabToGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.showMoreOptions",
+          "when": "false"
         }
       ]
     },
