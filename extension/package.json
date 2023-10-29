@@ -352,7 +352,6 @@
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "20.x",
-    "@types/polka": "^0.5.6",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^5.60.1",
@@ -365,9 +364,5 @@
     "typescript": "^5.1.3",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
-  },
-  "dependencies": {
-    "axios": "^1.6.0",
-    "polka": "^0.5.2"
   }
 }
