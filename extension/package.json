@@ -357,7 +357,7 @@
     "@typescript-eslint/parser": "^7.8.0",
     "@vscode/test-electron": "^2.4.1",
     "concurrently": "^9.1.2",
-    "eslint": "^9.1.1",
+    "eslint": "^9.21.0",
     "glob": "^11.0.1",
     "mocha": "^10.2.0",
     "ts-loader": "^9.5.2",
