@@ -261,7 +261,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const group: Group = item;
 
 		const newName = await getNewGroupName(group);
-		if (newName === undefined) return;
+		if (newName === undefined) {return;}
 
 		const selectedColorOption = await selectColorOption(group.colorName) as ColorOption;
 		if (selectedColorOption) {
@@ -278,7 +278,7 @@ export function activate(context: vscode.ExtensionContext) {
 			valueSelection: [0, currentLabel.length]
 		});
 
-		if (newName === undefined) return undefined;
+		if (newName === undefined) {return undefined;}
 		if (newName.trim() === '') {
 			vscode.window.showErrorMessage('Invalid Tab Group name. Please try again.');
 			return undefined;
@@ -417,9 +417,22 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	vscode.commands.registerCommand('tabstronaut.showMoreOptions', async () => {
-		const picked = await vscode.window.showQuickPick(['Get Started', 'Settings', 'Feedback', 'Support'], { placeHolder: 'Select an option' });
-
+		const picked = await vscode.window.showQuickPick([
+			'Export Tab Groups',
+			'Import Tab Groups',
+			'Get Started',
+			'Settings',
+			'Feedback',
+			'Support'
+		], { placeHolder: 'Select an option' });
+	
 		switch (picked) {
+			case 'Export Tab Groups':
+				await treeDataProvider.exportGroupsToFile();
+				break;
+			case 'Import Tab Groups':
+				await treeDataProvider.importGroupsFromFile();
+				break;
 			case 'Get Started':
 				await vscode.commands.executeCommand('extension.open', 'jhhtaylor.tabstronaut');
 				break;
@@ -433,7 +446,19 @@ export function activate(context: vscode.ExtensionContext) {
 				await vscode.env.openExternal(vscode.Uri.parse('https://www.buymeacoffee.com/jhhtaylor'));
 				break;
 		}
-	});
+	});	
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.exportTabGroups', async () => {
+			await treeDataProvider.exportGroupsToFile();
+		})
+	);
+	
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.importTabGroups', async () => {
+			await treeDataProvider.importGroupsFromFile();
+		})
+	);
 }
 
 export function deactivate() {

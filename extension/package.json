@@ -111,7 +111,17 @@
         "category": "Tabstronaut",
         "title": "More Options...",
         "icon": "$(more)"
-      }
+      },
+      {
+        "command": "tabstronaut.exportTabGroups",
+        "category": "Tabstronaut",
+        "title": "Export Tab Groups to JSON"
+      },
+      {
+        "command": "tabstronaut.importTabGroups",
+        "category": "Tabstronaut",
+        "title": "Import Tab Groups from JSON"
+      }      
     ],
     "views": {
       "explorer": [
@@ -144,7 +154,7 @@
           "command": "tabstronaut.showMoreOptions",
           "when": "view == tabstronaut",
           "group": "navigation@3"
-        }
+        }   
       ],
       "editor/title/context": [
         {
@@ -237,7 +247,15 @@
         {
           "command": "tabstronaut.showMoreOptions",
           "when": "false"
-        }
+        },
+        {
+          "command": "tabstronaut.exportTabGroups",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.importTabGroups",
+          "when": "false"
+        }        
       ]
     },
     "keybindings": [

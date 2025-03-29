@@ -100,7 +100,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async addToGroup(groupId: string, filePath: string) {
         const group = this.groupsMap.get(groupId);
-        if (!group) return;
+        if (!group) {return;}
 
         const normalizedFilePath = generateNormalizedPath(filePath);
         const fileName = path.basename(filePath);
@@ -141,7 +141,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     private moveGroupToTopAndUpdateTimestamp(groupId: string) {
         const group = this.groupsMap.get(groupId);
-        if (!group) return;
+        if (!group) {return;}
 
         this.groupsMap.delete(groupId);
         const newGroupsMap = new Map([[groupId, group], ...this.groupsMap.entries()]);
@@ -194,7 +194,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
 
     async removeFromGroup(groupId: string, filePath: string): Promise<void> {
         const group = this.groupsMap.get(groupId);
-        if (!group || !filePath) return;
+        if (!group || !filePath) {return;}
 
         const shouldConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose', true);
 
@@ -256,7 +256,7 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
                 }
             }
 
-            if (found) return;
+            if (found) {return;}
         });
 
         this.updateWorkspaceState().catch(err => { });
@@ -274,4 +274,61 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             return allGroups[allGroups.length - order];
         }
     }
+
+    async exportGroupsToFile(): Promise<void> {
+        const defaultPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath 
+        || require('os').homedir();
+    
+        const uri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file(path.join(defaultPath, 'tabGroups-export.json')),
+            filters: { 'JSON Files': ['json'] },
+            saveLabel: 'Export Tab Groups'
+        });
+    
+        if (!uri) {return;}
+    
+        const groupData = this.workspaceState.get<{ [id: string]: any }>('tabGroups', {});
+        const content = JSON.stringify(groupData, null, 2);
+    
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(content, 'utf8'));
+        vscode.window.showInformationMessage('Tab Groups exported successfully!');
+    }
+    
+    async importGroupsFromFile(): Promise<void> {
+        const [uri] = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'JSON Files': ['json'] },
+            openLabel: 'Import Tab Groups'
+        }) || [];
+    
+        if (!uri) {return;}
+    
+        const contentBytes = await vscode.workspace.fs.readFile(uri);
+        const content = contentBytes.toString();
+    
+        try {
+            const importedGroups: { [id: string]: any } = JSON.parse(content);
+    
+            // Merge imported groups with existing ones (if any)
+            const currentGroups = this.workspaceState.get<{ [id: string]: any }>('tabGroups', {});
+            const mergedGroups = { ...currentGroups, ...importedGroups };
+    
+            await this.workspaceState.update('tabGroups', mergedGroups);
+            this.rebuildStateFromStorage();  // You need to implement this if you want the UI to update
+            this.refresh();
+            vscode.window.showInformationMessage('Tab Groups imported successfully!');
+        } catch (error) {
+            vscode.window.showErrorMessage('Failed to import Tab Groups. Invalid JSON format.');
+        }
+    }
+    
+    private rebuildStateFromStorage(): void {
+        this.groupsMap.clear();
+        const groupData = this.workspaceState.get<{ [id: string]: any }>('tabGroups', {});
+        for (const id in groupData) {
+            let newGroup = new Group(groupData[id].label, id, new Date(groupData[id].creationTime), groupData[id].colorName);
+            groupData[id].items.forEach((filePath: string) => newGroup.addItem(filePath));
+            this.groupsMap.set(id, newGroup);
+        }
+    }    
 }
