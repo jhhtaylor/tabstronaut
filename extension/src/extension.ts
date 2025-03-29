@@ -201,49 +201,49 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.restoreAllTabsInGroup', async (item: any) => {
-			if (item.contextValue !== 'group') {
-				return;
+		  if (item.contextValue !== 'group') {return;}
+		  const group: Group = item;
+	  
+		  const autoClose = vscode.workspace.getConfiguration('tabstronaut').get<boolean>('autoCloseOnRestore', false);
+		  if (autoClose) {
+			await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+		  }
+	  
+		  for (const tabItem of group.items) {
+			const filePath = tabItem.resourceUri?.path;
+			if (filePath) {
+			  try {
+				await openFileSmart(filePath);
+			  } catch {
+				vscode.window.showErrorMessage(`Failed to open '${path.basename(filePath)}'. Please check if the file exists and try again.`);
+			  }
 			}
-			const group: Group = item;
-
-			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].resourceUri?.path as string;
-				if (filePath) {
-					try {
-						await openFileSmart(filePath);
-					} catch (error) {
-						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
-					}
-				}
-			}
+		  }
 		})
-	);
-
-	context.subscriptions.push(
+	  );
+	  
+	  context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.restoreTabsByGroupNumber', async (groupNumber: number) => {
-			const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
-
-			if (!group) {
-				vscode.window.showWarningMessage(`There isn't a Tab Group that matches restore keybinding ${groupNumber}.`);
-				return;
+		  const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
+		  if (!group || group.contextValue !== 'group') {return;}
+	  
+		  const autoClose = vscode.workspace.getConfiguration('tabstronaut').get<boolean>('autoCloseOnRestore', false);
+		  if (autoClose) {
+			await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+		  }
+	  
+		  for (const tabItem of group.items) {
+			const filePath = tabItem.resourceUri?.path;
+			if (filePath) {
+			  try {
+				await openFileSmart(filePath);
+			  } catch {
+				vscode.window.showErrorMessage(`Failed to open '${path.basename(filePath)}'. Please check if the file exists and try again.`);
+			  }
 			}
-
-			if (group.contextValue !== 'group') {
-				return;
-			}
-
-			for (let i = 0; i < group.items.length; i++) {
-				const filePath = group.items[i].resourceUri?.path as string;
-				if (filePath) {
-					try {
-						await openFileSmart(filePath);
-					} catch (error) {
-						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
-					}
-				}
-			}
+		  }
 		})
-	);
+	  );
 
 	const renameTabGroupCommand = async (item: any) => {
 		if (item.contextValue !== 'group' || typeof item.label !== 'string') {
