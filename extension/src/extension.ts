@@ -374,21 +374,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addCurrentTabToGroup', async (group: Group) => {
-			const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
-
-			if (!activeTab?.input || typeof activeTab.input !== 'object' || !('uri' in activeTab.input)) {
-				vscode.window.showWarningMessage('No supported file tab selected to add to Tab Group.');
-				return;
-			}
-			
-			if (activeTab.input && 'uri' in activeTab.input && activeTab.input.uri instanceof vscode.Uri) {
-				const filePath = activeTab.input.uri.fsPath;
-			} else {
-				vscode.window.showWarningMessage('No valid file URI found for the selected tab.');
-				return;
-			}			
+		  const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
+	  
+		  if (!activeTab?.input || typeof activeTab.input !== 'object' || !('uri' in activeTab.input)) {
+			vscode.window.showWarningMessage('No supported file tab selected to add to Tab Group.');
+			return;
+		  }
+	  
+		  const uri = activeTab.input.uri;
+		  if (!(uri instanceof vscode.Uri)) {
+			vscode.window.showWarningMessage('No valid file URI found for the selected tab.');
+			return;
+		  }
+	  
+		  const filePath = uri.fsPath;
+		  await treeDataProvider.addToGroup(group.id, filePath);
 		})
-	);
+	  );	  
 
 	vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('tabstronaut.addPaths')) {
