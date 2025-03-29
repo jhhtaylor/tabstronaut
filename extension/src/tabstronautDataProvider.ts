@@ -309,18 +309,31 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         try {
             const importedGroups: { [id: string]: any } = JSON.parse(content);
     
-            // Merge imported groups with existing ones (if any)
+            const isValid = Object.entries(importedGroups).every(([id, group]) => {
+                return typeof id === 'string'
+                    && typeof group.label === 'string'
+                    && Array.isArray(group.items)
+                    && group.items.every((item: any) => typeof item === 'string')
+                    && typeof group.creationTime === 'string'
+                    && typeof group.colorName === 'string';
+            });
+    
+            if (!isValid) {
+                vscode.window.showErrorMessage('Invalid JSON structure. Import aborted.');
+                return;
+            }
+    
             const currentGroups = this.workspaceState.get<{ [id: string]: any }>('tabGroups', {});
             const mergedGroups = { ...currentGroups, ...importedGroups };
     
             await this.workspaceState.update('tabGroups', mergedGroups);
-            this.rebuildStateFromStorage();  // You need to implement this if you want the UI to update
+            this.rebuildStateFromStorage();
             this.refresh();
             vscode.window.showInformationMessage('Tab Groups imported successfully!');
         } catch (error) {
-            vscode.window.showErrorMessage('Failed to import Tab Groups. Invalid JSON format.');
+            vscode.window.showErrorMessage('Failed to import Tab Groups. Invalid JSON file.');
         }
-    }
+    }    
     
     private rebuildStateFromStorage(): void {
         this.groupsMap.clear();
@@ -330,5 +343,5 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
             groupData[id].items.forEach((filePath: string) => newGroup.addItem(filePath));
             this.groupsMap.set(id, newGroup);
         }
-    }    
+    }      
 }
