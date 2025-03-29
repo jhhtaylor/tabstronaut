@@ -216,8 +216,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const filePath = group.items[i].resourceUri?.path as string;
 				if (filePath) {
 					try {
-						const document = await vscode.workspace.openTextDocument(filePath);
-						await vscode.window.showTextDocument(document, { preview: false });
+						await openFileSmart(filePath);
 					} catch (error) {
 						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
 					}
@@ -243,8 +242,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const filePath = group.items[i].resourceUri?.path as string;
 				if (filePath) {
 					try {
-						const document = await vscode.workspace.openTextDocument(filePath);
-						await vscode.window.showTextDocument(document, { preview: false });
+						await openFileSmart(filePath);
 					} catch (error) {
 						vscode.window.showErrorMessage(`Failed to open \'${path.basename(filePath)}\'. Please check if the file exists and try again.`);
 					}
@@ -360,9 +358,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if (item.resourceUri) {
 			try {
-				const document = await vscode.workspace.openTextDocument(item.resourceUri);
-				const preview = !isCurrentActiveTab && fromButton;
-				await vscode.window.showTextDocument(document, { preview: preview });
+				if (item.resourceUri.fsPath.endsWith('.ipynb')) {
+					await vscode.commands.executeCommand('vscode.openWith', item.resourceUri, 'jupyter-notebook');
+				} else {
+					const document = await vscode.workspace.openTextDocument(item.resourceUri);
+					const preview = !isCurrentActiveTab && fromButton;
+					await vscode.window.showTextDocument(document, { preview });
+				}
 			} catch (error) {
 				vscode.window.showErrorMessage(`Failed to open \'${path.basename(item.resourceUri.fsPath)}\'. Please check if the file exists and try again.`);
 			}
@@ -459,6 +461,21 @@ export function activate(context: vscode.ExtensionContext) {
 			await treeDataProvider.importGroupsFromFile();
 		})
 	);
+
+	async function openFileSmart(filePath: string): Promise<void> {
+		const uri = vscode.Uri.file(filePath);
+	
+		try {
+			if (filePath.endsWith('.ipynb')) {
+				await vscode.commands.executeCommand('vscode.openWith', uri, 'jupyter-notebook');
+			} else {
+				const document = await vscode.workspace.openTextDocument(uri);
+				await vscode.window.showTextDocument(document, { preview: false });
+			}
+		} catch (error) {
+			vscode.window.showErrorMessage(`Failed to open '${path.basename(filePath)}'. Please check if the file exists and try again.`);
+		}
+	}	
 }
 
 export function deactivate() {
