@@ -133,13 +133,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.openTabGroupContextMenu', async () => {
-			const activeEditor = vscode.window.activeTextEditor;
-			if (!activeEditor) {
-				vscode.window.showWarningMessage(`Can't add this selection to a Tab Group. Please ensure that at least one source code file tab is active and close all non-source code file tabs.`);
+			const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
+
+			if (!activeTab?.input || typeof activeTab.input !== 'object' || !('uri' in activeTab.input)) {
+				vscode.window.showWarningMessage('No supported file tab selected to add to a Tab Group.');
 				return;
 			}
-			const filePath = activeEditor.document.fileName;
-			await handleTabGroupAction(filePath);
+			
+			let filePath: string | undefined;
+			if (activeTab.input && 'uri' in activeTab.input && activeTab.input.uri instanceof vscode.Uri) {
+				filePath = activeTab.input.uri.fsPath;
+			} else {
+				vscode.window.showWarningMessage('No valid file URI found for the selected tab.');
+				return;
+			}
+			if (filePath) {
+				await handleTabGroupAction(filePath);
+			}
 		})
 	);
 
@@ -166,43 +176,27 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addAllToNewGroup', async (groupId: string) => {
-			let initialTab = vscode.window.activeTextEditor;
-			let initialTabFilePath = initialTab?.document.fileName;
-
-			await vscode.commands.executeCommand('workbench.action.firstEditorInGroup');
-
-			let startingTab = vscode.window.activeTextEditor;
-			if (!startingTab) {
-				return;
-			}
-
-			let addedFiles = new Set<string>();
-
-			let editor: vscode.TextEditor | undefined = startingTab;
-			let startFilePath = startingTab.document.fileName;
-			do {
-				if (editor) {
-					const filePath = editor.document.fileName;
-
-					if (!addedFiles.has(filePath)) {
-						await treeDataProvider.addToGroup(groupId, filePath);
-						addedFiles.add(filePath);
-					}
+			const allTabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
+		
+			const addedFiles = new Set<string>();
+		
+			for (const tab of allTabs) {
+				if (!tab.input || typeof tab.input !== 'object' || !('uri' in tab.input)) {
+					continue;
 				}
-
-				await vscode.commands.executeCommand('workbench.action.nextEditor');
-				editor = vscode.window.activeTextEditor;
-			} while (editor && editor.document.fileName !== startFilePath);
-
-			if (initialTabFilePath) {
-				editor = vscode.window.activeTextEditor;
-				startFilePath = editor?.document.fileName || '';
-				while (editor && editor.document.fileName !== initialTabFilePath) {
-					await vscode.commands.executeCommand('workbench.action.nextEditor');
-					editor = vscode.window.activeTextEditor;
+		
+				const uri = tab.input.uri;
+				if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
+					continue;
+				}
+		
+				const filePath = uri.fsPath;
+				if (!addedFiles.has(filePath)) {
+					await treeDataProvider.addToGroup(groupId, filePath);
+					addedFiles.add(filePath);
 				}
 			}
-		})
+		})		
 	);
 
 	context.subscriptions.push(
@@ -345,29 +339,26 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	async function handleOpenTab(item: any, fromButton: boolean) {
-		if (item.contextValue !== 'tab') {
-			return;
-		}
-
-		const currentEditor = vscode.window.activeTextEditor;
-
-		let isCurrentActiveTab = false;
-		if (currentEditor && item.resourceUri) {
-			isCurrentActiveTab = currentEditor.document.uri.fsPath === item.resourceUri.fsPath;
-		}
-
-		if (item.resourceUri) {
-			try {
-				if (item.resourceUri.fsPath.endsWith('.ipynb')) {
-					await vscode.commands.executeCommand('vscode.openWith', item.resourceUri, 'jupyter-notebook');
-				} else {
-					const document = await vscode.workspace.openTextDocument(item.resourceUri);
-					const preview = !isCurrentActiveTab && fromButton;
-					await vscode.window.showTextDocument(document, { preview });
-				}
-			} catch (error) {
-				vscode.window.showErrorMessage(`Failed to open \'${path.basename(item.resourceUri.fsPath)}\'. Please check if the file exists and try again.`);
+		if (item.contextValue !== 'tab') {return;}
+	
+		const uri = item.resourceUri;
+		if (!uri) {return;}
+	
+		try {
+			const isNotebook = uri.fsPath.endsWith('.ipynb');
+	
+			if (isNotebook) {
+				await vscode.commands.executeCommand('vscode.openWith', uri, 'jupyter-notebook');
+			} else {
+				const currentEditor = vscode.window.activeTextEditor;
+				const isCurrentActiveTab = currentEditor?.document.uri.fsPath === uri.fsPath;
+				const preview = !isCurrentActiveTab && fromButton;
+	
+				const doc = await vscode.workspace.openTextDocument(uri);
+				await vscode.window.showTextDocument(doc, { preview });
 			}
+		} catch (error) {
+			vscode.window.showErrorMessage(`Failed to open '${path.basename(uri.fsPath)}'.`);
 		}
 	}
 
@@ -383,16 +374,19 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addCurrentTabToGroup', async (group: Group) => {
-			const activeEditor = vscode.window.activeTextEditor;
-			if (!activeEditor) {
-				vscode.window.showWarningMessage('No current tab to add to Tab Group or current tab is a non-source code file.');
+			const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
+
+			if (!activeTab?.input || typeof activeTab.input !== 'object' || !('uri' in activeTab.input)) {
+				vscode.window.showWarningMessage('No supported file tab selected to add to Tab Group.');
 				return;
 			}
-
-			const filePath = activeEditor.document.fileName;
-			if (group.id) {
-				treeDataProvider.addToGroup(group.id, filePath);
-			}
+			
+			if (activeTab.input && 'uri' in activeTab.input && activeTab.input.uri instanceof vscode.Uri) {
+				const filePath = activeTab.input.uri.fsPath;
+			} else {
+				vscode.window.showWarningMessage('No valid file URI found for the selected tab.');
+				return;
+			}			
 		})
 	);
 
