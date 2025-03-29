@@ -23,6 +23,9 @@ The Tabstronaut extension offers these enhanced features:
 - Intuitive renaming and color-coding of groups.
 - Efficient deletion of individual tabs or entire groups.
 - Archive and retrieve tab sets, systematically storing frequently-used or feature-specific tabs for future access.
+- Auto-close Other Tabs on Restore: A setting to close all currently open tabs before restoring a group for clean context switching.
+- Improved Notebook Support: Tabs ending in `.ipynb` now restore properly using the Jupyter Notebook editor.
+- Flexible Group Membership: A file can now belong to multiple tab groups without restriction.
 
 ## Tips
 

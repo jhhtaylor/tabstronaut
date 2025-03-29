@@ -2,6 +2,17 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.1.19]
+
+- Added optional **Auto-close Other Tabs on Restore** setting for clean context switching.
+- Fixed notebook restoration so `.ipynb` tabs open correctly in the Jupyter Notebook view.
+- Enabled files to be members of **multiple tab groups**.
+- Bug fixes for group membership edge cases.
+
+## [1.1.19]
+
+- Updated Tabstronaut extension title
+
 ## [1.1.17]
 
 - Updated commands to be hidden from the command palette for a cleaner user experience.
