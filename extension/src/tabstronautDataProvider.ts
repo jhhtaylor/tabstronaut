@@ -3,7 +3,12 @@ import * as path from 'path';
 import { Group } from './models/Group';
 import { generateUuidv4, generateRelativeTime, generateNormalizedPath, COLORS } from './utils';
 
-export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | vscode.TreeItem> {
+export class TabstronautDataProvider implements
+    vscode.TreeDataProvider<Group | vscode.TreeItem>,
+    vscode.TreeDragAndDropController<Group | vscode.TreeItem> {
+    readonly dropMimeTypes = ['application/vnd.code.tree.tabstronaut'];
+    readonly dragMimeTypes = ['text/uri-list'];
+
     private _onDidChangeTreeData: vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<Group | vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<Group | vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private groupsMap: Map<string, Group> = new Map();
@@ -20,6 +25,73 @@ export class TabstronautDataProvider implements vscode.TreeDataProvider<Group | 
         this.refreshIntervalId = setInterval(() => this.refreshCreationTimes(), 300000);
     }
 
+    async handleDrag(
+        source: (Group | vscode.TreeItem)[],
+        dataTransfer: vscode.DataTransfer,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        const ids = source.map(item => {
+            return item instanceof Group ? `group:${item.id}` : `tab:${item.id}`;
+        });
+    
+        dataTransfer.set('application/vnd.code.tree.tabstronaut', new vscode.DataTransferItem(ids.join(',')));
+    }
+
+    async handleDrop(
+        target: Group | vscode.TreeItem | undefined,
+        dataTransfer: vscode.DataTransfer,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        const transferItem = dataTransfer.get('application/vnd.code.tree.tabstronaut');
+        if (!transferItem) {return;}
+    
+        const draggedIds = (transferItem.value as string).split(',');
+    
+        for (const id of draggedIds) {
+            if (id.startsWith('group:')) {
+                const groupId = id.replace('group:', '');
+                const groupOrder = Array.from(this.groupsMap.keys());
+                const draggedGroup = this.groupsMap.get(groupId);
+                const targetGroup = target instanceof Group ? target : undefined;
+    
+                if (!draggedGroup || !targetGroup || draggedGroup.id === targetGroup.id) {return;}
+    
+                // Reorder map
+                this.groupsMap.delete(groupId);
+                const reordered = new Map<string, Group>();
+                for (const key of groupOrder) {
+                    if (key === targetGroup.id) {
+                        reordered.set(draggedGroup.id, draggedGroup);
+                    }
+                    if (this.groupsMap.has(key)) {
+                        reordered.set(key, this.groupsMap.get(key)!);
+                    }
+                }
+    
+                this.groupsMap = reordered;
+                this.refresh();
+                await this.updateWorkspaceState();
+            }
+    
+            if (id.startsWith('tab:') && target instanceof Group) {
+                const tabId = id.replace('tab:', '');
+                const sourceGroup = Array.from(this.groupsMap.values()).find(g =>
+                    g.items.some(i => i.id === tabId)
+                );
+    
+                const tab = sourceGroup?.items.find(i => i.id === tabId);
+                if (!tab || !sourceGroup) {return;}
+    
+                // Remove and add tab in new order
+                sourceGroup.items = sourceGroup.items.filter(i => i.id !== tabId);
+                target.items.push(tab); // or insert at specific index
+    
+                this.refresh();
+                await this.updateWorkspaceState();
+            }
+        }
+    }
+    
     private refreshCreationTimes(): void {
         this.groupsMap.forEach(group => {
             group.description = generateRelativeTime(group.creationTime);
