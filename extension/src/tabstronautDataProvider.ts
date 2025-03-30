@@ -86,6 +86,8 @@ export class TabstronautDataProvider implements
     
                 this.refresh();
                 await this.updateWorkspaceState();
+
+                vscode.window.showInformationMessage(`Moved '${tab.label}' to Tab Group '${target.label}'.`);
             }
         }
     }

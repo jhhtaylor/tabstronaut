@@ -2,14 +2,24 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
-## [1.1.20], [1.1.21]
+## [1.2.0]
+
+- Added support to add files and folders to Tab Groups directly from the Solution Explorer.
+  - Selecting multiple files or folders now prompts to create or add to a group.
+  - When selecting folders with subfolders, users are prompted to add files either recursively or from the top level only.
+- Enabled drag and drop to reorder Tabs within a Tab Group.
+- Enabled drag and drop to move entire Tab Groups.
+- Added success messages when creating or adding to groups via both the Solution Explorer and tab right-click menu.
+- General UX improvements and polish.
+
+## [1.1.20 - 1.1.21]
 - Fix CHANGELOG.md
 
 ## [1.1.19]
 
-- Added optional **Auto-close Other Tabs on Restore** setting for clean context switching.
-- Added **Import/Export Tab Groups** functionality to backup and share setups.
-- Fixed **notebook support** so `.ipynb` tabs open correctly in the Jupyter Notebook view.
+- Added optional Auto-close Other Tabs on Restore setting for clean context switching.
+- Added Import/Export Tab Groups functionality to backup and share setups.
+- Fixed notebook support so `.ipynb` tabs open correctly in the Jupyter Notebook view.
 - Bug fixes and improvements.
 
 ## [1.1.19]
