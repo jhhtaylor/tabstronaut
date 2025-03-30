@@ -22,7 +22,7 @@ All notable changes to the Tabstronaut extension will be documented in this file
 - Fixed notebook support so `.ipynb` tabs open correctly in the Jupyter Notebook view.
 - Bug fixes and improvements.
 
-## [1.1.19]
+## [1.1.18]
 
 - Updated Tabstronaut extension title
 
