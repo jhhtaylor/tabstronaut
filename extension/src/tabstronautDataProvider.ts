@@ -56,7 +56,6 @@ export class TabstronautDataProvider implements
     
                 if (!draggedGroup || !targetGroup || draggedGroup.id === targetGroup.id) {return;}
     
-                // Reorder map
                 this.groupsMap.delete(groupId);
                 const reordered = new Map<string, Group>();
                 for (const key of groupOrder) {
@@ -82,9 +81,8 @@ export class TabstronautDataProvider implements
                 const tab = sourceGroup?.items.find(i => i.id === tabId);
                 if (!tab || !sourceGroup) {return;}
     
-                // Remove and add tab in new order
                 sourceGroup.items = sourceGroup.items.filter(i => i.id !== tabId);
-                target.items.push(tab); // or insert at specific index
+                target.items.push(tab);
     
                 this.refresh();
                 await this.updateWorkspaceState();

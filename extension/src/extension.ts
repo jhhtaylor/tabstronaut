@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const treeView = vscode.window.createTreeView('tabstronaut', {
 		treeDataProvider: treeDataProvider,
 		showCollapseAll: false,
-		dragAndDropController: treeDataProvider, // ✅ Add this line
+		dragAndDropController: treeDataProvider,
 	});	
 
 	context.subscriptions.push(
