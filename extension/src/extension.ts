@@ -501,17 +501,8 @@ export function activate(context: vscode.ExtensionContext) {
 			const selectedGroup = await selectTabGroup();
 			if (!selectedGroup) {return;}
 
-			if (selectedGroup.label === 'New Tab Group from current tab...') {
-				if (fileUris.length > 1) {
-					vscode.window.showWarningMessage('"New Tab Group from current tab..." only supports single file selection.');
-					return;
-				}
+			if (selectedGroup.label === 'New Tab Group from current tab...' || selectedGroup.label === 'New Tab Group from all tabs...') {
 				await handleNewGroupCreationFromMultipleFiles(selectedGroup.label, fileUris);
-				return;
-			}
-
-			if (selectedGroup.label === 'New Tab Group from all tabs...') {
-				await handleNewGroupCreationFromMultipleFiles(selectedGroup.label, []);
 				return;
 			}
 
@@ -524,7 +515,6 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage(`Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`);
 		})
 	);
-
 
 	async function handleNewGroupCreationFromMultipleFiles(groupLabel: string, fileUris: vscode.Uri[]): Promise<void> {
 		const isCurrent = groupLabel === 'New Tab Group from current tab...';
@@ -542,10 +532,8 @@ export function activate(context: vscode.ExtensionContext) {
 		const groupId = await treeDataProvider.addGroup(newGroupName, selectedColorOption.colorValue);
 		if (!groupId) {return;}
 
-		if (isAll) {
-			await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-		} else if (fileUris.length === 1) {
-			treeDataProvider.addToGroup(groupId, fileUris[0].fsPath);
+		for (const uri of fileUris) {
+			await treeDataProvider.addToGroup(groupId, uri.fsPath);
 		}
 	}
 }
