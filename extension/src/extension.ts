@@ -92,30 +92,35 @@ export function activate(context: vscode.ExtensionContext) {
 		if (newGroupName === undefined) {
 			return;
 		}
-
+	
 		const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
-
 		const selectedColorOption = await selectColorOption(defaultColor) as ColorOption | undefined;
 		if (!selectedColorOption) {
 			return;
 		}
 		const groupColor = selectedColorOption?.colorValue || defaultColor;
-
+	
 		const groupId = await treeDataProvider.addGroup(newGroupName, groupColor);
 		if (!groupId) {
 			vscode.window.showErrorMessage(`Failed to create Tab Group with name: ${newGroupName}.`);
 			return;
 		}
-
+	
 		if (groupLabel === 'New Tab Group from current tab...') {
 			treeDataProvider.addToGroup(groupId, filePath);
+			vscode.window.showInformationMessage(`Created '${newGroupName}' and added 1 file.`);
 		} else if (groupLabel === 'New Tab Group from all tabs...') {
-			vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
+			await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
+			vscode.window.showInformationMessage(`Created '${newGroupName}' and added all open tabs.`);
 		}
 	}
 
 	async function handleAddToExistingGroup(groupId: string, filePath: string): Promise<void> {
-		treeDataProvider.addToGroup(groupId, filePath);
+		await treeDataProvider.addToGroup(groupId, filePath);
+		const group = treeDataProvider.getGroups().find(g => g.id === groupId);
+		if (group) {
+			vscode.window.showInformationMessage(`Added 1 file to Tab Group '${group.label}'.`);
+		}
 	}
 
 	async function handleTabGroupAction(filePath: string) {
