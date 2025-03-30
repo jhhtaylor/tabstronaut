@@ -49,8 +49,7 @@
       {
         "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
         "category": "Tabstronaut",
-        "title": "Add to Tab Group...",
-        "icon": "$(plus)"
+        "title": "Add to Tab Group..."
       },
       {
         "command": "tabstronaut.collapseAll",
@@ -121,7 +120,12 @@
         "command": "tabstronaut.importTabGroups",
         "category": "Tabstronaut",
         "title": "Import Tab Groups from JSON"
-      }      
+      },
+      {
+        "command": "tabstronaut.addFilesToGroup",
+        "category": "Tabstronaut",
+        "title": "Add to Tab Group..."
+      }
     ],
     "views": {
       "explorer": [
@@ -154,7 +158,14 @@
           "command": "tabstronaut.showMoreOptions",
           "when": "view == tabstronaut",
           "group": "navigation@3"
-        }   
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tabstronaut.addFilesToGroup",
+          "when": "resourceLangId != ''",
+          "group": "3_tabstronaut"
+        }
       ],
       "editor/title/context": [
         {
@@ -255,7 +266,11 @@
         {
           "command": "tabstronaut.importTabGroups",
           "when": "false"
-        }        
+        },
+        {
+          "command": "tabstronaut.addFilesToGroup",
+          "when": "false"
+        }
       ]
     },
     "keybindings": [
@@ -352,9 +367,9 @@
           "description": "Move the Tab Group to the top and reset its timestamp when a tab is added, edited or removed."
         },
         "tabstronaut.autoCloseOnRestore": {
-        "type": "boolean",
-        "default": false,
-        "description": "Close all currently open tabs before restoring a Tab Group for clean context switching."
+          "type": "boolean",
+          "default": false,
+          "description": "Close all currently open tabs before restoring a Tab Group for clean context switching."
         }
       }
     }

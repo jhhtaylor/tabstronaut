@@ -7,7 +7,7 @@ import { COLORS, COLOR_LABELS } from './utils';
 let treeDataProvider: TabstronautDataProvider;
 
 export function activate(context: vscode.ExtensionContext) {
-	const treeDataProvider = new TabstronautDataProvider(context.workspaceState);
+	treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
 	const treeView = vscode.window.createTreeView('tabstronaut', {
 		treeDataProvider: treeDataProvider,
@@ -472,7 +472,63 @@ export function activate(context: vscode.ExtensionContext) {
 		} catch (error) {
 			vscode.window.showErrorMessage(`Failed to open '${path.basename(filePath)}'. Please check if the file exists and try again.`);
 		}
-	}	
+	}
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.addFilesToGroup', async (uri: vscode.Uri, uris?: vscode.Uri[]) => {
+			const allUris = uris && uris.length > 1 ? uris : [uri];
+			const fileUris: vscode.Uri[] = [];
+
+			for (const u of allUris) {
+				try {
+					const stat = await vscode.workspace.fs.stat(u);
+					if (stat.type === vscode.FileType.File) {
+						fileUris.push(u);
+					} else if (stat.type === vscode.FileType.Directory) {
+						const collected = await collectFilesRecursively(u);
+						fileUris.push(...collected);
+					}
+				} catch (err) {
+					console.warn(`Skipping invalid URI: ${u.fsPath}`, err);
+				}
+			}
+
+			if (fileUris.length === 0) {
+				vscode.window.showInformationMessage('No files found to add to Tab Group.');
+				return;
+			}
+
+			const selectedGroup = await selectTabGroup();
+			if (!selectedGroup || !selectedGroup.id) {return;}
+			if (selectedGroup.label.includes('New Tab Group')) {
+				vscode.window.showWarningMessage('Use this option only for existing Tab Groups.');
+				return;
+			}
+
+			for (const file of fileUris) {
+				await treeDataProvider.addToGroup(selectedGroup.id, file.fsPath);
+			}
+
+			vscode.window.showInformationMessage(`Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`);
+		})
+	);
+
+	// ... other existing commands and functions remain unchanged ...
+}
+
+async function collectFilesRecursively(uri: vscode.Uri): Promise<vscode.Uri[]> {
+	const collected: vscode.Uri[] = [];
+	const entries = await vscode.workspace.fs.readDirectory(uri);
+	for (const [name, type] of entries) {
+		const entryUri = vscode.Uri.joinPath(uri, name);
+		if (type === vscode.FileType.File) {
+			collected.push(entryUri);
+		} else if (type === vscode.FileType.Directory) {
+			const subFiles = await collectFilesRecursively(entryUri);
+			collected.push(...subFiles);
+		}
+	}
+	return collected;  
 }
 
 export function deactivate() {
