@@ -499,11 +499,23 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			const selectedGroup = await selectTabGroup();
-			if (!selectedGroup || !selectedGroup.id) {return;}
-			if (selectedGroup.label.includes('New Tab Group')) {
-				vscode.window.showWarningMessage('Use this option only for existing Tab Groups.');
+			if (!selectedGroup) {return;}
+
+			if (selectedGroup.label === 'New Tab Group from current tab...') {
+				if (fileUris.length > 1) {
+					vscode.window.showWarningMessage('"New Tab Group from current tab..." only supports single file selection.');
+					return;
+				}
+				await handleNewGroupCreationFromMultipleFiles(selectedGroup.label, fileUris);
 				return;
 			}
+
+			if (selectedGroup.label === 'New Tab Group from all tabs...') {
+				await handleNewGroupCreationFromMultipleFiles(selectedGroup.label, []);
+				return;
+			}
+
+			if (!selectedGroup.id) {return;}
 
 			for (const file of fileUris) {
 				await treeDataProvider.addToGroup(selectedGroup.id, file.fsPath);
@@ -513,7 +525,29 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	// ... other existing commands and functions remain unchanged ...
+
+	async function handleNewGroupCreationFromMultipleFiles(groupLabel: string, fileUris: vscode.Uri[]): Promise<void> {
+		const isCurrent = groupLabel === 'New Tab Group from current tab...';
+		const isAll = groupLabel === 'New Tab Group from all tabs...';
+
+		let newGroupName: string | undefined = isAll
+			? await getGroupNameForAllToNewGroup()
+			: await getGroupName();
+		if (!newGroupName) {return;}
+
+		const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+		const selectedColorOption = await selectColorOption(defaultColor) as ColorOption | undefined;
+		if (!selectedColorOption) {return;}
+
+		const groupId = await treeDataProvider.addGroup(newGroupName, selectedColorOption.colorValue);
+		if (!groupId) {return;}
+
+		if (isAll) {
+			await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
+		} else if (fileUris.length === 1) {
+			treeDataProvider.addToGroup(groupId, fileUris[0].fsPath);
+		}
+	}
 }
 
 async function collectFilesRecursively(uri: vscode.Uri): Promise<vscode.Uri[]> {
