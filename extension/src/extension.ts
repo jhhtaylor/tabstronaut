@@ -485,7 +485,26 @@ export function activate(context: vscode.ExtensionContext) {
 					if (stat.type === vscode.FileType.File) {
 						fileUris.push(u);
 					} else if (stat.type === vscode.FileType.Directory) {
-						const collected = await collectFilesRecursively(u);
+						const hasSubFolders = (await vscode.workspace.fs.readDirectory(u)).some(([, type]) => type === vscode.FileType.Directory);
+						let collected: vscode.Uri[] = [];
+
+						if (hasSubFolders) {
+							const choice = await vscode.window.showQuickPick([
+								{ label: 'Add first-level files only', value: 'first' },
+								{ label: 'Add all files recursively', value: 'recursive' }
+							], { placeHolder: 'Select how to add files from the folder:' });
+
+							if (!choice) {continue;}
+
+							if (choice.value === 'first') {
+								collected = await collectFilesFirstLevel(u);
+							} else {
+								collected = await collectFilesRecursively(u);
+							}
+						} else {
+							collected = await collectFilesFirstLevel(u);
+						}
+
 						fileUris.push(...collected);
 					}
 				} catch (err) {
@@ -519,38 +538,51 @@ export function activate(context: vscode.ExtensionContext) {
 	async function handleNewGroupCreationFromMultipleFiles(groupLabel: string, fileUris: vscode.Uri[]): Promise<void> {
 		const isCurrent = groupLabel === 'New Tab Group from current tab...';
 		const isAll = groupLabel === 'New Tab Group from all tabs...';
-
+	
 		let newGroupName: string | undefined = isAll
 			? await getGroupNameForAllToNewGroup()
 			: await getGroupName();
 		if (!newGroupName) {return;}
-
+	
 		const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
 		const selectedColorOption = await selectColorOption(defaultColor) as ColorOption | undefined;
 		if (!selectedColorOption) {return;}
-
+	
 		const groupId = await treeDataProvider.addGroup(newGroupName, selectedColorOption.colorValue);
 		if (!groupId) {return;}
-
+	
 		for (const uri of fileUris) {
 			await treeDataProvider.addToGroup(groupId, uri.fsPath);
 		}
-	}
-}
+	
+		vscode.window.showInformationMessage(`Created '${newGroupName}' and added ${fileUris.length} file(s).`);
+	}	
 
-async function collectFilesRecursively(uri: vscode.Uri): Promise<vscode.Uri[]> {
-	const collected: vscode.Uri[] = [];
-	const entries = await vscode.workspace.fs.readDirectory(uri);
-	for (const [name, type] of entries) {
-		const entryUri = vscode.Uri.joinPath(uri, name);
-		if (type === vscode.FileType.File) {
-			collected.push(entryUri);
-		} else if (type === vscode.FileType.Directory) {
-			const subFiles = await collectFilesRecursively(entryUri);
-			collected.push(...subFiles);
+	async function collectFilesRecursively(uri: vscode.Uri): Promise<vscode.Uri[]> {
+		const collected: vscode.Uri[] = [];
+		const entries = await vscode.workspace.fs.readDirectory(uri);
+		for (const [name, type] of entries) {
+			const entryUri = vscode.Uri.joinPath(uri, name);
+			if (type === vscode.FileType.File) {
+				collected.push(entryUri);
+			} else if (type === vscode.FileType.Directory) {
+				const subFiles = await collectFilesRecursively(entryUri);
+				collected.push(...subFiles);
+			}
 		}
+		return collected;
 	}
-	return collected;  
+
+	async function collectFilesFirstLevel(uri: vscode.Uri): Promise<vscode.Uri[]> {
+		const collected: vscode.Uri[] = [];
+		const entries = await vscode.workspace.fs.readDirectory(uri);
+		for (const [name, type] of entries) {
+			if (type === vscode.FileType.File) {
+				collected.push(vscode.Uri.joinPath(uri, name));
+			}
+		}
+		return collected;
+	}
 }
 
 export function deactivate() {
