@@ -125,15 +125,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function handleTabGroupAction(filePath: string) {
 		const selectedGroup = await selectTabGroup();
-
+	
 		if (!selectedGroup) {
 			return;
 		}
-
+	
 		if (selectedGroup.label === 'New Tab Group from current tab...' || selectedGroup.label === 'New Tab Group from all tabs...') {
 			await handleNewGroupCreation(selectedGroup.label, filePath);
 		} else if (selectedGroup.id) {
 			await handleAddToExistingGroup(selectedGroup.id, filePath);
+			vscode.window.showInformationMessage(`Added '${path.basename(filePath)}' to Tab Group '${selectedGroup.label}'`);
 		}
 	}
 
