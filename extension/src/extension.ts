@@ -63,17 +63,74 @@ export function activate(context: vscode.ExtensionContext) {
 		return await getGroupName(prompt);
 	}
 
-	type CustomQuickPickItem = vscode.QuickPickItem & { id?: string };
-
+	type CustomQuickPickItem = vscode.QuickPickItem & {
+		id?: string;
+		buttons?: vscode.QuickInputButton[];
+	};
+	
 	async function selectTabGroup(): Promise<CustomQuickPickItem | undefined> {
-		let options: CustomQuickPickItem[] = [
+		const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
+	
+		quickPick.items = [
 			{ label: 'New Tab Group from current tab...' },
 			{ label: 'New Tab Group from all tabs...' },
-			{ label: '', kind: vscode.QuickPickItemKind.Separator }
+			{ label: '', kind: vscode.QuickPickItemKind.Separator },
+			...treeDataProvider.getGroups().map(group => ({
+				label: typeof group.label === 'string' ? group.label : '',
+				id: group.id,
+				buttons: [
+					{
+						iconPath: new vscode.ThemeIcon('new-folder', new vscode.ThemeColor(group.colorName)),
+						tooltip: 'Add all open tabs to this Tab Group'
+					}
+				]
+			}))
 		];
-		options.push(...treeDataProvider.getGroups().map(group => ({ label: group.label as string, id: group.id })));
-		return await vscode.window.showQuickPick(options, { placeHolder: 'Select a Tab Group' });
-	}
+	
+		quickPick.placeholder = 'Select a Tab Group';
+	
+		const selectionPromise = new Promise<CustomQuickPickItem | undefined>((resolve) => {
+			quickPick.onDidAccept(() => {
+				resolve(quickPick.selectedItems[0]);
+				quickPick.hide();
+			});
+	
+			quickPick.onDidHide(() => {
+				resolve(undefined);
+			});
+	
+			quickPick.onDidTriggerItemButton(async e => {
+				const groupId = (e.item as CustomQuickPickItem).id;
+				if (!groupId) {return;}
+			
+				const group = treeDataProvider.getGroups().find(g => g.id === groupId);
+				if (!group) {return;}
+			
+				const allTabs = vscode.window.tabGroups.all.flatMap(g => g.tabs);
+				const addedFiles = new Set<string>();
+				let count = 0;
+			
+				for (const tab of allTabs) {
+					if (!tab.input || typeof tab.input !== 'object' || !('uri' in tab.input)) {continue;}
+					const uri = tab.input.uri;
+					if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {continue;}
+			
+					const filePath = uri.fsPath;
+					if (!addedFiles.has(filePath)) {
+						await treeDataProvider.addToGroup(group.id, filePath);
+						addedFiles.add(filePath);
+						count++;
+					}
+				}
+			
+				vscode.window.showInformationMessage(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+				quickPick.hide();
+			});			
+		});
+	
+		quickPick.show();
+		return await selectionPromise;
+	}	
 
 	type ColorOption = {
 		label: string;
@@ -480,6 +537,35 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage(`Failed to open '${path.basename(filePath)}'. Please check if the file exists and try again.`);
 		}
 	}
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('tabstronaut.addAllOpenTabsToGroup', async (item: any) => {
+			if (item.contextValue !== 'group') {return;}
+			const group: Group = item;
+	
+			const allTabs = vscode.window.tabGroups.all.flatMap(g => g.tabs);
+			const addedFiles = new Set<string>();
+			let count = 0;
+	
+			for (const tab of allTabs) {
+				if (!tab.input || typeof tab.input !== 'object' || !('uri' in tab.input)) {
+					continue;
+				}
+				const uri = tab.input.uri;
+				if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
+					continue;
+				}
+				const filePath = uri.fsPath;
+				if (!addedFiles.has(filePath)) {
+					await treeDataProvider.addToGroup(group.id, filePath);
+					addedFiles.add(filePath);
+					count++;
+				}
+			}
+	
+			vscode.window.showInformationMessage(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+		})
+	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.addFilesToGroup', async (uri: vscode.Uri, uris?: vscode.Uri[]) => {

@@ -127,7 +127,13 @@
         "command": "tabstronaut.addFilesToGroup",
         "category": "Tabstronaut",
         "title": "Add to Tab Group..."
-      }
+      },
+      {
+        "command": "tabstronaut.addAllOpenTabsToGroup",
+        "category": "Tabstronaut",
+        "title": "Add all tabs to Tab Group",
+        "icon": "$(new-folder)"
+      }      
     ],
     "views": {
       "explorer": [
@@ -187,20 +193,25 @@
           "group": "inline@0"
         },
         {
-          "command": "tabstronaut.restoreAllTabsInGroup",
+          "command": "tabstronaut.addAllOpenTabsToGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@1"
-        },
+        }, 
         {
-          "command": "tabstronaut.editTabGroup",
+          "command": "tabstronaut.restoreAllTabsInGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
         },
         {
-          "command": "tabstronaut.removeTabGroup",
+          "command": "tabstronaut.editTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@3"
         },
+        {
+          "command": "tabstronaut.removeTabGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline@4"
+        },       
         {
           "command": "tabstronaut.restoreSpecificTab",
           "when": "view == tabstronaut && viewItem == tab",
