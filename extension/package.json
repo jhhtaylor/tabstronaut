@@ -36,7 +36,9 @@
     "Efficiency",
     "Productivity"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+  "onFileSystem:*"
+],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [

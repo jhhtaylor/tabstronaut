@@ -134,7 +134,6 @@ export function activate(context: vscode.ExtensionContext) {
 			await handleNewGroupCreation(selectedGroup.label, filePath);
 		} else if (selectedGroup.id) {
 			await handleAddToExistingGroup(selectedGroup.id, filePath);
-			vscode.window.showInformationMessage(`Added '${path.basename(filePath)}' to Tab Group '${selectedGroup.label}'`);
 		}
 	}
 
@@ -396,8 +395,10 @@ export function activate(context: vscode.ExtensionContext) {
 	  
 		  const filePath = uri.fsPath;
 		  await treeDataProvider.addToGroup(group.id, filePath);
+
+		  vscode.window.showInformationMessage(`Added 1 file to Tab Group '${group.label}'.`);
 		})
-	  );	  
+	  );
 
 	vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('tabstronaut.addPaths')) {
