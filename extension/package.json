@@ -390,6 +390,11 @@
           "type": "boolean",
           "default": false,
           "description": "Close all currently open tabs before restoring a Tab Group for clean context switching."
+        },
+        "tabstronaut.showConfirmationMessages": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show confirmation messages after adding tabs to groups."
         }
       }
     }

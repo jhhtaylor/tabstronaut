@@ -15,6 +15,13 @@ export function activate(context: vscode.ExtensionContext) {
 		dragAndDropController: treeDataProvider,
 	});	
 
+	function showConfirmation(message: string) {
+		const shouldShow = vscode.workspace.getConfiguration('tabstronaut').get<boolean>('showConfirmationMessages', false);
+		if (shouldShow) {
+		  vscode.window.showInformationMessage(message);
+		}
+	  }	  
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('tabstronaut.collapseAll', async () => {
 			const firstGroup = treeDataProvider.getFirstGroup();
@@ -123,7 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
 					if (!groupId) {return;}
 	
 					await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-					vscode.window.showInformationMessage(`Created '${newGroupName}' and added all open tabs.`);
+					showConfirmation(`Created '${newGroupName}' and added all open tabs.`);
 					quickPick.hide();
 					return;
 				}
@@ -149,7 +156,7 @@ export function activate(context: vscode.ExtensionContext) {
 						}
 					}
 	
-					vscode.window.showInformationMessage(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+					showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
 					quickPick.hide();
 				}
 			});
@@ -192,10 +199,10 @@ export function activate(context: vscode.ExtensionContext) {
 	
 		if (groupLabel === 'New Tab Group from current tab...') {
 			treeDataProvider.addToGroup(groupId, filePath);
-			vscode.window.showInformationMessage(`Created '${newGroupName}' and added 1 file.`);
+			showConfirmation(`Created '${newGroupName}' and added 1 file.`);
 		} else if (groupLabel === 'New Tab Group from all tabs...') {
 			await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-			vscode.window.showInformationMessage(`Created '${newGroupName}' and added all open tabs.`);
+			showConfirmation(`Created '${newGroupName}' and added all open tabs.`);
 		}
 	}
 
@@ -203,7 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
 		await treeDataProvider.addToGroup(groupId, filePath);
 		const group = treeDataProvider.getGroups().find(g => g.id === groupId);
 		if (group) {
-			vscode.window.showInformationMessage(`Added 1 file to Tab Group '${group.label}'.`);
+			showConfirmation(`Added 1 file to Tab Group '${group.label}'.`);
 		}
 	}
 
@@ -480,7 +487,7 @@ export function activate(context: vscode.ExtensionContext) {
 		  const filePath = uri.fsPath;
 		  await treeDataProvider.addToGroup(group.id, filePath);
 
-		  vscode.window.showInformationMessage(`Added 1 file to Tab Group '${group.label}'.`);
+		  showConfirmation(`Added 1 file to Tab Group '${group.label}'.`);
 		})
 	  );
 
@@ -590,7 +597,7 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			}
 	
-			vscode.window.showInformationMessage(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+			showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
 		})
 	);
 
@@ -633,7 +640,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			if (fileUris.length === 0) {
-				vscode.window.showInformationMessage('No files found to add to Tab Group.');
+				showConfirmation('No files found to add to Tab Group.');
 				return;
 			}
 
@@ -651,7 +658,7 @@ export function activate(context: vscode.ExtensionContext) {
 				await treeDataProvider.addToGroup(selectedGroup.id, file.fsPath);
 			}
 
-			vscode.window.showInformationMessage(`Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`);
+			showConfirmation(`Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`);
 		})
 	);
 
@@ -675,7 +682,7 @@ export function activate(context: vscode.ExtensionContext) {
 			await treeDataProvider.addToGroup(groupId, uri.fsPath);
 		}
 	
-		vscode.window.showInformationMessage(`Created '${newGroupName}' and added ${fileUris.length} file(s).`);
+		showConfirmation(`Created '${newGroupName}' and added ${fileUris.length} file(s).`);
 	}	
 
 	async function collectFilesRecursively(uri: vscode.Uri): Promise<vscode.Uri[]> {
