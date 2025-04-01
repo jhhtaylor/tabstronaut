@@ -395,7 +395,7 @@
     "@typescript-eslint/parser": "^6.21.0",
     "@vscode/test-electron": "^2.4.1",
     "concurrently": "^9.1.2",
-    "eslint": "^8.57.0",
+    "eslint": "^9.23.0",
     "glob": "^11.0.1",
     "mocha": "^10.8.2",
     "ts-loader": "^9.5.2",
