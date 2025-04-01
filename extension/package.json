@@ -412,7 +412,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run copyfiles && npm run package",
-    "copyfiles": "copyfiles ../README.md ../LICENSE ./",
+    "copyfiles": "cp ../README.md ./README.md && cp ../LICENSE ./LICENSE",
     "compile": "webpack",
     "watch": "webpack --watch",
     "package": "npx webpack --mode production --devtool hidden-source-map",
