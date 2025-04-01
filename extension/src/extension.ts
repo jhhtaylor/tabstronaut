@@ -7,6 +7,15 @@ import { COLORS, COLOR_LABELS, showConfirmation } from "./utils";
 let treeDataProvider: TabstronautDataProvider;
 
 export function activate(context: vscode.ExtensionContext) {
+
+  const config = vscode.workspace.getConfiguration("tabstronaut");
+  config.get("addPaths");
+  config.get("keybindingOrder");
+  config.get("confirmRemoveAndClose");
+  config.get("moveTabGroupOnTabChange");
+  config.get("autoCloseOnRestore");
+  config.get("showConfirmationMessages");
+
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
