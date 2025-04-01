@@ -9,6 +9,35 @@ let treeDataProvider: TabstronautDataProvider;
 export function activate(context: vscode.ExtensionContext) {
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
+  treeDataProvider.onGroupAutoDeleted = (group: Group) => {
+    recentlyDeletedGroup = {
+      ...group,
+      createTabItem: group.createTabItem.bind(group),
+      addItem: group.addItem.bind(group),
+    };
+
+    vscode.commands.executeCommand(
+      "setContext",
+      "tabstronaut:canUndoDelete",
+      true
+    );
+
+    if (undoTimeout) {
+      clearTimeout(undoTimeout);
+    }
+
+    undoTimeout = setTimeout(() => {
+      recentlyDeletedGroup = null;
+      treeDataProvider.refresh();
+
+      vscode.commands.executeCommand(
+        "setContext",
+        "tabstronaut:canUndoDelete",
+        false
+      );
+    }, 5000);
+  };
+
   const treeView = vscode.window.createTreeView("tabstronaut", {
     treeDataProvider: treeDataProvider,
     showCollapseAll: false,
@@ -1047,7 +1076,11 @@ export function activate(context: vscode.ExtensionContext) {
         clearTimeout(undoTimeout);
       }
 
-	  vscode.commands.executeCommand('setContext', 'tabstronaut:canUndoDelete', false);
+      vscode.commands.executeCommand(
+        "setContext",
+        "tabstronaut:canUndoDelete",
+        false
+      );
 
       treeDataProvider.refresh();
       showConfirmation("Tab Group restored.");
