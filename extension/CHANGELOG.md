@@ -5,7 +5,6 @@ All notable changes to the Tabstronaut extension will be documented in this file
 [1.2.1]
 - New "Add all open tabs to Tab Group" option for faster group building.
 - Undo support when deleting a Tab Group — available for 5 seconds after deletion via a button in the Tabstronaut title bar.
-- Added WSL support for seamless cross-platform development.
 - New configuration options:
   - showConfirmationMessages: Toggle confirmation popups when adding tabs to groups.
 - Minor bug fixes and improvements.
