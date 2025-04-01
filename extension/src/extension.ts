@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { TabstronautDataProvider } from "./tabstronautDataProvider";
 import { Group } from "./models/Group";
-import { COLORS, COLOR_LABELS } from "./utils";
+import { COLORS, COLOR_LABELS, showConfirmation } from "./utils";
 
 let treeDataProvider: TabstronautDataProvider;
 
@@ -43,15 +43,6 @@ export function activate(context: vscode.ExtensionContext) {
     showCollapseAll: false,
     dragAndDropController: treeDataProvider,
   });
-
-  function showConfirmation(message: string) {
-    const shouldShow = vscode.workspace
-      .getConfiguration("tabstronaut")
-      .get<boolean>("showConfirmationMessages", false);
-    if (shouldShow) {
-      vscode.window.showInformationMessage(message);
-    }
-  }
 
   let recentlyDeletedGroup: Group | null = null;
   let undoTimeout: NodeJS.Timeout | undefined;

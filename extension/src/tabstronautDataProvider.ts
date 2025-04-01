@@ -5,6 +5,7 @@ import {
   generateUuidv4,
   generateRelativeTime,
   generateNormalizedPath,
+  showConfirmation,
   COLORS,
 } from "./utils";
 
@@ -132,7 +133,7 @@ export class TabstronautDataProvider
         this.refresh();
         await this.updateWorkspaceState();
 
-        vscode.window.showInformationMessage(
+        showConfirmation(
           `Moved '${tab.label}' to Tab Group '${target.label}'.`
         );
       }
@@ -504,7 +505,7 @@ export class TabstronautDataProvider
     const content = JSON.stringify(groupData, null, 2);
 
     await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
-    vscode.window.showInformationMessage("Tab Groups exported successfully!");
+    showConfirmation("Tab Groups exported successfully!");
   }
 
   async importGroupsFromFile(): Promise<void> {
@@ -552,7 +553,7 @@ export class TabstronautDataProvider
       await this.workspaceState.update("tabGroups", mergedGroups);
       this.rebuildStateFromStorage();
       this.refresh();
-      vscode.window.showInformationMessage("Tab Groups imported successfully!");
+      showConfirmation("Tab Groups imported successfully!");
     } catch (error) {
       vscode.window.showErrorMessage(
         "Failed to import Tab Groups. Invalid JSON file."
