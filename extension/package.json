@@ -133,7 +133,13 @@
         "category": "Tabstronaut",
         "title": "Add all tabs to Tab Group",
         "icon": "$(new-folder)"
-      }
+      },
+      {
+        "command": "tabstronaut.undoDelete",
+        "title": "Undo Delete",
+        "category": "Tabstronaut",
+        "icon": "$(discard)"
+      }      
     ],
     "viewsContainers": {
       "activitybar": [
@@ -154,6 +160,11 @@
     },
     "menus": {
       "view/title": [
+        {
+          "command": "tabstronaut.undoDelete",
+          "when": "view == tabstronaut && tabstronaut:canUndoDelete",
+          "group": "navigation@-1"
+        },      
         {
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut",

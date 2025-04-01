@@ -24,6 +24,9 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  let recentlyDeletedGroup: Group | null = null;
+  let undoTimeout: NodeJS.Timeout | undefined;
+
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.collapseAll", async () => {
       const firstGroup = treeDataProvider.getFirstGroup();
@@ -572,7 +575,34 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
 
+        recentlyDeletedGroup = {
+          ...group,
+          createTabItem: group.createTabItem.bind(group),
+          addItem: group.addItem.bind(group),
+        };
         treeDataProvider.deleteGroup(group.id);
+
+        vscode.commands.executeCommand(
+          "setContext",
+          "tabstronaut:canUndoDelete",
+          true
+        );
+
+        if (undoTimeout) {
+          clearTimeout(undoTimeout);
+        }
+        undoTimeout = setTimeout(() => {
+          recentlyDeletedGroup = null;
+          treeDataProvider.refresh();
+
+          vscode.commands.executeCommand(
+            "setContext",
+            "tabstronaut:canUndoDelete",
+            false
+          );
+        }, 5000);
+
+        treeDataProvider.refresh();
       }
     )
   );
@@ -860,7 +890,7 @@ export function activate(context: vscode.ExtensionContext) {
                     { label: "Add first-level files only", value: "first" },
                     { label: "Add all files recursively", value: "recursive" },
                   ],
-                  { placeHolder: "Select how to add files from the folder:" }
+                  { placeHolder: "Select how to add files from the folder" }
                 );
 
                 if (!choice) {
@@ -988,6 +1018,41 @@ export function activate(context: vscode.ExtensionContext) {
     }
     return collected;
   }
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.undoDelete", async () => {
+      if (!recentlyDeletedGroup) {
+        return;
+      }
+
+      const restored = await treeDataProvider.addGroup(
+        recentlyDeletedGroup.label as string,
+        recentlyDeletedGroup.colorName
+      );
+
+      if (!restored) {
+        vscode.window.showErrorMessage("Failed to restore Tab Group.");
+        return;
+      }
+
+      for (const tab of recentlyDeletedGroup.items) {
+        const uri = tab.resourceUri;
+        if (uri) {
+          await treeDataProvider.addToGroup(restored, uri.fsPath);
+        }
+      }
+
+      recentlyDeletedGroup = null;
+      if (undoTimeout) {
+        clearTimeout(undoTimeout);
+      }
+
+	  vscode.commands.executeCommand('setContext', 'tabstronaut:canUndoDelete', false);
+
+      treeDataProvider.refresh();
+      showConfirmation("Tab Group restored.");
+    })
+  );
 }
 
 export function deactivate() {
