@@ -37,8 +37,8 @@
     "Productivity"
   ],
   "activationEvents": [
-  "onFileSystem:*"
-],
+    "onFileSystem:*"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -133,15 +133,22 @@
         "category": "Tabstronaut",
         "title": "Add all tabs to Tab Group",
         "icon": "$(new-folder)"
-      }      
+      }
     ],
-    "views": {
-      "explorer": [
+    "viewsContainers": {
+      "activitybar": [
         {
           "id": "tabstronaut",
-          "name": "Tabstronaut",
-          "contextualTitle": "Tabstronaut",
+          "title": "Tabstronaut",
           "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "tabstronaut": [
+        {
+          "id": "tabstronaut",
+          "name": "Tab Groups"
         }
       ]
     },
@@ -196,7 +203,7 @@
           "command": "tabstronaut.addAllOpenTabsToGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@1"
-        }, 
+        },
         {
           "command": "tabstronaut.restoreAllTabsInGroup",
           "when": "view == tabstronaut && viewItem == group",
@@ -211,7 +218,7 @@
           "command": "tabstronaut.removeTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@4"
-        },       
+        },
         {
           "command": "tabstronaut.restoreSpecificTab",
           "when": "view == tabstronaut && viewItem == tab",
