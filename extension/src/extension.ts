@@ -491,7 +491,7 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	  );
 
-	vscode.workspace.onDidChangeConfiguration(e => {
+	  vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('tabstronaut.addPaths')) {
 			treeDataProvider.rebuildAndRefresh();
 			vscode.window.showInformationMessage('Tabstronaut paths setting updated.');
@@ -505,8 +505,14 @@ export function activate(context: vscode.ExtensionContext) {
 		if (e.affectsConfiguration('tabstronaut.moveTabGroupOnTabChange')) {
 			vscode.window.showInformationMessage('Tabstronaut move Tab Group on Tab add, edit or remove setting updated.');
 		}
+		if (e.affectsConfiguration('tabstronaut.autoCloseOnRestore')) {
+			vscode.window.showInformationMessage('Tabstronaut auto-close setting updated.');
+		}
+		if (e.affectsConfiguration('tabstronaut.showConfirmationMessages')) {
+			vscode.window.showInformationMessage('Tabstronaut confirmation message setting updated.');
+		}
 	});
-
+	
 	vscode.workspace.onDidRenameFiles(event => {
 		for (const file of event.files) {
 			treeDataProvider.handleFileRename(file.oldUri.fsPath, file.newUri.fsPath);
