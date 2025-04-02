@@ -2,9 +2,12 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.2.3]
+- New more readable logo
+
 ## [1.2.2]
 
-- Fixed issue where the `showConfirmationMessages` setting was missing from the Settings UI.
+- Fixed issue where the showConfirmationMessages setting was missing from the Settings UI.
 
 ## [1.2.1]
 
@@ -25,7 +28,7 @@ All notable changes to the Tabstronaut extension will be documented in this file
 - General UX improvements and polish.
 
 ## [1.1.20 - 1.1.21]
-- Fix CHANGELOG.md
+- Hotfixes
 
 ## [1.1.19]
 
