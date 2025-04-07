@@ -129,6 +129,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# macOS Finder metadata file
+.DS_Store
+
 # Copied README and LICENSE files for VSCode extension
 /extension/README.md
 /extension/LICENSE

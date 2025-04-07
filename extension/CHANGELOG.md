@@ -2,7 +2,12 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.2.4]
+
+- Disable erroneous commands
+
 ## [1.2.3]
+
 - New more readable logo
 
 ## [1.2.2]
