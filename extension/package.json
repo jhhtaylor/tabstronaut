@@ -441,7 +441,7 @@
     "concurrently": "^9.1.2",
     "eslint": "^9.23.0",
     "glob": "^11.0.1",
-    "mocha": "^10.8.2",
+    "mocha": "^11.1.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.2",
     "webpack": "^5.98.0",
