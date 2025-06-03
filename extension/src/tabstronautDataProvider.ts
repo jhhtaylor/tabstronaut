@@ -213,14 +213,24 @@ export class TabstronautDataProvider
 
   public getGroups(): Group[] {
     const groupData = this.workspaceState.get<{
-      [id: string]: { label: string; items: string[]; creationTime?: string };
+      [id: string]: {
+        label: string;
+        items: string[];
+        creationTime?: string;
+        colorName?: string;
+      };
     }>("tabGroups", {});
     const groups: Group[] = [];
     for (const id in groupData) {
       const creationTime = groupData[id].creationTime
         ? new Date(groupData[id].creationTime as string)
         : new Date();
-      const group = new Group(groupData[id].label, id, creationTime);
+      const group = new Group(
+        groupData[id].label,
+        id,
+        creationTime,
+        groupData[id].colorName
+      );
       groupData[id].items.forEach((filePath) => group.addItem(filePath));
       groups.push(group);
     }
