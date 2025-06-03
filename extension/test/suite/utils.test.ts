@@ -1,10 +1,11 @@
+/// <reference types="mocha" />
 import { strictEqual } from 'assert';
 import { generateNormalizedPath } from '../../src/utils';
 
 describe('generateNormalizedPath', () => {
   it('converts backslashes to forward slashes and lowercases', () => {
     const result = generateNormalizedPath('C\\Users\\Foo');
-    strictEqual(result, 'c:/users/foo');
+    strictEqual(result, 'c/users/foo');
   });
 
   it('removes trailing slashes', () => {
