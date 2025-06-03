@@ -65,7 +65,7 @@ OR
 
 1. Open **VS Code Settings**: **`Ctrl+Shift+P`** ➡️ "Preferences: Open Settings (UI)".
 2. Search for "Tabstronaut".
-3. Adjust the provided settings such as "Display file paths as Tab descriptions", "Set key bindings for restoring Tab Groups", "Move Group On Tab Change", and confirmation preferences.
+3. Adjust the provided settings such as "Display file paths as Tab descriptions", "Set key bindings for restoring Tab Groups", "Move Tab Group on Tab Change", and confirmation preferences.
 
 Your changes will be saved automatically.
 
