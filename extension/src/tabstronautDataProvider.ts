@@ -128,6 +128,7 @@ export class TabstronautDataProvider
         }
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+        tab.groupId = target.id;
         target.items.push(tab);
 
         this.refresh();
@@ -136,6 +137,45 @@ export class TabstronautDataProvider
         showConfirmation(
           `Moved '${tab.label}' to Tab Group '${target.label}'.`
         );
+      } else if (id.startsWith("tab:") && target instanceof vscode.TreeItem && target.contextValue === "tab") {
+        const tabId = id.replace("tab:", "");
+        const sourceGroup = Array.from(this.groupsMap.values()).find((g) =>
+          g.items.some((i) => i.id === tabId)
+        );
+        const draggedTab = sourceGroup?.items.find((i) => i.id === tabId);
+        if (!draggedTab || !sourceGroup) {
+          return;
+        }
+
+        const targetTabId = target.id as string;
+        const targetGroup = Array.from(this.groupsMap.values()).find((g) =>
+          g.items.some((i) => i.id === targetTabId)
+        );
+        if (!targetGroup) {
+          return;
+        }
+
+        const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
+
+        sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+        if (targetGroup === sourceGroup) {
+          const adjustedIndex = targetIndex;
+          targetGroup.items.splice(adjustedIndex, 0, draggedTab);
+        } else {
+          draggedTab.groupId = targetGroup.id;
+          targetGroup.items.splice(targetIndex, 0, draggedTab);
+        }
+
+        this.refresh();
+        await this.updateWorkspaceState();
+
+        if (targetGroup === sourceGroup) {
+          showConfirmation(`Reordered '${draggedTab.label}'.`);
+        } else {
+          showConfirmation(
+            `Moved '${draggedTab.label}' to Tab Group '${targetGroup.label}'.`
+          );
+        }
       }
     }
   }
