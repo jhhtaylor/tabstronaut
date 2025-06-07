@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { Group } from "./models/Group";
+import { Group, TabItem } from "./models/Group";
 import {
   generateUuidv4,
   generateRelativeTime,
@@ -88,32 +88,31 @@ export class TabstronautDataProvider
     for (const id of draggedIds) {
       if (id.startsWith("group:")) {
         const groupId = id.replace("group:", "");
-        const groupOrder = Array.from(this.groupsMap.keys());
         const draggedGroup = this.groupsMap.get(groupId);
         const targetGroup = target instanceof Group ? target : undefined;
 
-        if (
-          !draggedGroup ||
-          !targetGroup ||
-          draggedGroup.id === targetGroup.id
-        ) {
+        if (!draggedGroup || !targetGroup || draggedGroup.id === targetGroup.id) {
           return;
         }
 
-        this.groupsMap.delete(groupId);
-        const reordered = new Map<string, Group>();
-        for (const key of groupOrder) {
-          if (key === targetGroup.id) {
-            reordered.set(draggedGroup.id, draggedGroup);
-          }
-          if (this.groupsMap.has(key)) {
-            reordered.set(key, this.groupsMap.get(key)!);
-          }
+        const groups = Array.from(this.groupsMap.values());
+        const draggedIndex = groups.findIndex((g) => g.id === draggedGroup.id);
+        const targetIndex = groups.findIndex((g) => g.id === targetGroup.id);
+
+        if (draggedIndex === -1 || targetIndex === -1) {
+          return;
         }
 
-        this.groupsMap = reordered;
+        groups.splice(draggedIndex, 1);
+        const insertPos = groups.findIndex((g) => g.id === targetGroup.id);
+        const adjustedIndex =
+          draggedIndex < targetIndex ? insertPos + 1 : insertPos;
+        groups.splice(adjustedIndex, 0, draggedGroup);
+
+        this.groupsMap = new Map(groups.map((g) => [g.id, g]));
         this.refresh();
         await this.updateWorkspaceState();
+        showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
       }
 
       if (id.startsWith("tab:") && target instanceof Group) {
@@ -122,13 +121,31 @@ export class TabstronautDataProvider
           g.items.some((i) => i.id === tabId)
         );
 
-        const tab = sourceGroup?.items.find((i) => i.id === tabId);
+        const tab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
         if (!tab || !sourceGroup) {
           return;
         }
 
+        const tabPath = tab.resourceUri?.fsPath || "";
+        const normalizedFilePath = generateNormalizedPath(tabPath);
+        const existingItem = target.items.find(
+          (item) =>
+            generateNormalizedPath(item.resourceUri?.fsPath || "") ===
+            normalizedFilePath
+        );
+
+        if (existingItem) {
+          vscode.window.showWarningMessage(
+            `${path.basename(tabPath)} is already in this Tab Group.`
+          );
+          continue;
+        }
+
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
-        target.items.push(tab);
+        const newItem = target.createTabItem(tabPath);
+        target.items.push(newItem);
 
         this.refresh();
         await this.updateWorkspaceState();
@@ -136,6 +153,62 @@ export class TabstronautDataProvider
         showConfirmation(
           `Moved '${tab.label}' to Tab Group '${target.label}'.`
         );
+      } else if (id.startsWith("tab:") && target instanceof vscode.TreeItem && target.contextValue === "tab") {
+        const tabId = id.replace("tab:", "");
+        const sourceGroup = Array.from(this.groupsMap.values()).find((g) =>
+          g.items.some((i) => i.id === tabId)
+        );
+        const draggedTab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
+        if (!draggedTab || !sourceGroup) {
+          return;
+        }
+
+        const targetTabId = target.id as string;
+        const targetGroup = Array.from(this.groupsMap.values()).find((g) =>
+          g.items.some((i) => i.id === targetTabId)
+        );
+        if (!targetGroup) {
+          return;
+        }
+
+        const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
+
+        const draggedPath = draggedTab.resourceUri?.fsPath || "";
+        const normalizedDragged = generateNormalizedPath(draggedPath);
+        const existingItem = targetGroup.items.find(
+          (item) =>
+            generateNormalizedPath(item.resourceUri?.fsPath || "") ===
+            normalizedDragged
+        );
+
+        if (existingItem && targetGroup !== sourceGroup) {
+          vscode.window.showWarningMessage(
+            `${path.basename(draggedPath)} is already in this Tab Group.`
+          );
+          continue;
+        }
+
+        sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+        if (targetGroup === sourceGroup) {
+          const adjustedIndex = targetIndex;
+          targetGroup.items.splice(adjustedIndex, 0, draggedTab);
+        } else {
+          const newItem = targetGroup.createTabItem(draggedPath);
+          targetGroup.items.splice(targetIndex, 0, newItem);
+        }
+
+        this.refresh();
+        await this.updateWorkspaceState();
+
+        if (targetGroup === sourceGroup) {
+          showConfirmation(`Reordered '${draggedTab.label}'.`);
+        } else {
+          showConfirmation(
+            `Moved '${draggedTab.label}' to Tab Group '${targetGroup.label}'.`
+          );
+        }
       }
     }
   }
@@ -282,7 +355,7 @@ export class TabstronautDataProvider
 
     const existingItem = group.items.find(
       (item) =>
-        generateNormalizedPath(item.resourceUri?.path || "") ===
+        generateNormalizedPath(item.resourceUri?.fsPath || "") ===
         normalizedFilePath
     );
 
@@ -349,7 +422,7 @@ export class TabstronautDataProvider
       const items = [...group.items];
       group.items = [];
       items.forEach((itemPath) =>
-        group.addItem(itemPath.resourceUri?.path as string)
+        group.addItem(itemPath.resourceUri?.fsPath as string)
       );
     });
 
@@ -403,7 +476,7 @@ export class TabstronautDataProvider
   
     const isLastTab =
       group.items.length === 1 &&
-      group.items[0].resourceUri?.path === filePath;
+      group.items[0].resourceUri?.fsPath === filePath;
   
     if (isLastTab && shouldConfirm) {
       const shouldDelete: string | undefined = await vscode.window.showQuickPick(
@@ -420,17 +493,18 @@ export class TabstronautDataProvider
     }
   
     if (isLastTab && this.onGroupAutoDeleted) {
-      const backupGroup = {
+      const backupGroup: Group = {
         ...group,
         items: [...group.items],
         createTabItem: group.createTabItem.bind(group),
         addItem: group.addItem.bind(group),
+        containsFile: group.containsFile.bind(group),
       };
       this.onGroupAutoDeleted(backupGroup);
     }
   
     group.items = group.items.filter(
-      (item) => item.resourceUri?.path !== filePath
+      (item) => item.resourceUri?.fsPath !== filePath
     );
   
     const shouldMoveGroup = vscode.workspace
@@ -470,7 +544,7 @@ export class TabstronautDataProvider
     } = {};
     this.groupsMap.forEach((group, id) => {
       if (typeof group.label === "string") {
-        let items = group.items.map((item) => item.resourceUri?.path as string);
+        let items = group.items.map((item) => item.resourceUri?.fsPath as string);
         groupData[id] = {
           label: group.label,
           items: items,
@@ -494,7 +568,7 @@ export class TabstronautDataProvider
     this.groupsMap.forEach((group) => {
       for (let i = 0; i < group.items.length; i++) {
         const item = group.items[i];
-        const itemPath = item.resourceUri?.path;
+        const itemPath = item.resourceUri?.fsPath;
 
         if (
           itemPath &&

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { generateRelativeTime, generateRelativeDescription, generateColorHash, COLORS } from '../utils';
+import { generateRelativeTime, generateRelativeDescription, generateColorHash, COLORS, generateNormalizedPath } from '../utils';
 
 export class Group extends vscode.TreeItem {
-    items: vscode.TreeItem[] = [];
+    items: TabItem[] = [];
     id: string;
     creationTime: Date;
     colorName: string;
@@ -36,6 +36,14 @@ export class Group extends vscode.TreeItem {
         return item;
     }
 
+    containsFile(filePath: string): boolean {
+        const normalized = generateNormalizedPath(filePath);
+        return this.items.some(
+            (i) =>
+                generateNormalizedPath(i.resourceUri?.fsPath || '') === normalized
+        );
+    }
+
     addItem(filePath: string) {
         if (!filePath) {
             vscode.window.showErrorMessage(`Cannot interpret file path. You may need to delete the Tab Group and try again.`);
@@ -45,6 +53,6 @@ export class Group extends vscode.TreeItem {
     }
 }
 
-class TabItem extends vscode.TreeItem {
+export class TabItem extends vscode.TreeItem {
     groupId?: string;
 }
