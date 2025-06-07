@@ -104,9 +104,9 @@ export class TabstronautDataProvider
         }
 
         order.splice(draggedIndex, 1);
-        order.splice(targetIndex, 0, draggedGroup.id);
 
-        this.groupsMap.delete(groupId);
+        const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+        order.splice(insertIndex, 0, draggedGroup.id);
 
         const reordered = new Map<string, Group>();
         for (const key of order) {
