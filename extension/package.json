@@ -139,7 +139,7 @@
         "title": "Undo Delete",
         "category": "Tabstronaut",
         "icon": "$(discard)"
-      }      
+      }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -164,7 +164,7 @@
           "command": "tabstronaut.undoDelete",
           "when": "view == tabstronaut && tabstronaut:canUndoDelete",
           "group": "navigation@-1"
-        },      
+        },
         {
           "command": "tabstronaut.openTabGroupContextMenu",
           "when": "view == tabstronaut",
@@ -309,7 +309,7 @@
         {
           "command": "tabstronaut.undoDelete",
           "when": "false"
-        }        
+        }
       ]
     },
     "keybindings": [
@@ -427,20 +427,21 @@
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
+    "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.98.0",
-    "@typescript-eslint/eslint-plugin": "^8.33.0",
-    "@typescript-eslint/parser": "^8.33.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
     "@vscode/test-electron": "^2.4.1",
     "concurrently": "^9.1.2",
-    "eslint": "^9.28.0",
+    "eslint": "^8.57.1",
     "glob": "^11.0.1",
+    "minimatch": "^3.1.2",
     "mocha": "^11.5.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.2",
