@@ -129,11 +129,11 @@ export class TabstronautDataProvider
         }
 
         const normalizedPath = generateNormalizedPath(
-          tab.resourceUri?.path || ""
+          tab.resourceUri?.fsPath || ""
         );
         const duplicate = target.items.some(
           (i) =>
-            generateNormalizedPath(i.resourceUri?.path || "") === normalizedPath
+            generateNormalizedPath(i.resourceUri?.fsPath || "") === normalizedPath
         );
         if (duplicate) {
           vscode.window.showWarningMessage(
@@ -175,11 +175,11 @@ export class TabstronautDataProvider
         const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
 
         const normalizedPath = generateNormalizedPath(
-          draggedTab.resourceUri?.path || ""
+          draggedTab.resourceUri?.fsPath || ""
         );
         const duplicate = targetGroup.items.some(
           (i) =>
-            generateNormalizedPath(i.resourceUri?.path || "") === normalizedPath
+            generateNormalizedPath(i.resourceUri?.fsPath || "") === normalizedPath
         );
         if (duplicate && targetGroup !== sourceGroup) {
           vscode.window.showWarningMessage(
@@ -353,7 +353,7 @@ export class TabstronautDataProvider
 
     const existingItem = group.items.find(
       (item) =>
-        generateNormalizedPath(item.resourceUri?.path || "") ===
+        generateNormalizedPath(item.resourceUri?.fsPath || "") ===
         normalizedFilePath
     );
 
@@ -420,7 +420,7 @@ export class TabstronautDataProvider
       const items = [...group.items];
       group.items = [];
       items.forEach((itemPath) =>
-        group.addItem(itemPath.resourceUri?.path as string)
+        group.addItem(itemPath.resourceUri?.fsPath as string)
       );
     });
 
@@ -474,7 +474,7 @@ export class TabstronautDataProvider
   
     const isLastTab =
       group.items.length === 1 &&
-      group.items[0].resourceUri?.path === filePath;
+      group.items[0].resourceUri?.fsPath === filePath;
   
     if (isLastTab && shouldConfirm) {
       const shouldDelete: string | undefined = await vscode.window.showQuickPick(
@@ -501,7 +501,7 @@ export class TabstronautDataProvider
     }
   
     group.items = group.items.filter(
-      (item) => item.resourceUri?.path !== filePath
+      (item) => item.resourceUri?.fsPath !== filePath
     );
   
     const shouldMoveGroup = vscode.workspace
@@ -541,7 +541,7 @@ export class TabstronautDataProvider
     } = {};
     this.groupsMap.forEach((group, id) => {
       if (typeof group.label === "string") {
-        let items = group.items.map((item) => item.resourceUri?.path as string);
+        let items = group.items.map((item) => item.resourceUri?.fsPath as string);
         groupData[id] = {
           label: group.label,
           items: items,
@@ -565,7 +565,7 @@ export class TabstronautDataProvider
     this.groupsMap.forEach((group) => {
       for (let i = 0; i < group.items.length; i++) {
         const item = group.items[i];
-        const itemPath = item.resourceUri?.path;
+        const itemPath = item.resourceUri?.fsPath;
 
         if (
           itemPath &&

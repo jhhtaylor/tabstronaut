@@ -227,7 +227,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         for (const tabItem of group.items) {
-          const filePath = tabItem.resourceUri?.path;
+          const filePath = tabItem.resourceUri?.fsPath;
           if (filePath) {
             try {
               await openFileSmart(filePath);
@@ -263,7 +263,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         for (const tabItem of group.items) {
-          const filePath = tabItem.resourceUri?.path;
+          const filePath = tabItem.resourceUri?.fsPath;
           if (filePath) {
             try {
               await openFileSmart(filePath);
@@ -375,7 +375,7 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        treeDataProvider.removeFromGroup(item.groupId, item.resourceUri?.path);
+        treeDataProvider.removeFromGroup(item.groupId, item.resourceUri?.fsPath);
       }
     )
   );
