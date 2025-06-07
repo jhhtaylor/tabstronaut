@@ -104,9 +104,11 @@ export class TabstronautDataProvider
         }
 
         order.splice(draggedIndex, 1);
-
-        const insertIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-        order.splice(insertIndex, 0, draggedGroup.id);
+        const adjustedTargetIndex = order.indexOf(targetGroup.id);
+        if (adjustedTargetIndex === -1) {
+          return;
+        }
+        order.splice(adjustedTargetIndex, 0, draggedGroup.id);
 
         const reordered = new Map<string, Group>();
         for (const key of order) {
@@ -129,7 +131,9 @@ export class TabstronautDataProvider
           g.items.some((i) => i.id === tabId)
         );
 
-        const tab = sourceGroup?.items.find((i) => i.id === tabId);
+        const tab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
         if (!tab || !sourceGroup) {
           return;
         }
@@ -149,7 +153,9 @@ export class TabstronautDataProvider
         const sourceGroup = Array.from(this.groupsMap.values()).find((g) =>
           g.items.some((i) => i.id === tabId)
         );
-        const draggedTab = sourceGroup?.items.find((i) => i.id === tabId);
+        const draggedTab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
         if (!draggedTab || !sourceGroup) {
           return;
         }
