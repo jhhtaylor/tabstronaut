@@ -34,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
       previousGroupId: prevId,
       createTabItem: group.createTabItem.bind(group),
       addItem: group.addItem.bind(group),
+      containsFile: group.containsFile.bind(group),
     };
 
     vscode.commands.executeCommand(
@@ -320,6 +321,7 @@ export function activate(context: vscode.ExtensionContext) {
           previousGroupId: prevId,
           createTabItem: group.createTabItem.bind(group),
           addItem: group.addItem.bind(group),
+          containsFile: group.containsFile.bind(group),
         };
         treeDataProvider.deleteGroup(group.id);
 

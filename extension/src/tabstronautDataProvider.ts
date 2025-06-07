@@ -481,11 +481,12 @@ export class TabstronautDataProvider
     }
   
     if (isLastTab && this.onGroupAutoDeleted) {
-      const backupGroup = {
+      const backupGroup: Group = {
         ...group,
         items: [...group.items],
         createTabItem: group.createTabItem.bind(group),
         addItem: group.addItem.bind(group),
+        containsFile: group.containsFile.bind(group),
       };
       this.onGroupAutoDeleted(backupGroup);
     }
