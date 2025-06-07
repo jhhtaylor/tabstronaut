@@ -88,25 +88,26 @@ export class TabstronautDataProvider
     for (const id of draggedIds) {
       if (id.startsWith("group:")) {
         const groupId = id.replace("group:", "");
-        const groupOrder = Array.from(this.groupsMap.keys());
         const draggedGroup = this.groupsMap.get(groupId);
         const targetGroup = target instanceof Group ? target : undefined;
 
-        if (
-          !draggedGroup ||
-          !targetGroup ||
-          draggedGroup.id === targetGroup.id
-        ) {
+        if (!draggedGroup || !targetGroup || draggedGroup.id === targetGroup.id) {
           return;
         }
 
         this.groupsMap.delete(groupId);
+        const order = Array.from(this.groupsMap.keys());
+        let targetIndex = order.indexOf(targetGroup.id);
+        if (targetIndex === -1) {
+          targetIndex = order.length;
+        }
+        order.splice(targetIndex, 0, draggedGroup.id);
+
         const reordered = new Map<string, Group>();
-        for (const key of groupOrder) {
-          if (key === targetGroup.id) {
-            reordered.set(draggedGroup.id, draggedGroup);
-          }
-          if (this.groupsMap.has(key)) {
+        for (const key of order) {
+          if (key === draggedGroup.id) {
+            reordered.set(key, draggedGroup);
+          } else {
             reordered.set(key, this.groupsMap.get(key)!);
           }
         }
@@ -114,6 +115,7 @@ export class TabstronautDataProvider
         this.groupsMap = reordered;
         this.refresh();
         await this.updateWorkspaceState();
+        showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
       }
 
       if (id.startsWith("tab:") && target instanceof Group) {
