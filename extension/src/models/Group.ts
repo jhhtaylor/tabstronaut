@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { generateRelativeTime, generateRelativeDescription, generateColorHash, COLORS } from '../utils';
+import { generateRelativeTime, generateRelativeDescription, generateColorHash, COLORS, generateNormalizedPath } from '../utils';
 
 export class Group extends vscode.TreeItem {
     items: TabItem[] = [];
@@ -34,6 +34,14 @@ export class Group extends vscode.TreeItem {
             arguments: [item]
         };
         return item;
+    }
+
+    containsFile(filePath: string): boolean {
+        const normalized = generateNormalizedPath(filePath);
+        return this.items.some(
+            (i) =>
+                generateNormalizedPath(i.resourceUri?.fsPath || '') === normalized
+        );
     }
 
     addItem(filePath: string) {

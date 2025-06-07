@@ -128,13 +128,7 @@ export class TabstronautDataProvider
           return;
         }
 
-        const normalizedPath = generateNormalizedPath(
-          tab.resourceUri?.fsPath || ""
-        );
-        const duplicate = target.items.some(
-          (i) =>
-            generateNormalizedPath(i.resourceUri?.fsPath || "") === normalizedPath
-        );
+        const duplicate = target.containsFile(tab.resourceUri?.fsPath || "");
         if (duplicate) {
           vscode.window.showWarningMessage(
             `'${tab.label}' is already in Tab Group '${target.label}'.`
@@ -174,12 +168,8 @@ export class TabstronautDataProvider
 
         const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
 
-        const normalizedPath = generateNormalizedPath(
+        const duplicate = targetGroup.containsFile(
           draggedTab.resourceUri?.fsPath || ""
-        );
-        const duplicate = targetGroup.items.some(
-          (i) =>
-            generateNormalizedPath(i.resourceUri?.fsPath || "") === normalizedPath
         );
         if (duplicate && targetGroup !== sourceGroup) {
           vscode.window.showWarningMessage(
