@@ -28,6 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
     recentlyDeletedGroup = {
       ...group,
+      index: treeDataProvider.getGroupIndex(group.id),
       createTabItem: group.createTabItem.bind(group),
       addItem: group.addItem.bind(group),
     };
@@ -60,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
     dragAndDropController: treeDataProvider,
   });
 
-  let recentlyDeletedGroup: Group | null = null;
+  let recentlyDeletedGroup: (Group & { index: number }) | null = null;
   let undoTimeout: NodeJS.Timeout | undefined;
 
   context.subscriptions.push(
@@ -308,6 +309,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         recentlyDeletedGroup = {
           ...group,
+          index: treeDataProvider.getGroupIndex(group.id),
           createTabItem: group.createTabItem.bind(group),
           addItem: group.addItem.bind(group),
         };
@@ -534,7 +536,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       const restored = await treeDataProvider.addGroup(
         recentlyDeletedGroup.label as string,
-        recentlyDeletedGroup.colorName
+        recentlyDeletedGroup.colorName,
+        recentlyDeletedGroup.index
       );
 
       if (!restored) {
