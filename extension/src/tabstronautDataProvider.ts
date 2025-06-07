@@ -188,16 +188,26 @@ export class TabstronautDataProvider
 
   async addGroup(
     label: string,
-    colorName?: string
+    colorName?: string,
+    position = 0
   ): Promise<string | undefined> {
     const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
 
+    const entries = Array.from(this.groupsMap.entries());
     const newGroupsMap = new Map<string, Group>();
-    newGroupsMap.set(newGroup.id, newGroup);
 
-    this.groupsMap.forEach((group, id) => {
+    let inserted = false;
+    entries.forEach(([id, group], index) => {
+      if (!inserted && index === position) {
+        newGroupsMap.set(newGroup.id, newGroup);
+        inserted = true;
+      }
       newGroupsMap.set(id, group);
     });
+
+    if (!inserted) {
+      newGroupsMap.set(newGroup.id, newGroup);
+    }
 
     this.groupsMap = newGroupsMap;
 
@@ -256,7 +266,11 @@ export class TabstronautDataProvider
     return groups;
   }
 
-  async addToGroup(groupId: string, filePath: string) {
+  async addToGroup(
+    groupId: string,
+    filePath: string,
+    moveGroup = true
+  ) {
     const group = this.groupsMap.get(groupId);
     if (!group) {
       return;
@@ -293,7 +307,7 @@ export class TabstronautDataProvider
       const shouldMoveGroup = vscode.workspace
         .getConfiguration("tabstronaut")
         .get("moveTabGroupOnTabChange", true);
-      if (shouldMoveGroup) {
+      if (shouldMoveGroup && moveGroup) {
         this.moveGroupToTopAndUpdateTimestamp(groupId);
       }
     }
@@ -435,6 +449,14 @@ export class TabstronautDataProvider
 
   public getFirstGroup(): Group | undefined {
     return Array.from(this.groupsMap.values())[0];
+  }
+
+  public getGroupIndex(groupId: string): number {
+    return Array.from(this.groupsMap.keys()).indexOf(groupId);
+  }
+
+  public getGroupIdByIndex(index: number): string | undefined {
+    return Array.from(this.groupsMap.keys())[index];
   }
 
   async updateWorkspaceState(): Promise<void> {
