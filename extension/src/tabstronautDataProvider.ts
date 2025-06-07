@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { Group } from "./models/Group";
+import { Group, TabItem } from "./models/Group";
 import {
   generateUuidv4,
   generateRelativeTime,

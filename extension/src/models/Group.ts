@@ -3,7 +3,7 @@ import * as path from 'path';
 import { generateRelativeTime, generateRelativeDescription, generateColorHash, COLORS } from '../utils';
 
 export class Group extends vscode.TreeItem {
-    items: vscode.TreeItem[] = [];
+    items: TabItem[] = [];
     id: string;
     creationTime: Date;
     colorName: string;
@@ -45,6 +45,6 @@ export class Group extends vscode.TreeItem {
     }
 }
 
-class TabItem extends vscode.TreeItem {
+export class TabItem extends vscode.TreeItem {
     groupId?: string;
 }
