@@ -20,8 +20,8 @@ export async function getGroupName(
     inputBox.prompt = prompt;
   }
   const defaultButton: vscode.QuickInputButton = {
-    iconPath: new vscode.ThemeIcon('check'),
-    tooltip: 'Use default name and color',
+    iconPath: new vscode.ThemeIcon('testing-skipped-icon'),
+    tooltip: 'Use default Tab Group name and color',
   };
   inputBox.buttons = [defaultButton];
 
