@@ -26,9 +26,12 @@ export function activate(context: vscode.ExtensionContext) {
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
+    const index = treeDataProvider.getGroupIndex(group.id);
+    const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
     recentlyDeletedGroup = {
       ...group,
-      index: treeDataProvider.getGroupIndex(group.id),
+      index,
+      previousGroupId: prevId,
       createTabItem: group.createTabItem.bind(group),
       addItem: group.addItem.bind(group),
     };
@@ -61,7 +64,9 @@ export function activate(context: vscode.ExtensionContext) {
     dragAndDropController: treeDataProvider,
   });
 
-  let recentlyDeletedGroup: (Group & { index: number }) | null = null;
+  let recentlyDeletedGroup:
+    | (Group & { index: number; previousGroupId?: string })
+    | null = null;
   let undoTimeout: NodeJS.Timeout | undefined;
 
   context.subscriptions.push(
@@ -307,9 +312,12 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
 
+        const index = treeDataProvider.getGroupIndex(group.id);
+        const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
         recentlyDeletedGroup = {
           ...group,
-          index: treeDataProvider.getGroupIndex(group.id),
+          index,
+          previousGroupId: prevId,
           createTabItem: group.createTabItem.bind(group),
           addItem: group.addItem.bind(group),
         };
@@ -534,10 +542,20 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
+      let insertIndex = recentlyDeletedGroup.index;
+      if (recentlyDeletedGroup.previousGroupId) {
+        const prevIdx = treeDataProvider.getGroupIndex(
+          recentlyDeletedGroup.previousGroupId
+        );
+        if (prevIdx !== -1) {
+          insertIndex = prevIdx + 1;
+        }
+      }
+
       const restored = await treeDataProvider.addGroup(
         recentlyDeletedGroup.label as string,
         recentlyDeletedGroup.colorName,
-        recentlyDeletedGroup.index
+        insertIndex
       );
 
       if (!restored) {

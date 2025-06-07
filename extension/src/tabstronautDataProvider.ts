@@ -455,6 +455,10 @@ export class TabstronautDataProvider
     return Array.from(this.groupsMap.keys()).indexOf(groupId);
   }
 
+  public getGroupIdByIndex(index: number): string | undefined {
+    return Array.from(this.groupsMap.keys())[index];
+  }
+
   async updateWorkspaceState(): Promise<void> {
     let groupData: {
       [key: string]: {
