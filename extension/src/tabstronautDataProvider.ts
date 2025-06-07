@@ -16,7 +16,10 @@ export class TabstronautDataProvider
 {
   onGroupAutoDeleted?: (group: Group) => void;
 
-  readonly dropMimeTypes = ["application/vnd.code.tree.tabstronaut"];
+  readonly dropMimeTypes = [
+    "application/vnd.code.tree.tabstronaut",
+    "text/uri-list",
+  ];
   readonly dragMimeTypes = ["text/uri-list"];
 
   private _onDidChangeTreeData: vscode.EventEmitter<
@@ -76,6 +79,30 @@ export class TabstronautDataProvider
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken
   ): Promise<void> {
+    const uriItem = dataTransfer.get("text/uri-list");
+    if (uriItem && target instanceof Group) {
+      const uriList = (uriItem.value as string)
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      let count = 0;
+      for (const uriString of uriList) {
+        try {
+          const uri = vscode.Uri.parse(uriString);
+          if (uri.scheme === "file") {
+            await this.addToGroup(target.id, uri.fsPath);
+            count++;
+          }
+        } catch {
+          continue;
+        }
+      }
+      if (count > 0) {
+        showConfirmation(`Added ${count} file(s) to Tab Group '${target.label}'.`);
+      }
+      return;
+    }
+
     const transferItem = dataTransfer.get(
       "application/vnd.code.tree.tabstronaut"
     );
