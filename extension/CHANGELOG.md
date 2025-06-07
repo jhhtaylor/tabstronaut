@@ -2,6 +2,16 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.2.5]
+
+- Add unit tests.
+- Fix two issues with importing Tabs — colors and locating the correct group.
+- Restored context menu command (`Ctrl+Shift+P`) to open the Tab Group context menu.
+- Code cleanup with more classes and separation of concerns.
+- Restoring a Tab Group returns it to its original position instead of moving it to the top.
+- Added buttons for selecting defaults when creating a Tab Group.
+- Improved text consistency throughout the extension.
+
 ## [1.2.4]
 
 - Disable erroneous commands
