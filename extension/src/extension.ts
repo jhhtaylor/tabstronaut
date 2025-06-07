@@ -548,7 +548,7 @@ export function activate(context: vscode.ExtensionContext) {
       for (const tab of recentlyDeletedGroup.items) {
         const uri = tab.resourceUri;
         if (uri) {
-          await treeDataProvider.addToGroup(restored, uri.fsPath);
+          await treeDataProvider.addToGroup(restored, uri.fsPath, false);
         }
       }
 

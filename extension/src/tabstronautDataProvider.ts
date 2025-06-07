@@ -266,7 +266,11 @@ export class TabstronautDataProvider
     return groups;
   }
 
-  async addToGroup(groupId: string, filePath: string) {
+  async addToGroup(
+    groupId: string,
+    filePath: string,
+    moveGroup = true
+  ) {
     const group = this.groupsMap.get(groupId);
     if (!group) {
       return;
@@ -303,7 +307,7 @@ export class TabstronautDataProvider
       const shouldMoveGroup = vscode.workspace
         .getConfiguration("tabstronaut")
         .get("moveTabGroupOnTabChange", true);
-      if (shouldMoveGroup) {
+      if (shouldMoveGroup && moveGroup) {
         this.moveGroupToTopAndUpdateTimestamp(groupId);
       }
     }
