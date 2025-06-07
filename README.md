@@ -17,12 +17,16 @@ Tabstronaut excels in tab management for VS Code by enabling users to archive an
 
 The Tabstronaut extension offers these enhanced features:
 
-- Creation of new groups from current tab or all tabs.
-- Streamlined addition and removal of tabs within specific groups.
-- Ability to open all tabs in a group or selectively expand/collapse them.
-- Intuitive renaming and color-coding of groups.
-- Efficient deletion of individual tabs or entire groups.
-- Archive and retrieve tab sets, systematically storing frequently-used or feature-specific tabs for future access.
+- Creation of new groups from current tab or all open tabs.
+- Streamlined addition and removal of tabs within specific groups, including files and folders from the Explorer.
+- Ability to add entire folders or all open tabs to a group at once.
+- Drag and drop to reorder tabs or move whole groups.
+- Option to open all tabs in a group or selectively expand/collapse them.
+- Intuitive renaming and color-coding of groups with real-time timestamps.
+- Optional auto-close of other tabs when restoring a group.
+- Efficient deletion of individual tabs or entire groups with undo support.
+- Import and export tab groups for easy sharing or backup.
+- Archive and retrieve tab sets, including Jupyter Notebooks, for future access.
 
 ## Tips
 
