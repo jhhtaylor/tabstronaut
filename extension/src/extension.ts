@@ -344,7 +344,7 @@ export function activate(context: vscode.ExtensionContext) {
           !("uri" in activeTab.input)
         ) {
           vscode.window.showWarningMessage(
-            "No supported file tab selected to add to a Tab Group."
+            "Add to Tab Group is only available when an editor tab is active."
           );
           return;
         }

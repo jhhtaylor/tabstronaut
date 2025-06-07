@@ -80,3 +80,12 @@ For a detailed list of all updates in bullet point format, see our [Change Log](
 ---
 
 **Enjoy using Tabstronaut!** 🧑‍🚀🪐
+
+## Development & Testing
+
+To run the unit tests locally:
+
+1. Install dependencies with `npm install` inside the `extension` folder.
+2. Run `npm test` from the same folder.
+
+The test suite requires Node and VS Code type definitions which are installed through the development dependencies.

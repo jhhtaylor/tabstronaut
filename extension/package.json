@@ -243,8 +243,7 @@
       ],
       "commandPalette": [
         {
-          "command": "tabstronaut.openTabGroupContextMenu",
-          "when": "false"
+          "command": "tabstronaut.openTabGroupContextMenu"
         },
         {
           "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
