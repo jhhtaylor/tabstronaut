@@ -7,6 +7,9 @@ class MockMemento implements vscode.Memento {
   constructor(initial: Record<string, any> = {}) {
     this.store = initial;
   }
+  keys(): readonly string[] {
+    throw new Error('Method not implemented.');
+  }
   get<T>(key: string, defaultValue?: T): T {
     if (key in this.store) {
       return this.store[key] as T;
