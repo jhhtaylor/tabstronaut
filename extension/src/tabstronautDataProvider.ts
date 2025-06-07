@@ -128,6 +128,20 @@ export class TabstronautDataProvider
           return;
         }
 
+        const normalizedPath = generateNormalizedPath(
+          tab.resourceUri?.path || ""
+        );
+        const duplicate = target.items.some(
+          (i) =>
+            generateNormalizedPath(i.resourceUri?.path || "") === normalizedPath
+        );
+        if (duplicate) {
+          vscode.window.showWarningMessage(
+            `'${tab.label}' is already in Tab Group '${target.label}'.`
+          );
+          continue;
+        }
+
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
         tab.groupId = target.id;
         target.items.push(tab);
@@ -159,6 +173,20 @@ export class TabstronautDataProvider
         }
 
         const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
+
+        const normalizedPath = generateNormalizedPath(
+          draggedTab.resourceUri?.path || ""
+        );
+        const duplicate = targetGroup.items.some(
+          (i) =>
+            generateNormalizedPath(i.resourceUri?.path || "") === normalizedPath
+        );
+        if (duplicate && targetGroup !== sourceGroup) {
+          vscode.window.showWarningMessage(
+            `'${draggedTab.label}' is already in Tab Group '${targetGroup.label}'.`
+          );
+          continue;
+        }
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
         if (targetGroup === sourceGroup) {
