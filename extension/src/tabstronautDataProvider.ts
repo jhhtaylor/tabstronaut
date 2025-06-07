@@ -138,6 +138,7 @@ export class TabstronautDataProvider
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
         tab.groupId = target.id;
+        tab.id = target.id + (tab.resourceUri?.fsPath || "");
         target.items.push(tab);
 
         this.refresh();
@@ -184,6 +185,7 @@ export class TabstronautDataProvider
           targetGroup.items.splice(adjustedIndex, 0, draggedTab);
         } else {
           draggedTab.groupId = targetGroup.id;
+          draggedTab.id = targetGroup.id + (draggedTab.resourceUri?.fsPath || "");
           targetGroup.items.splice(targetIndex, 0, draggedTab);
         }
 
