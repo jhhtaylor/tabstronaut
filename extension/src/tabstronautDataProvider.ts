@@ -129,18 +129,23 @@ export class TabstronautDataProvider
         }
 
         const tabPath = tab.resourceUri?.fsPath || "";
-        const duplicate = target.containsFile(tabPath);
-        if (duplicate) {
+        const normalizedFilePath = generateNormalizedPath(tabPath);
+        const existingItem = target.items.find(
+          (item) =>
+            generateNormalizedPath(item.resourceUri?.fsPath || "") ===
+            normalizedFilePath
+        );
+
+        if (existingItem) {
           vscode.window.showWarningMessage(
-            `'${tab.label}' is already in Tab Group '${target.label}'.`
+            `${path.basename(tabPath)} is already in this Tab Group.`
           );
           continue;
         }
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
-        tab.groupId = target.id;
-        tab.id = target.id + (tab.resourceUri?.fsPath || "");
-        target.items.push(tab);
+        const newItem = target.createTabItem(tabPath);
+        target.items.push(newItem);
 
         this.refresh();
         await this.updateWorkspaceState();
@@ -171,10 +176,16 @@ export class TabstronautDataProvider
         const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
 
         const draggedPath = draggedTab.resourceUri?.fsPath || "";
-        const duplicate = targetGroup.containsFile(draggedPath);
-        if (duplicate && targetGroup !== sourceGroup) {
+        const normalizedDragged = generateNormalizedPath(draggedPath);
+        const existingItem = targetGroup.items.find(
+          (item) =>
+            generateNormalizedPath(item.resourceUri?.fsPath || "") ===
+            normalizedDragged
+        );
+
+        if (existingItem && targetGroup !== sourceGroup) {
           vscode.window.showWarningMessage(
-            `'${draggedTab.label}' is already in Tab Group '${targetGroup.label}'.`
+            `${path.basename(draggedPath)} is already in this Tab Group.`
           );
           continue;
         }
@@ -184,9 +195,8 @@ export class TabstronautDataProvider
           const adjustedIndex = targetIndex;
           targetGroup.items.splice(adjustedIndex, 0, draggedTab);
         } else {
-          draggedTab.groupId = targetGroup.id;
-          draggedTab.id = targetGroup.id + (draggedTab.resourceUri?.fsPath || "");
-          targetGroup.items.splice(targetIndex, 0, draggedTab);
+          const newItem = targetGroup.createTabItem(draggedPath);
+          targetGroup.items.splice(targetIndex, 0, newItem);
         }
 
         this.refresh();
