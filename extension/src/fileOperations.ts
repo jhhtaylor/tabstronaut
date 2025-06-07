@@ -49,24 +49,30 @@ export async function openFileSmart(filePath: string): Promise<void> {
   }
 }
 
-export async function collectFilesRecursively(uri: vscode.Uri): Promise<vscode.Uri[]> {
+export async function collectFilesRecursively(
+  uri: vscode.Uri,
+  fs: Pick<vscode.FileSystem, 'readDirectory'> = vscode.workspace.fs
+): Promise<vscode.Uri[]> {
   const collected: vscode.Uri[] = [];
-  const entries = await vscode.workspace.fs.readDirectory(uri);
+  const entries = await fs.readDirectory(uri);
   for (const [name, type] of entries) {
     const entryUri = vscode.Uri.joinPath(uri, name);
     if (type === vscode.FileType.File) {
       collected.push(entryUri);
     } else if (type === vscode.FileType.Directory) {
-      const subFiles = await collectFilesRecursively(entryUri);
+      const subFiles = await collectFilesRecursively(entryUri, fs);
       collected.push(...subFiles);
     }
   }
   return collected;
 }
 
-export async function collectFilesFirstLevel(uri: vscode.Uri): Promise<vscode.Uri[]> {
+export async function collectFilesFirstLevel(
+  uri: vscode.Uri,
+  fs: Pick<vscode.FileSystem, 'readDirectory'> = vscode.workspace.fs
+): Promise<vscode.Uri[]> {
   const collected: vscode.Uri[] = [];
-  const entries = await vscode.workspace.fs.readDirectory(uri);
+  const entries = await fs.readDirectory(uri);
   for (const [name, type] of entries) {
     if (type === vscode.FileType.File) {
       collected.push(vscode.Uri.joinPath(uri, name));
@@ -74,22 +80,31 @@ export async function collectFilesFirstLevel(uri: vscode.Uri): Promise<vscode.Ur
   }
   return collected;
 }
-export async function gatherFileUris(uris: vscode.Uri[]): Promise<vscode.Uri[]> {
+export async function gatherFileUris(
+  uris: vscode.Uri[],
+  {
+    fs = vscode.workspace.fs,
+    showQuickPick = vscode.window.showQuickPick,
+  }: {
+    fs?: Pick<vscode.FileSystem, 'stat' | 'readDirectory'>;
+    showQuickPick?: typeof vscode.window.showQuickPick;
+  } = {}
+): Promise<vscode.Uri[]> {
   const fileUris: vscode.Uri[] = [];
 
   for (const u of uris) {
     try {
-      const stat = await vscode.workspace.fs.stat(u);
+      const stat = await fs.stat(u);
       if (stat.type === vscode.FileType.File) {
         fileUris.push(u);
       } else if (stat.type === vscode.FileType.Directory) {
-        const hasSubFolders = (await vscode.workspace.fs.readDirectory(u)).some(
+        const hasSubFolders = (await fs.readDirectory(u)).some(
           ([, type]) => type === vscode.FileType.Directory
         );
         let collected: vscode.Uri[] = [];
 
         if (hasSubFolders) {
-          const choice = await vscode.window.showQuickPick(
+          const choice = await showQuickPick(
             [
               { label: 'Add first-level files only', value: 'first' },
               { label: 'Add all files recursively', value: 'recursive' },
@@ -102,12 +117,12 @@ export async function gatherFileUris(uris: vscode.Uri[]): Promise<vscode.Uri[]> 
           }
 
           if (choice.value === 'first') {
-            collected = await collectFilesFirstLevel(u);
+            collected = await collectFilesFirstLevel(u, fs);
           } else {
-            collected = await collectFilesRecursively(u);
+            collected = await collectFilesRecursively(u, fs);
           }
         } else {
-          collected = await collectFilesFirstLevel(u);
+          collected = await collectFilesFirstLevel(u, fs);
         }
 
         fileUris.push(...collected);
