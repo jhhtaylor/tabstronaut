@@ -80,27 +80,57 @@ export class TabstronautDataProvider
     token: vscode.CancellationToken
   ): Promise<void> {
     const uriItem = dataTransfer.get("text/uri-list");
-    if (uriItem && target instanceof Group) {
+    if (uriItem) {
       const uriList = (uriItem.value as string)
         .split(/\r?\n/)
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
-      let count = 0;
+
+      const filePaths: string[] = [];
       for (const uriString of uriList) {
         try {
           const uri = vscode.Uri.parse(uriString);
           if (uri.scheme === "file") {
-            await this.addToGroup(target.id, uri.fsPath);
-            count++;
+            filePaths.push(uri.fsPath);
           }
         } catch {
           continue;
         }
       }
-      if (count > 0) {
-        showConfirmation(`Added ${count} file(s) to Tab Group '${target.label}'.`);
+
+      if (filePaths.length === 0) {
+        return;
       }
-      return;
+
+      if (!target || (target instanceof vscode.TreeItem && target.contextValue === "instruction")) {
+        const newGroupLabel = `Group ${this.groupsMap.size + 1}`;
+        const color = COLORS[this.groupsMap.size % COLORS.length];
+        const groupId = await this.addGroup(newGroupLabel, color);
+        if (!groupId) {
+          return;
+        }
+        for (const fp of filePaths) {
+          await this.addToGroup(groupId, fp);
+        }
+        showConfirmation(
+          `Created '${newGroupLabel}' and added ${filePaths.length} file(s).`
+        );
+        return;
+      }
+
+      if (target instanceof Group) {
+        let count = 0;
+        for (const fp of filePaths) {
+          await this.addToGroup(target.id, fp);
+          count++;
+        }
+        if (count > 0) {
+          showConfirmation(
+            `Added ${count} file(s) to Tab Group '${target.label}'.`
+          );
+        }
+        return;
+      }
     }
 
     const transferItem = dataTransfer.get(

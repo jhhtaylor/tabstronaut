@@ -117,4 +117,21 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(provider.getGroups().some((g) => g.id === g1), false);
     strictEqual(dstGroup.items.length, 1);
   });
+
+  it('handleDrop creates new group when dropping file on empty space', async () => {
+    const memento = new MockMemento({});
+    const provider = new TabstronautDataProvider(memento);
+
+    const uri = vscode.Uri.file('/tmp/file2');
+    const dragData = new vscode.DataTransfer();
+    dragData.set('text/uri-list', new vscode.DataTransferItem(uri.toString()));
+
+    await provider.handleDrop(undefined, dragData, new vscode.CancellationTokenSource().token);
+
+    provider.clearRefreshInterval();
+    const groups = provider.getGroups();
+    strictEqual(groups.length, 1);
+    strictEqual(groups[0].items.length, 1);
+    strictEqual(groups[0].items[0].resourceUri?.fsPath, uri.fsPath);
+  });
 });
