@@ -207,8 +207,27 @@ export class TabstronautDataProvider
   }
 
   getGroup(groupName: string): Group | undefined {
-    const groups = this.workspaceState.get<Group[]>("tabGroups", []);
-    return groups.find((group) => group.label === groupName);
+    const tabGroups = this.workspaceState.get<{
+      [id: string]: {
+        label: string;
+        items: string[];
+        creationTime?: string;
+        colorName?: string;
+      };
+    }>("tabGroups", {});
+
+    for (const id in tabGroups) {
+      const g = tabGroups[id];
+      if (g.label === groupName) {
+        const creationTime = g.creationTime
+          ? new Date(g.creationTime)
+          : new Date();
+        const group = new Group(g.label, id, creationTime, g.colorName);
+        g.items.forEach((filePath) => group.addItem(filePath));
+        return group;
+      }
+    }
+    return undefined;
   }
 
   public getGroups(): Group[] {
