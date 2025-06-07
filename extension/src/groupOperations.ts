@@ -230,7 +230,7 @@ export async function handleNewGroupCreation(
   const groupId = await treeDataProvider.addGroup(result.name, groupColor);
   if (!groupId) {
     vscode.window.showErrorMessage(
-      `Failed to create Tab Group with name: ${result.name}.`
+      `Cannot create Tab Group with name: ${result.name}.`
     );
     return;
   }

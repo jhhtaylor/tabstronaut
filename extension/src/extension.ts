@@ -152,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
       async (contextSelection: vscode.Uri) => {
-        const INVALID_TAB_MESSAGE = `Can't add this selection to a Tab Group. Please ensure you're selecting a valid source code file tab.`;
+        const INVALID_TAB_MESSAGE = `Cannot add this selection to a Tab Group. Please ensure you select a valid source code file tab.`;
         const filePath = contextSelection.fsPath;
 
         try {
@@ -233,7 +233,7 @@ export function activate(context: vscode.ExtensionContext) {
               await openFileSmart(filePath);
             } catch {
               vscode.window.showErrorMessage(
-                `Failed to open '${path.basename(
+                `Cannot open '${path.basename(
                   filePath
                 )}'. Please check if the file exists and try again.`
               );
@@ -269,7 +269,7 @@ export function activate(context: vscode.ExtensionContext) {
               await openFileSmart(filePath);
             } catch {
               vscode.window.showErrorMessage(
-                `Failed to open '${path.basename(
+                `Cannot open '${path.basename(
                   filePath
                 )}'. Please check if the file exists and try again.`
               );
@@ -559,7 +559,7 @@ export function activate(context: vscode.ExtensionContext) {
       );
 
       if (!restored) {
-        vscode.window.showErrorMessage("Failed to restore Tab Group.");
+        vscode.window.showErrorMessage("Cannot restore Tab Group.");
         return;
       }
 

@@ -25,7 +25,7 @@ export async function handleOpenTab(item: any, fromButton: boolean) {
       await vscode.window.showTextDocument(doc, { preview });
     }
   } catch {
-    vscode.window.showErrorMessage(`Failed to open '${path.basename(uri.fsPath)}'.`);
+    vscode.window.showErrorMessage(`Cannot open '${path.basename(uri.fsPath)}'.`);
   }
 }
 
@@ -44,7 +44,7 @@ export async function openFileSmart(filePath: string): Promise<void> {
     }
   } catch {
     vscode.window.showErrorMessage(
-      `Failed to open '${path.basename(filePath)}'. Please check if the file exists and try again.`
+      `Cannot open '${path.basename(filePath)}'. Please check if the file exists and try again.`
     );
   }
 }

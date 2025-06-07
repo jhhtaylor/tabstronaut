@@ -556,7 +556,7 @@ export class TabstronautDataProvider
     const content = JSON.stringify(groupData, null, 2);
 
     await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
-    showConfirmation("Tab Groups exported successfully!");
+    showConfirmation("Tab Groups exported successfully.");
   }
 
   async importGroupsFromFile(): Promise<void> {
@@ -604,10 +604,10 @@ export class TabstronautDataProvider
       await this.workspaceState.update("tabGroups", mergedGroups);
       this.rebuildStateFromStorage();
       this.refresh();
-      showConfirmation("Tab Groups imported successfully!");
+      showConfirmation("Tab Groups imported successfully.");
     } catch (error) {
       vscode.window.showErrorMessage(
-        "Failed to import Tab Groups. Invalid JSON file."
+        "Cannot import Tab Groups. Invalid JSON file."
       );
     }
   }
