@@ -500,7 +500,7 @@ export class TabstronautDataProvider
       defaultUri: vscode.Uri.file(
         path.join(defaultPath, "tabGroups-export.json")
       ),
-      filters: { "JSON Files": ["json"] },
+      filters: { jsonFiles: ["json"] },
       saveLabel: "Export Tab Groups",
     });
 
@@ -522,7 +522,7 @@ export class TabstronautDataProvider
     const [uri] =
       (await vscode.window.showOpenDialog({
         canSelectMany: false,
-        filters: { "JSON Files": ["json"] },
+        filters: { jsonFiles: ["json"] },
         openLabel: "Import Tab Groups",
       })) || [];
 
