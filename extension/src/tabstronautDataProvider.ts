@@ -95,13 +95,18 @@ export class TabstronautDataProvider
           return;
         }
 
-        this.groupsMap.delete(groupId);
         const order = Array.from(this.groupsMap.keys());
-        let targetIndex = order.indexOf(targetGroup.id);
-        if (targetIndex === -1) {
-          targetIndex = order.length;
+        const draggedIndex = order.indexOf(draggedGroup.id);
+        const targetIndex = order.indexOf(targetGroup.id);
+
+        if (draggedIndex === -1 || targetIndex === -1) {
+          return;
         }
+
+        order.splice(draggedIndex, 1);
         order.splice(targetIndex, 0, draggedGroup.id);
+
+        this.groupsMap.delete(groupId);
 
         const reordered = new Map<string, Group>();
         for (const key of order) {
