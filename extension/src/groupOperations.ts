@@ -4,28 +4,62 @@ import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS, showConfirmation } from './utils';
 import { gatherFileUris } from './fileOperations';
 
+export type GroupNameResult = {
+  name: string | undefined;
+  useDefaults: boolean;
+};
+
 export async function getGroupName(
   treeDataProvider: TabstronautDataProvider,
   prompt: string | undefined = undefined
-): Promise<string | undefined> {
-  const groupName = await vscode.window.showInputBox({
-    placeHolder:
-      "Enter a Tab Group name. Press 'Enter' without typing to use the default.",
-    prompt,
-  });
-
-  if (groupName === undefined) {
-    return undefined;
-  } else if (groupName.trim() === '') {
-    return `Group ${treeDataProvider.getGroups().length + 1}`;
-  } else {
-    return groupName;
+): Promise<GroupNameResult> {
+  const inputBox = vscode.window.createInputBox();
+  inputBox.placeholder =
+    "Enter a Tab Group name. Press 'Enter' without typing to use the default.";
+  if (prompt) {
+    inputBox.prompt = prompt;
   }
+  const defaultButton: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon('testing-skipped-icon'),
+    tooltip: 'Use default Tab Group name and color',
+  };
+  inputBox.buttons = [defaultButton];
+
+  return await new Promise<GroupNameResult>((resolve) => {
+    inputBox.onDidAccept(() => {
+      const value = inputBox.value;
+      inputBox.hide();
+      if (value.trim() === '') {
+        resolve({
+          name: `Group ${treeDataProvider.getGroups().length + 1}`,
+          useDefaults: false,
+        });
+      } else {
+        resolve({ name: value, useDefaults: false });
+      }
+    });
+
+    inputBox.onDidTriggerButton((button) => {
+      if (button === defaultButton) {
+        inputBox.hide();
+        resolve({
+          name: `Group ${treeDataProvider.getGroups().length + 1}`,
+          useDefaults: true,
+        });
+      }
+    });
+
+    inputBox.onDidHide(() => {
+      resolve({ name: undefined, useDefaults: false });
+    });
+
+    inputBox.show();
+  });
 }
 
 export async function getGroupNameForAllToNewGroup(
   treeDataProvider: TabstronautDataProvider
-): Promise<string | undefined> {
+): Promise<GroupNameResult> {
   const prompt =
     "Please ensure that all non-source code file tabs are closed before proceeding.";
   return await getGroupName(treeDataProvider, prompt);
@@ -83,23 +117,24 @@ export async function selectTabGroup(
       const item = e.item as CustomQuickPickItem;
 
       if (item.label === 'New Tab Group from current tab...') {
-        const newGroupName = await getGroupNameForAllToNewGroup(treeDataProvider);
-        if (!newGroupName) {
+        const result = await getGroupNameForAllToNewGroup(treeDataProvider);
+        if (!result.name) {
           return;
         }
 
         const color = COLORS[treeDataProvider.getGroups().length % COLORS.length];
-        const selectedColorOption = await selectColorOption(color);
-        if (!selectedColorOption) {
-          return;
+        let groupColor = color;
+        if (!result.useDefaults) {
+          const selectedColorOption = await selectColorOption(color);
+          if (!selectedColorOption || !('colorValue' in selectedColorOption)) {
+            return;
+          }
+          groupColor = selectedColorOption.colorValue;
         }
 
-        if (!('colorValue' in selectedColorOption)) {
-          return;
-        }
         const groupId = await treeDataProvider.addGroup(
-          newGroupName,
-          selectedColorOption.colorValue
+          result.name,
+          groupColor
         );
 
         if (!groupId) {
@@ -110,7 +145,7 @@ export async function selectTabGroup(
           'tabstronaut.addAllToNewGroup',
           groupId
         );
-        showConfirmation(`Created '${newGroupName}' and added all open tabs.`);
+        showConfirmation(`Created '${result.name}' and added all open tabs.`);
         quickPick.hide();
         return;
       }
@@ -170,39 +205,42 @@ export async function handleNewGroupCreation(
   groupLabel: string,
   filePath: string
 ): Promise<void> {
-  let newGroupName: string | undefined;
+  let result: GroupNameResult;
   if (groupLabel === 'New Tab Group from current tab...') {
-    newGroupName = await getGroupName(treeDataProvider);
-  } else if (groupLabel === 'New Tab Group from all tabs...') {
-    newGroupName = await getGroupNameForAllToNewGroup(treeDataProvider);
+    result = await getGroupName(treeDataProvider);
+  } else {
+    result = await getGroupNameForAllToNewGroup(treeDataProvider);
   }
-  if (newGroupName === undefined) {
+  if (!result.name) {
     return;
   }
 
   const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
-  const selectedColorOption = (await selectColorOption(defaultColor)) as
-    | ColorOption
-    | undefined;
-  if (!selectedColorOption) {
-    return;
+  let groupColor = defaultColor;
+  if (!result.useDefaults) {
+    const selectedColorOption = (await selectColorOption(defaultColor)) as
+      | ColorOption
+      | undefined;
+    if (!selectedColorOption) {
+      return;
+    }
+    groupColor = selectedColorOption.colorValue;
   }
-  const groupColor = selectedColorOption?.colorValue || defaultColor;
 
-  const groupId = await treeDataProvider.addGroup(newGroupName, groupColor);
+  const groupId = await treeDataProvider.addGroup(result.name, groupColor);
   if (!groupId) {
     vscode.window.showErrorMessage(
-      `Failed to create Tab Group with name: ${newGroupName}.`
+      `Failed to create Tab Group with name: ${result.name}.`
     );
     return;
   }
 
   if (groupLabel === 'New Tab Group from current tab...') {
     treeDataProvider.addToGroup(groupId, filePath);
-    showConfirmation(`Created '${newGroupName}' and added 1 file.`);
+    showConfirmation(`Created '${result.name}' and added 1 file.`);
   } else if (groupLabel === 'New Tab Group from all tabs...') {
     await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-    showConfirmation(`Created '${newGroupName}' and added all open tabs.`);
+    showConfirmation(`Created '${result.name}' and added all open tabs.`);
   }
 }
 
@@ -245,24 +283,28 @@ export async function handleNewGroupCreationFromMultipleFiles(
 ): Promise<void> {
   const isAll = groupLabel === 'New Tab Group from all tabs...';
 
-  const newGroupName = isAll
+  const result = isAll
     ? await getGroupNameForAllToNewGroup(treeDataProvider)
     : await getGroupName(treeDataProvider);
-  if (!newGroupName) {
+  if (!result.name) {
     return;
   }
 
   const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
-  const selectedColorOption = (await selectColorOption(defaultColor)) as
-    | ColorOption
-    | undefined;
-  if (!selectedColorOption) {
-    return;
+  let groupColor = defaultColor;
+  if (!result.useDefaults) {
+    const selectedColorOption = (await selectColorOption(defaultColor)) as
+      | ColorOption
+      | undefined;
+    if (!selectedColorOption) {
+      return;
+    }
+    groupColor = selectedColorOption.colorValue;
   }
 
   const groupId = await treeDataProvider.addGroup(
-    newGroupName,
-    selectedColorOption.colorValue
+    result.name,
+    groupColor
   );
   if (!groupId) {
     return;
@@ -272,7 +314,7 @@ export async function handleNewGroupCreationFromMultipleFiles(
     await treeDataProvider.addToGroup(groupId, uri.fsPath);
   }
 
-  showConfirmation(`Created '${newGroupName}' and added ${fileUris.length} file(s).`);
+  showConfirmation(`Created '${result.name}' and added ${fileUris.length} file(s).`);
 }
 
 export async function renameTabGroupCommand(
