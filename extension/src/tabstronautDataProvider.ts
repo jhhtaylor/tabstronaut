@@ -104,8 +104,10 @@ export class TabstronautDataProvider
         }
 
         groups.splice(draggedIndex, 1);
-        const insertIndex = groups.findIndex((g) => g.id === targetGroup.id);
-        groups.splice(insertIndex, 0, draggedGroup);
+        const insertPos = groups.findIndex((g) => g.id === targetGroup.id);
+        const adjustedIndex =
+          draggedIndex < targetIndex ? insertPos + 1 : insertPos;
+        groups.splice(adjustedIndex, 0, draggedGroup);
 
         this.groupsMap = new Map(groups.map((g) => [g.id, g]));
         this.refresh();
