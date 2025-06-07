@@ -143,7 +143,27 @@ export class TabstronautDataProvider
           continue;
         }
 
+        const wasLastTab = sourceGroup.items.length === 1;
+        let backupGroup: Group | undefined;
+        if (wasLastTab) {
+          backupGroup = {
+            ...sourceGroup,
+            items: [...sourceGroup.items],
+            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
+            addItem: sourceGroup.addItem.bind(sourceGroup),
+            containsFile: sourceGroup.containsFile.bind(sourceGroup),
+          };
+        }
+
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+
+        if (wasLastTab) {
+          if (this.onGroupAutoDeleted && backupGroup) {
+            this.onGroupAutoDeleted(backupGroup);
+          }
+          this.groupsMap.delete(sourceGroup.id);
+        }
+
         const newItem = target.createTabItem(tabPath);
         target.items.push(newItem);
 
@@ -190,7 +210,27 @@ export class TabstronautDataProvider
           continue;
         }
 
+        const wasLastTab = sourceGroup.items.length === 1;
+        let backupGroup: Group | undefined;
+        if (wasLastTab) {
+          backupGroup = {
+            ...sourceGroup,
+            items: [...sourceGroup.items],
+            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
+            addItem: sourceGroup.addItem.bind(sourceGroup),
+            containsFile: sourceGroup.containsFile.bind(sourceGroup),
+          };
+        }
+
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+
+        if (wasLastTab) {
+          if (this.onGroupAutoDeleted && backupGroup) {
+            this.onGroupAutoDeleted(backupGroup);
+          }
+          this.groupsMap.delete(sourceGroup.id);
+        }
+
         if (targetGroup === sourceGroup) {
           const adjustedIndex = targetIndex;
           targetGroup.items.splice(adjustedIndex, 0, draggedTab);
