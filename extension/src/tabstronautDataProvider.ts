@@ -172,7 +172,57 @@ export class TabstronautDataProvider
         showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
       }
 
-      if (id.startsWith("tab:") && target instanceof Group) {
+      const dropOnEmpty =
+        !target ||
+        (target instanceof vscode.TreeItem && target.contextValue === "instruction");
+
+      if (id.startsWith("tab:") && dropOnEmpty) {
+        const tabId = id.replace("tab:", "");
+        const sourceGroup = Array.from(this.groupsMap.values()).find((g) =>
+          g.items.some((i) => i.id === tabId)
+        );
+
+        const tab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
+        if (!tab || !sourceGroup) {
+          continue;
+        }
+
+        const wasLastTab = sourceGroup.items.length === 1;
+        let backupGroup: Group | undefined;
+        if (wasLastTab) {
+          backupGroup = {
+            ...sourceGroup,
+            items: [...sourceGroup.items],
+            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
+            addItem: sourceGroup.addItem.bind(sourceGroup),
+            containsFile: sourceGroup.containsFile.bind(sourceGroup),
+          };
+        }
+
+        sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+
+        if (wasLastTab) {
+          if (this.onGroupAutoDeleted && backupGroup) {
+            this.onGroupAutoDeleted(backupGroup);
+          }
+          this.groupsMap.delete(sourceGroup.id);
+        }
+
+        const newGroupLabel = `Group ${this.groupsMap.size + 1}`;
+        const color = COLORS[this.groupsMap.size % COLORS.length];
+        const groupId = await this.addGroup(newGroupLabel, color);
+        if (!groupId) {
+          continue;
+        }
+
+        await this.addToGroup(groupId, tab.resourceUri?.fsPath || "");
+
+        showConfirmation(
+          `Created '${newGroupLabel}' and moved '${tab.label}' to it.`
+        );
+      } else if (id.startsWith("tab:") && target instanceof Group) {
         const tabId = id.replace("tab:", "");
         const sourceGroup = Array.from(this.groupsMap.values()).find((g) =>
           g.items.some((i) => i.id === tabId)

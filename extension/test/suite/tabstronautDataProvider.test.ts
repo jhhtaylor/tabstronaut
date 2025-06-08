@@ -134,4 +134,25 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(groups[0].items.length, 1);
     strictEqual(groups[0].items[0].resourceUri?.fsPath, uri.fsPath);
   });
+
+  it('handleDrop creates new group when dropping tab item on empty space', async () => {
+    const memento = new MockMemento({});
+    const provider = new TabstronautDataProvider(memento);
+
+    const g1 = await provider.addGroup('G1');
+    await provider.addToGroup(g1!, '/tmp/file1');
+
+    const srcGroup = provider.getGroup('G1')!;
+    const tabItem = srcGroup.items[0];
+
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag([tabItem], dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(undefined, dragData, new vscode.CancellationTokenSource().token);
+
+    provider.clearRefreshInterval();
+    const groups = provider.getGroups();
+    strictEqual(groups.length, 1);
+    strictEqual(groups[0].items.length, 1);
+    strictEqual(groups[0].items[0].resourceUri?.fsPath, '/tmp/file1');
+  });
 });
