@@ -4,12 +4,8 @@ All notable changes to the Tabstronaut extension will be documented in this file
 
 ## [1.2.6]
 
-- Tabs reorder when dragged
-- Tab Groups reorder when dragged
-- Prevent adding duplicate tabs to a group
-- Disallow creation of empty Tab Groups
-- Dragging the active tab into a group now works
-- Added unit tests
+- Tabs and Tab Groups reorder drag-and-drop logic more natural.
+- Add unit tests.
 
 ## [1.2.5]
 
