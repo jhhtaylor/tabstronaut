@@ -2,23 +2,28 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.2.6]
+
+- Tabs and Tab Groups reorder drag-and-drop logic more natural.
+- Add unit tests.
+
 ## [1.2.5]
 
-- Add unit tests.
 - Fix two issues with importing Tabs — colors and locating the correct group.
 - Restored context menu command (`Ctrl+Shift+P`) to open the Tab Group context menu.
 - Code cleanup with more classes and separation of concerns.
 - Restoring a Tab Group returns it to its original position instead of moving it to the top.
 - Added buttons for selecting defaults when creating a Tab Group.
 - Improved text consistency throughout the extension.
+- Add unit tests.
 
 ## [1.2.4]
 
-- Disable erroneous commands
+- Disable erroneous commands.
 
 ## [1.2.3]
 
-- New more readable logo
+- New more readable logo.
 
 ## [1.2.2]
 
@@ -43,7 +48,8 @@ All notable changes to the Tabstronaut extension will be documented in this file
 - General UX improvements and polish.
 
 ## [1.1.20 - 1.1.21]
-- Hotfixes
+
+- Hotfixes.
 
 ## [1.1.19]
 
@@ -54,7 +60,8 @@ All notable changes to the Tabstronaut extension will be documented in this file
 
 ## [1.1.18]
 
-- Updated Tabstronaut extension title
+
+- Updated Tabstronaut extension title.
 
 ## [1.1.17]
 
@@ -80,7 +87,7 @@ All notable changes to the Tabstronaut extension will be documented in this file
 - Added setting to change order of restore keybindings.
 - Added close all button.
 - Add settings option to remove confirmation modals.
-- Added bug fixes
+- Added bug fixes.
 
 ## [1.1.12]
 
@@ -115,7 +122,7 @@ All notable changes to the Tabstronaut extension will be documented in this file
 
 ## [1.1.3 - 1.1.6]
 
-- Hotfixes
+- Hotfixes.
 
 ## [1.1.2]
 
