@@ -26,13 +26,14 @@ describe('TabstronautDataProvider handleDrop text/uri-list', () => {
   it('adds file from uri list to group', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1', undefined, 0);
-    const group = provider.getGroup('G1')!;
+    let group = provider.getGroup('G1')!;
 
     const dragData = new vscode.DataTransfer();
     const uri = vscode.Uri.file('/tmp/file1');
     dragData.set('text/uri-list', new vscode.DataTransferItem(uri.toString()));
 
     await provider.handleDrop(group, dragData, new vscode.CancellationTokenSource().token);
+    group = provider.getGroup('G1')!;
     provider.clearRefreshInterval();
 
     strictEqual(group.items.length, 1);
@@ -42,7 +43,7 @@ describe('TabstronautDataProvider handleDrop text/uri-list', () => {
   it('does not add duplicate file from uri list', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1', undefined, 0);
-    const group = provider.getGroup('G1')!;
+    let group = provider.getGroup('G1')!;
 
     const dragData = new vscode.DataTransfer();
     const uri = vscode.Uri.file('/tmp/file1');
@@ -51,6 +52,7 @@ describe('TabstronautDataProvider handleDrop text/uri-list', () => {
     const token = new vscode.CancellationTokenSource().token;
     await provider.handleDrop(group, dragData, token);
     await provider.handleDrop(group, dragData, token);
+    group = provider.getGroup('G1')!;
     provider.clearRefreshInterval();
 
     strictEqual(group.items.length, 1);
