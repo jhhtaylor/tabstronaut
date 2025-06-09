@@ -7,6 +7,7 @@ import {
   generateNormalizedPath,
   showConfirmation,
   COLORS,
+  labelForTopFolder,
 } from "./utils";
 
 export class TabstronautDataProvider
@@ -752,6 +753,38 @@ export class TabstronautDataProvider
       );
     }
   }
+
+  async sortGroup(
+    groupId: string,
+    mode: "folder" | "fileType"
+  ): Promise<void> {
+    const group = this.groupsMap.get(groupId);
+    if (!group) {
+      return;
+    }
+
+    const getKey = (filePath: string): string => {
+      if (mode === "fileType") {
+        return path.extname(filePath).toLowerCase();
+      }
+      return labelForTopFolder(filePath).toLowerCase();
+    };
+
+    group.items.sort((a, b) => {
+      const aPath = a.resourceUri?.fsPath || "";
+      const bPath = b.resourceUri?.fsPath || "";
+      const keyA = getKey(aPath);
+      const keyB = getKey(bPath);
+      if (keyA === keyB) {
+        return aPath.localeCompare(bPath);
+      }
+      return keyA.localeCompare(keyB);
+    });
+
+    await this.updateWorkspaceState();
+    this._onDidChangeTreeData.fire(group);
+  }
+
 
   private rebuildStateFromStorage(): void {
     this.groupsMap.clear();

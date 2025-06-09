@@ -9,6 +9,7 @@ import {
   renameTabGroupCommand,
   addAllOpenTabsToGroup,
   addFilesToGroupCommand,
+  sortTabGroupCommand,
 } from "./groupOperations";
 
 let treeDataProvider: TabstronautDataProvider;
@@ -286,6 +287,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.editTabGroup",
       (item: any) => renameTabGroupCommand(treeDataProvider, item)
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.sortTabGroup",
+      (item: any) => sortTabGroupCommand(treeDataProvider, item)
     )
   );
 

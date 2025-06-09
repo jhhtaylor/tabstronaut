@@ -118,3 +118,42 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(dstGroup.items.length, 1);
   });
 });
+
+describe('TabstronautDataProvider.sortGroup', () => {
+  it('sorts by file type', async () => {
+    const memento = new MockMemento({});
+    const provider = new TabstronautDataProvider(memento);
+    const id = await provider.addGroup('G1');
+    await provider.addToGroup(id!, '/tmp/b.ts');
+    await provider.addToGroup(id!, '/tmp/a.js');
+    await provider.sortGroup(id!, 'fileType');
+    provider.clearRefreshInterval();
+    const group = provider.getGroup('G1')!;
+    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/a.js');
+    strictEqual(group.items[1].resourceUri?.fsPath, '/tmp/b.ts');
+  });
+
+  it('sorts by folder', async () => {
+    const orig = (vscode.workspace as any).workspaceFolders;
+    Object.defineProperty(vscode.workspace, 'workspaceFolders', {
+      value: [
+        { uri: vscode.Uri.file('/tmp'), index: 0, name: 'tmp' } as vscode.WorkspaceFolder,
+      ],
+      configurable: true,
+    });
+
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('G1');
+    await provider.addToGroup(id!, '/tmp/src/b.ts');
+    await provider.addToGroup(id!, '/tmp/tests/a.ts');
+    await provider.sortGroup(id!, 'folder');
+    provider.clearRefreshInterval();
+    const group = provider.getGroup('G1')!;
+    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/src/b.ts');
+    strictEqual(group.items[1].resourceUri?.fsPath, '/tmp/tests/a.ts');
+    Object.defineProperty(vscode.workspace, 'workspaceFolders', {
+      value: orig,
+      configurable: true,
+    });
+  });
+});
