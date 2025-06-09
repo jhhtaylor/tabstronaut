@@ -78,6 +78,12 @@
         "icon": "$(pencil)"
       },
       {
+        "command": "tabstronaut.sortTabGroup",
+        "category": "Tabstronaut",
+        "title": "Sort Tab Group...",
+        "icon": "$(sort-precedence)"
+      },
+      {
         "command": "tabstronaut.removeTabGroup",
         "category": "Tabstronaut",
         "title": "Remove Tab Group",
@@ -221,14 +227,19 @@
           "group": "inline@2"
         },
         {
-          "command": "tabstronaut.editTabGroup",
+          "command": "tabstronaut.sortTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@3"
         },
         {
-          "command": "tabstronaut.removeTabGroup",
+          "command": "tabstronaut.editTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@4"
+        },
+        {
+          "command": "tabstronaut.removeTabGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline@5"
         },
         {
           "command": "tabstronaut.restoreSpecificTab",
@@ -259,6 +270,10 @@
         },
         {
           "command": "tabstronaut.restoreAllTabsInGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.sortTabGroup",
           "when": "false"
         },
         {
@@ -413,13 +428,8 @@
           "type": "boolean",
           "default": false,
           "description": "Show confirmation messages after adding tabs to groups."
-        },
-        "tabstronaut.autoGroupBy": {
-          "type": "string",
-          "enum": ["none", "fileType", "folder"],
-          "default": "none",
-          "description": "Automatically add newly opened files to Tab Groups based on file type or top-level folder."
         }
+        
       }
     }
   },

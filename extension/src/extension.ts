@@ -9,6 +9,7 @@ import {
   renameTabGroupCommand,
   addAllOpenTabsToGroup,
   addFilesToGroupCommand,
+  sortTabGroupCommand,
 } from "./groupOperations";
 
 let treeDataProvider: TabstronautDataProvider;
@@ -22,7 +23,6 @@ export function activate(context: vscode.ExtensionContext) {
   config.get("moveTabGroupOnTabChange");
   config.get("autoCloseOnRestore");
   config.get("showConfirmationMessages");
-  config.get("autoGroupBy");
 
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
@@ -65,18 +65,6 @@ export function activate(context: vscode.ExtensionContext) {
     showCollapseAll: false,
     dragAndDropController: treeDataProvider,
   });
-
-  context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(async (doc) => {
-      const mode = vscode.workspace
-        .getConfiguration("tabstronaut")
-        .get<"none" | "fileType" | "folder">("autoGroupBy", "none");
-      if (mode === "none" || doc.uri.scheme !== "file") {
-        return;
-      }
-      await treeDataProvider.autoGroupFile(doc.uri.fsPath, mode);
-    })
-  );
 
   let recentlyDeletedGroup:
     | (Group & { index: number; previousGroupId?: string })
@@ -299,6 +287,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.editTabGroup",
       (item: any) => renameTabGroupCommand(treeDataProvider, item)
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.sortTabGroup",
+      (item: any) => sortTabGroupCommand(treeDataProvider, item)
     )
   );
 

@@ -12,7 +12,7 @@ The Tabstronaut extension offers these enhanced features:
 - Streamlined addition and removal of tabs within specific groups, including files and folders from the Explorer.
 - Ability to add entire folders or all open tabs to a group at once.
 - Drag and drop to reorder tabs or move whole groups.
-- Automatic grouping of new tabs by file type or top-level folder.
+- Sort tabs within a group by folder or file type using the group action button.
 - Option to open all tabs in a group or selectively expand/collapse them.
 - Intuitive renaming and color-coding of groups with real-time timestamps.
 - Optional auto-close of other tabs when restoring a group.

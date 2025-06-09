@@ -463,3 +463,24 @@ export async function addFilesToGroupCommand(
     `Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`
   );
 }
+
+export async function sortTabGroupCommand(
+  treeDataProvider: TabstronautDataProvider,
+  item: any
+): Promise<void> {
+  if (item.contextValue !== 'group') {
+    return;
+  }
+
+  const picked = await vscode.window.showQuickPick(
+    ['Sort by Folder', 'Sort by File Type'],
+    { placeHolder: 'Sort Tab Group' }
+  );
+
+  if (!picked) {
+    return;
+  }
+
+  const mode = picked === 'Sort by File Type' ? 'fileType' : 'folder';
+  await treeDataProvider.sortGroup(item.id, mode as 'folder' | 'fileType');
+}

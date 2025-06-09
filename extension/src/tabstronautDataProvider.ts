@@ -7,7 +7,6 @@ import {
   generateNormalizedPath,
   showConfirmation,
   COLORS,
-  labelForFileType,
   labelForTopFolder,
 } from "./utils";
 
@@ -755,41 +754,37 @@ export class TabstronautDataProvider
     }
   }
 
-  async autoGroupFile(filePath: string, mode: "fileType" | "folder"): Promise<void> {
-    if (!filePath) {
-      return;
-    }
-
-    const already = Array.from(this.groupsMap.values()).some((g) =>
-      g.containsFile(filePath)
-    );
-    if (already) {
-      return;
-    }
-
-    let label: string;
-    if (mode === "fileType") {
-      label = labelForFileType(filePath);
-    } else {
-      label = labelForTopFolder(filePath);
-    }
-
-    let group = Array.from(this.groupsMap.values()).find(
-      (g) => g.label === label
-    );
+  async sortGroup(
+    groupId: string,
+    mode: "folder" | "fileType"
+  ): Promise<void> {
+    const group = this.groupsMap.get(groupId);
     if (!group) {
-      const color = COLORS[this.groupsMap.size % COLORS.length];
-      const id = await this.addGroup(label, color, this.groupsMap.size);
-      if (!id) {
-        return;
-      }
-      group = this.groupsMap.get(id);
+      return;
     }
 
-    if (group) {
-      await this.addToGroup(group.id, filePath);
-    }
+    const getKey = (filePath: string): string => {
+      if (mode === "fileType") {
+        return path.extname(filePath).toLowerCase();
+      }
+      return labelForTopFolder(filePath).toLowerCase();
+    };
+
+    group.items.sort((a, b) => {
+      const aPath = a.resourceUri?.fsPath || "";
+      const bPath = b.resourceUri?.fsPath || "";
+      const keyA = getKey(aPath);
+      const keyB = getKey(bPath);
+      if (keyA === keyB) {
+        return aPath.localeCompare(bPath);
+      }
+      return keyA.localeCompare(keyB);
+    });
+
+    await this.updateWorkspaceState();
+    this._onDidChangeTreeData.fire(group);
   }
+
 
   private rebuildStateFromStorage(): void {
     this.groupsMap.clear();
