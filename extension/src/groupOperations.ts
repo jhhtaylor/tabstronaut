@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS, showConfirmation } from './utils';
-import { gatherFileUris } from './fileOperations';
+import { gatherFileUris, getOpenEditorFilePaths } from './fileOperations';
 
 export type GroupNameResult = {
   name: string | undefined;
@@ -61,7 +61,7 @@ export async function getGroupNameForAllToNewGroup(
   treeDataProvider: TabstronautDataProvider
 ): Promise<GroupNameResult> {
   const prompt =
-    "Please ensure that all non-source code file tabs are closed before proceeding.";
+    "Tabs that are not source code files will be skipped.";
   return await getGroupName(treeDataProvider, prompt);
 }
 
@@ -158,32 +158,12 @@ export async function selectTabGroup(
           return;
         }
 
-        const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
-        const addedFiles = new Set<string>();
-        let count = 0;
-
-        for (const tab of allTabs) {
-          if (
-            !tab.input ||
-            typeof tab.input !== 'object' ||
-            !('uri' in tab.input)
-          ) {
-            continue;
-          }
-          const uri = (tab.input as any).uri;
-          if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
-            continue;
-          }
-
-          const filePath = uri.fsPath;
-          if (!addedFiles.has(filePath)) {
-            await treeDataProvider.addToGroup(group.id, filePath);
-            addedFiles.add(filePath);
-            count++;
-          }
+        const filePaths = getOpenEditorFilePaths();
+        for (const filePath of filePaths) {
+          await treeDataProvider.addToGroup(group.id, filePath);
         }
 
-        showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+        showConfirmation(`Added ${filePaths.length} open tab(s) to Tab Group '${group.label}'.`);
         quickPick.hide();
       }
     });
@@ -396,31 +376,12 @@ export async function addAllOpenTabsToGroup(
   treeDataProvider: TabstronautDataProvider,
   group: Group
 ): Promise<void> {
-  const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
-  const addedFiles = new Set<string>();
-  let count = 0;
-
-  for (const tab of allTabs) {
-    if (
-      !tab.input ||
-      typeof tab.input !== 'object' ||
-      !('uri' in tab.input)
-    ) {
-      continue;
-    }
-    const uri = (tab.input as any).uri;
-    if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
-      continue;
-    }
-    const filePath = uri.fsPath;
-    if (!addedFiles.has(filePath)) {
-      await treeDataProvider.addToGroup(group.id, filePath);
-      addedFiles.add(filePath);
-      count++;
-    }
+  const filePaths = getOpenEditorFilePaths();
+  for (const filePath of filePaths) {
+    await treeDataProvider.addToGroup(group.id, filePath);
   }
 
-  showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+  showConfirmation(`Added ${filePaths.length} open tab(s) to Tab Group '${group.label}'.`);
 }
 
 export async function addFilesToGroupCommand(

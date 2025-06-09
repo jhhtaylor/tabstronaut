@@ -134,3 +134,34 @@ export async function gatherFileUris(
 
   return fileUris;
 }
+
+function isFileTab(tab: vscode.Tab): boolean {
+  const input: any = tab.input;
+  return (
+    input &&
+    typeof input === 'object' &&
+    'uri' in input &&
+    input.uri instanceof vscode.Uri &&
+    input.uri.scheme === 'file'
+  );
+}
+
+export function getOpenEditorFilePaths(): string[] {
+  const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+  const seen = new Set<string>();
+  const paths: string[] = [];
+
+  for (const tab of allTabs) {
+    if (!isFileTab(tab)) {
+      continue;
+    }
+
+    const filePath = (tab.input as any).uri.fsPath;
+    if (!seen.has(filePath)) {
+      seen.add(filePath);
+      paths.push(filePath);
+    }
+  }
+
+  return paths;
+}

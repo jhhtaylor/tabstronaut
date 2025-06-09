@@ -3,7 +3,7 @@ import * as path from "path";
 import { TabstronautDataProvider } from "./tabstronautDataProvider";
 import { Group } from "./models/Group";
 import { showConfirmation } from "./utils";
-import { handleOpenTab, openFileSmart } from "./fileOperations";
+import { handleOpenTab, openFileSmart, getOpenEditorFilePaths } from "./fileOperations";
 import {
   handleTabGroupAction,
   renameTabGroupCommand,
@@ -179,31 +179,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addAllToNewGroup",
       async (groupId: string) => {
-        const allTabs = vscode.window.tabGroups.all.flatMap(
-          (group) => group.tabs
-        );
-
-        const addedFiles = new Set<string>();
-
-        for (const tab of allTabs) {
-          if (
-            !tab.input ||
-            typeof tab.input !== "object" ||
-            !("uri" in tab.input)
-          ) {
-            continue;
-          }
-
-          const uri = tab.input.uri;
-          if (!(uri instanceof vscode.Uri) || uri.scheme !== "file") {
-            continue;
-          }
-
-          const filePath = uri.fsPath;
-          if (!addedFiles.has(filePath)) {
-            await treeDataProvider.addToGroup(groupId, filePath);
-            addedFiles.add(filePath);
-          }
+        const filePaths = getOpenEditorFilePaths();
+        for (const filePath of filePaths) {
+          await treeDataProvider.addToGroup(groupId, filePath);
         }
       }
     )
