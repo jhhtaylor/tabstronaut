@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.2.7]
+
+- Optional automatic grouping of new tabs by file type or top-level folder.
+
 ## [1.2.6]
 
 - Tabs and Tab Groups reorder drag-and-drop logic more natural.

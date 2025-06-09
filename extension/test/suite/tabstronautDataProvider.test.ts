@@ -118,3 +118,34 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(dstGroup.items.length, 1);
   });
 });
+
+describe('TabstronautDataProvider.autoGroupFile', () => {
+  it('groups by file type', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.autoGroupFile('/tmp/foo.ts', 'fileType');
+    provider.clearRefreshInterval();
+    const group = provider.getGroups()[0];
+    strictEqual(group.label, 'TS Files');
+    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/foo.ts');
+  });
+
+  it('groups by folder', async () => {
+    const orig = (vscode.workspace as any).workspaceFolders;
+    Object.defineProperty(vscode.workspace, 'workspaceFolders', {
+      value: [
+        { uri: vscode.Uri.file('/tmp'), index: 0, name: 'tmp' } as vscode.WorkspaceFolder,
+      ],
+      configurable: true,
+    });
+
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.autoGroupFile('/tmp/src/foo.ts', 'folder');
+    provider.clearRefreshInterval();
+    const group = provider.getGroups()[0];
+    strictEqual(group.label, 'src');
+    Object.defineProperty(vscode.workspace, 'workspaceFolders', {
+      value: orig,
+      configurable: true,
+    });
+  });
+});

@@ -7,6 +7,8 @@ import {
   generateNormalizedPath,
   showConfirmation,
   COLORS,
+  labelForFileType,
+  labelForTopFolder,
 } from "./utils";
 
 export class TabstronautDataProvider
@@ -750,6 +752,42 @@ export class TabstronautDataProvider
       vscode.window.showErrorMessage(
         "Cannot import Tab Groups. Invalid JSON file."
       );
+    }
+  }
+
+  async autoGroupFile(filePath: string, mode: "fileType" | "folder"): Promise<void> {
+    if (!filePath) {
+      return;
+    }
+
+    const already = Array.from(this.groupsMap.values()).some((g) =>
+      g.containsFile(filePath)
+    );
+    if (already) {
+      return;
+    }
+
+    let label: string;
+    if (mode === "fileType") {
+      label = labelForFileType(filePath);
+    } else {
+      label = labelForTopFolder(filePath);
+    }
+
+    let group = Array.from(this.groupsMap.values()).find(
+      (g) => g.label === label
+    );
+    if (!group) {
+      const color = COLORS[this.groupsMap.size % COLORS.length];
+      const id = await this.addGroup(label, color, this.groupsMap.size);
+      if (!id) {
+        return;
+      }
+      group = this.groupsMap.get(id);
+    }
+
+    if (group) {
+      await this.addToGroup(group.id, filePath);
     }
   }
 

@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.2.6",
+  "version": "1.2.7",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -413,6 +413,12 @@
           "type": "boolean",
           "default": false,
           "description": "Show confirmation messages after adding tabs to groups."
+        },
+        "tabstronaut.autoGroupBy": {
+          "type": "string",
+          "enum": ["none", "fileType", "folder"],
+          "default": "none",
+          "description": "Automatically add newly opened files to Tab Groups based on file type or top-level folder."
         }
       }
     }

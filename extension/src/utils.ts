@@ -142,3 +142,29 @@ export function showConfirmation(message: string) {
     vscode.window.showInformationMessage(message);
   }
 }
+
+export function labelForFileType(filePath: string): string {
+  const ext = path.extname(filePath).replace(".", "");
+  return ext ? `${ext.toUpperCase()} Files` : "No Extension";
+}
+
+export function labelForTopFolder(
+  filePath: string,
+  workspaceFolders: readonly vscode.WorkspaceFolder[] | undefined =
+    vscode.workspace.workspaceFolders
+): string {
+  let relative = filePath;
+  if (workspaceFolders) {
+    const match = workspaceFolders.find((f) =>
+      generateNormalizedPath(filePath).startsWith(
+        generateNormalizedPath(f.uri.fsPath)
+      )
+    );
+    if (match) {
+      relative = path.relative(match.uri.fsPath, filePath);
+    }
+  }
+  const normalized = relative.replace(/\\/g, "/");
+  const segments = normalized.split("/");
+  return segments.length > 1 ? segments[0] : "Root";
+}
