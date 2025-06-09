@@ -117,6 +117,37 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(provider.getGroups().some((g) => g.id === g1), false);
     strictEqual(dstGroup.items.length, 1);
   });
+
+  it('handles file paths containing commas when dragging tabs', async () => {
+    const memento = new MockMemento({});
+    const provider = new TabstronautDataProvider(memento);
+
+    const g1 = await provider.addGroup('G1');
+    const g2 = await provider.addGroup('G2');
+    const file = '/tmp/.NETCoreApp,Version=v7.0.AssemblyAttributes.cs';
+    await provider.addToGroup(g1!, file);
+
+    const srcGroup = provider.getGroup('G1')!;
+    const dstGroup = provider.getGroup('G2')!;
+    const tabItem = srcGroup.items[0];
+
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag(
+      [tabItem],
+      dragData,
+      new vscode.CancellationTokenSource().token
+    );
+    await provider.handleDrop(
+      dstGroup,
+      dragData,
+      new vscode.CancellationTokenSource().token
+    );
+
+    provider.clearRefreshInterval();
+    strictEqual(provider.getGroups().some((g) => g.id === g1), false);
+    strictEqual(dstGroup.items.length, 1);
+    strictEqual(dstGroup.items[0].resourceUri?.fsPath, file);
+  });
 });
 
 describe('TabstronautDataProvider.sortGroup', () => {

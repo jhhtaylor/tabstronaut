@@ -71,7 +71,7 @@ export class TabstronautDataProvider
 
     dataTransfer.set(
       "application/vnd.code.tree.tabstronaut",
-      new vscode.DataTransferItem(ids.join(","))
+      new vscode.DataTransferItem(JSON.stringify(ids))
     );
   }
 
@@ -111,7 +111,18 @@ export class TabstronautDataProvider
       return;
     }
 
-    const draggedIds = (transferItem.value as string).split(",");
+    let draggedIds: string[] = [];
+    const raw = transferItem.value as string;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        draggedIds = parsed as string[];
+      } else {
+        draggedIds = raw.split(",");
+      }
+    } catch {
+      draggedIds = raw.split(",");
+    }
 
     for (const id of draggedIds) {
       if (id.startsWith("group:")) {
