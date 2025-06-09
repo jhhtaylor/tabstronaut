@@ -2,8 +2,9 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
-## [1.2.7]
+## [1.3.0]
 
+- Added a new logo and branding.
 - New action to sort tabs within a group by folder or file type.
 
 ## [1.2.6]
