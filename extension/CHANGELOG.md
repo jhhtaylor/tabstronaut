@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.0]
+
+- Added a new logo and branding.
+
 ## [1.2.6]
 
 - Tabs and Tab Groups reorder drag-and-drop logic more natural.
