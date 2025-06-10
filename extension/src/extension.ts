@@ -8,7 +8,6 @@ import {
   handleTabGroupAction,
   renameTabGroupCommand,
   addAllOpenTabsToGroup,
-  addFilesToGroupCommand,
   sortTabGroupCommand,
 } from "./groupOperations";
 
@@ -534,15 +533,6 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "tabstronaut.addFilesToGroup",
-      async (uri: vscode.Uri, uris?: vscode.Uri[]) => {
-        const allUris = uris && uris.length > 1 ? uris : [uri];
-        await addFilesToGroupCommand(treeDataProvider, allUris);
-      }
-    )
-  );
 
 
 

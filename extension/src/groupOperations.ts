@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS, showConfirmation } from './utils';
-import { gatherFileUris } from './fileOperations';
 
 export type GroupNameResult = {
   name: string | undefined;
@@ -423,46 +422,6 @@ export async function addAllOpenTabsToGroup(
   showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
 }
 
-export async function addFilesToGroupCommand(
-  treeDataProvider: TabstronautDataProvider,
-  uris: vscode.Uri[]
-): Promise<void> {
-  const fileUris = await gatherFileUris(uris);
-
-  if (fileUris.length === 0) {
-    showConfirmation('No files found to add to Tab Group.');
-    return;
-  }
-
-  const selectedGroup = await selectTabGroup(treeDataProvider);
-  if (!selectedGroup) {
-    return;
-  }
-
-  if (
-    selectedGroup.label === 'New Tab Group from current tab...' ||
-    selectedGroup.label === 'New Tab Group from all tabs...'
-  ) {
-    await handleNewGroupCreationFromMultipleFiles(
-      treeDataProvider,
-      selectedGroup.label,
-      fileUris
-    );
-    return;
-  }
-
-  if (!selectedGroup.id) {
-    return;
-  }
-
-  for (const file of fileUris) {
-    await treeDataProvider.addToGroup(selectedGroup.id, file.fsPath);
-  }
-
-  showConfirmation(
-    `Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`
-  );
-}
 
 export async function sortTabGroupCommand(
   treeDataProvider: TabstronautDataProvider,
