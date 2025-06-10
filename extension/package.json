@@ -130,11 +130,6 @@
         "title": "Import Tab Groups from JSON"
       },
       {
-        "command": "tabstronaut.addFilesToGroup",
-        "category": "Tabstronaut",
-        "title": "Add to Tab Group..."
-      },
-      {
         "command": "tabstronaut.addAllOpenTabsToGroup",
         "category": "Tabstronaut",
         "title": "Add all tabs to Tab Group",
@@ -192,13 +187,7 @@
           "group": "navigation@3"
         }
       ],
-      "explorer/context": [
-        {
-          "command": "tabstronaut.addFilesToGroup",
-          "when": "resourceLangId != '' || explorerResourceIsFolder",
-          "group": "3_tabstronaut"
-        }
-      ],
+      "explorer/context": [],
       "editor/title/context": [
         {
           "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
@@ -310,10 +299,6 @@
         },
         {
           "command": "tabstronaut.importTabGroups",
-          "when": "false"
-        },
-        {
-          "command": "tabstronaut.addFilesToGroup",
           "when": "false"
         },
         {

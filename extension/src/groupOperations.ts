@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 import { COLORS, COLOR_LABELS, showConfirmation } from './utils';
-import { gatherFileUris } from './fileOperations';
 
 export type GroupNameResult = {
   name: string | undefined;
@@ -280,46 +279,6 @@ export async function handleTabGroupAction(
   }
 }
 
-export async function handleNewGroupCreationFromMultipleFiles(
-  treeDataProvider: TabstronautDataProvider,
-  groupLabel: string,
-  fileUris: vscode.Uri[]
-): Promise<void> {
-  const isAll = groupLabel === 'New Tab Group from all tabs...';
-
-  const result = isAll
-    ? await getGroupNameForAllToNewGroup(treeDataProvider)
-    : await getGroupName(treeDataProvider);
-  if (!result.name) {
-    return;
-  }
-
-  const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
-  let groupColor = defaultColor;
-  if (!result.useDefaults) {
-    const selectedColorOption = (await selectColorOption(defaultColor)) as
-      | ColorOption
-      | undefined;
-    if (!selectedColorOption) {
-      return;
-    }
-    groupColor = selectedColorOption.colorValue;
-  }
-
-  const groupId = await treeDataProvider.addGroup(
-    result.name,
-    groupColor
-  );
-  if (!groupId) {
-    return;
-  }
-
-  for (const uri of fileUris) {
-    await treeDataProvider.addToGroup(groupId, uri.fsPath);
-  }
-
-  showConfirmation(`Created '${result.name}' and added ${fileUris.length} file(s).`);
-}
 
 export async function renameTabGroupCommand(
   treeDataProvider: TabstronautDataProvider,
@@ -427,46 +386,6 @@ export async function addAllOpenTabsToGroup(
   showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
 }
 
-export async function addFilesToGroupCommand(
-  treeDataProvider: TabstronautDataProvider,
-  uris: vscode.Uri[]
-): Promise<void> {
-  const fileUris = await gatherFileUris(uris);
-
-  if (fileUris.length === 0) {
-    showConfirmation('No files found to add to Tab Group.');
-    return;
-  }
-
-  const selectedGroup = await selectTabGroup(treeDataProvider);
-  if (!selectedGroup) {
-    return;
-  }
-
-  if (
-    selectedGroup.label === 'New Tab Group from current tab...' ||
-    selectedGroup.label === 'New Tab Group from all tabs...'
-  ) {
-    await handleNewGroupCreationFromMultipleFiles(
-      treeDataProvider,
-      selectedGroup.label,
-      fileUris
-    );
-    return;
-  }
-
-  if (!selectedGroup.id) {
-    return;
-  }
-
-  for (const file of fileUris) {
-    await treeDataProvider.addToGroup(selectedGroup.id, file.fsPath);
-  }
-
-  showConfirmation(
-    `Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`
-  );
-}
 
 export async function sortTabGroupCommand(
   treeDataProvider: TabstronautDataProvider,
