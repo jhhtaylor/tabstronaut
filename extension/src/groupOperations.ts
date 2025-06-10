@@ -147,6 +147,7 @@ export async function selectTabGroup(
         );
         showConfirmation(`Created '${result.name}' and added all open tabs.`);
         quickPick.hide();
+        resolve({ id: groupId, label: result.name });
         return;
       }
 
@@ -183,8 +184,11 @@ export async function selectTabGroup(
           }
         }
 
-        showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+        showConfirmation(
+          `Added ${count} open tab(s) to Tab Group '${group.label}'.`
+        );
         quickPick.hide();
+        resolve({ id: group.id, label: typeof group.label === 'string' ? group.label : '' });
       }
     });
   });

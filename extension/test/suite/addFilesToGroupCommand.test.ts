@@ -37,4 +37,33 @@ describe('addFilesToGroupCommand multi-select', () => {
     (groupOps as any).selectTabGroup = selectOrig;
     (fileOps as any).gatherFileUris = gatherOrig;
   });
+
+  it('adds files when group selected via quick pick button', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const groupId = await provider.addGroup('G1');
+    const uri1 = vscode.Uri.file('/tmp/c.txt');
+    const uri2 = vscode.Uri.file('/tmp/d.txt');
+
+    const gatherOrig = fileOps.gatherFileUris;
+    (fileOps as any).gatherFileUris = async () => [uri1, uri2];
+
+    const selectOrig = groupOps.selectTabGroup;
+    (groupOps as any).selectTabGroup = async () => {
+      await provider.addToGroup(groupId, '/tmp/existing.txt');
+      return { id: groupId, label: 'G1' };
+    };
+
+    await groupOps.addFilesToGroupCommand(provider, [uri1, uri2]);
+    provider.clearRefreshInterval();
+
+    const group = provider.getGroup('G1');
+    strictEqual(group?.items.length, 3);
+    const paths = group!.items.map((i) => i.resourceUri?.fsPath);
+    strictEqual(paths.includes('/tmp/c.txt'), true);
+    strictEqual(paths.includes('/tmp/d.txt'), true);
+    strictEqual(paths.includes('/tmp/existing.txt'), true);
+
+    (groupOps as any).selectTabGroup = selectOrig;
+    (fileOps as any).gatherFileUris = gatherOrig;
+  });
 });
