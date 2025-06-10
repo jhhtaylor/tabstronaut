@@ -195,7 +195,7 @@
       "explorer/context": [
         {
           "command": "tabstronaut.addFilesToGroup",
-          "when": "resourceLangId != ''",
+          "when": "resourceLangId != '' || explorerResourceIsFolder",
           "group": "3_tabstronaut"
         }
       ],
