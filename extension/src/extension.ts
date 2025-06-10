@@ -537,9 +537,25 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.addFilesToGroup",
-      async (uri: vscode.Uri, uris?: vscode.Uri[]) => {
-        const allUris = uris && uris.length ? uris : [uri];
-        await addFilesToGroupCommand(treeDataProvider, allUris);
+      async (uri: vscode.Uri, selected?: unknown) => {
+        let targets: vscode.Uri[] = [];
+        if (Array.isArray(selected) && selected.length) {
+          targets = selected
+            .map((s) =>
+              s instanceof vscode.Uri
+                ? s
+                : (s as any).resourceUri instanceof vscode.Uri
+                ? (s as any).resourceUri
+                : undefined
+            )
+            .filter((u): u is vscode.Uri => !!u);
+        }
+
+        if (!targets.length) {
+          targets = [uri];
+        }
+
+        await addFilesToGroupCommand(treeDataProvider, targets);
       }
     )
   );
