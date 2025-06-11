@@ -130,7 +130,7 @@ describe('groupOperations.addAllOpenTabsToGroup', () => {
 
   it('adds unique open tabs to group', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
-    const id = await provider.addGroup('G1');
+    await provider.addGroup('G1');
     const group = provider.getGroup('G1')!;
 
     const uri1 = vscode.Uri.file('/tmp/a.txt');
@@ -144,9 +144,10 @@ describe('groupOperations.addAllOpenTabsToGroup', () => {
     });
 
     await addAllOpenTabsToGroup(provider, group);
+    const updatedGroup = provider.getGroup('G1')!;
     provider.clearRefreshInterval();
-    strictEqual(group.items.length, 2);
-    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/a.txt');
-    strictEqual(group.items[1].resourceUri?.fsPath, '/tmp/b.txt');
+    strictEqual(updatedGroup.items.length, 2);
+    strictEqual(updatedGroup.items[0].resourceUri?.fsPath, '/tmp/a.txt');
+    strictEqual(updatedGroup.items[1].resourceUri?.fsPath, '/tmp/b.txt');
   });
 });
