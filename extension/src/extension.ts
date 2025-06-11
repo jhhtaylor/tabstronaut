@@ -116,7 +116,15 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.openTabGroupContextMenu",
-      async () => {
+      async (uri?: vscode.Uri, uris?: vscode.Uri[]) => {
+        const selectedUris =
+          uris && uris.length > 0 ? uris : uri ? [uri] : [];
+
+        if (selectedUris.length > 0) {
+          await addFilesToGroupCommand(treeDataProvider, selectedUris);
+          return;
+        }
+
         const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
 
         if (
