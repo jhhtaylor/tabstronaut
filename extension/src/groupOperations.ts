@@ -71,7 +71,8 @@ export type CustomQuickPickItem = vscode.QuickPickItem & {
 };
 
 export async function selectTabGroup(
-  treeDataProvider: TabstronautDataProvider
+  treeDataProvider: TabstronautDataProvider,
+  fileUris?: vscode.Uri[]
 ): Promise<CustomQuickPickItem | undefined> {
   const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
 
@@ -81,7 +82,9 @@ export async function selectTabGroup(
       buttons: [
         {
           iconPath: new vscode.ThemeIcon('new-folder'),
-          tooltip: 'New Tab Group from all tabs...',
+          tooltip: fileUris
+            ? 'New Tab Group from all selected files...'
+            : 'New Tab Group from all tabs...',
         },
       ],
     },
@@ -95,7 +98,9 @@ export async function selectTabGroup(
             'new-folder',
             new vscode.ThemeColor(group.colorName)
           ),
-          tooltip: 'Add all tabs to Tab Group',
+          tooltip: fileUris
+            ? 'Add selected files to Tab Group'
+            : 'Add all tabs to Tab Group',
         },
       ],
     })),
@@ -117,6 +122,42 @@ export async function selectTabGroup(
       const item = e.item as CustomQuickPickItem;
 
       if (item.label === 'New Tab Group from current tab...') {
+        if (fileUris && fileUris.length > 0) {
+          const result = await getGroupName(treeDataProvider);
+          if (!result.name) {
+            return;
+          }
+
+          const color = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+          let groupColor = color;
+          if (!result.useDefaults) {
+            const selectedColorOption = await selectColorOption(color);
+            if (!selectedColorOption || !('colorValue' in selectedColorOption)) {
+              return;
+            }
+            groupColor = selectedColorOption.colorValue;
+          }
+
+          const groupId = await treeDataProvider.addGroup(
+            result.name,
+            groupColor
+          );
+
+          if (!groupId) {
+            return;
+          }
+
+          for (const uri of fileUris) {
+            await treeDataProvider.addToGroup(groupId, uri.fsPath);
+          }
+
+          showConfirmation(
+            `Created '${result.name}' and added ${fileUris.length} file(s).`
+          );
+          quickPick.hide();
+          return;
+        }
+
         const result = await getGroupNameForAllToNewGroup(treeDataProvider);
         if (!result.name) {
           return;
@@ -158,6 +199,17 @@ export async function selectTabGroup(
           return;
         }
 
+        if (fileUris && fileUris.length > 0) {
+          for (const uri of fileUris) {
+            await treeDataProvider.addToGroup(group.id, uri.fsPath);
+          }
+          showConfirmation(
+            `Added ${fileUris.length} file(s) to Tab Group '${group.label}'.`
+          );
+          quickPick.hide();
+          return;
+        }
+
         const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
         const addedFiles = new Set<string>();
         let count = 0;
@@ -183,7 +235,9 @@ export async function selectTabGroup(
           }
         }
 
-        showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+        showConfirmation(
+          `Added ${count} open tab(s) to Tab Group '${group.label}'.`
+        );
         quickPick.hide();
       }
     });
@@ -434,7 +488,7 @@ export async function addFilesToGroupCommand(
     return;
   }
 
-  const selectedGroup = await selectTabGroup(treeDataProvider);
+  const selectedGroup = await selectTabGroup(treeDataProvider, fileUris);
   if (!selectedGroup) {
     return;
   }
