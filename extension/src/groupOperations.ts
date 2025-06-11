@@ -71,7 +71,8 @@ export type CustomQuickPickItem = vscode.QuickPickItem & {
 };
 
 export async function selectTabGroup(
-  treeDataProvider: TabstronautDataProvider
+  treeDataProvider: TabstronautDataProvider,
+  useSelectedFiles = false
 ): Promise<CustomQuickPickItem | undefined> {
   const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
 
@@ -115,6 +116,11 @@ export async function selectTabGroup(
 
     quickPick.onDidTriggerItemButton(async (e) => {
       const item = e.item as CustomQuickPickItem;
+      if (useSelectedFiles) {
+        resolve(item);
+        quickPick.hide();
+        return;
+      }
 
       if (item.label === 'New Tab Group from current tab...') {
         const result = await getGroupNameForAllToNewGroup(treeDataProvider);
@@ -434,7 +440,7 @@ export async function addFilesToGroupCommand(
     return;
   }
 
-  const selectedGroup = await selectTabGroup(treeDataProvider);
+  const selectedGroup = await selectTabGroup(treeDataProvider, true);
   if (!selectedGroup) {
     return;
   }
