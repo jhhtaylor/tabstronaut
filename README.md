@@ -21,6 +21,8 @@ Tabstronaut excels in tab management for VS Code by enabling users to archive an
 
 ## Tips
 
+💡 Check out [@tabstronaut_dev](https://x.com/tabstronaut_dev) for Tabstronaut tips and how-to videos.
+
 ### Quick Access to Tabstronaut's Context Menu
 
 You can quickly access the Tabstronaut's context menu without having to right-click. Simply press **`Ctrl+Alt+A`** on Windows/Linux or **`Cmd+Alt+A`** on macOS. You can also open this menu from the title bar of the Tabstronaut view, the right-click menu or the 'More Actions...' menu.

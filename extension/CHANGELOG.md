@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.1]
+
+- Fixed behavior with adding tabs from Solution Explorer.
+
 ## [1.3.0]
 
 - Added a new logo and branding.
