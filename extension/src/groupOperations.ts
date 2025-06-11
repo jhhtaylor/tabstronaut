@@ -122,41 +122,17 @@ export async function selectTabGroup(
       const item = e.item as CustomQuickPickItem;
 
       if (item.label === mainLabel) {
-        if (!fileUris || fileUris.length === 0) {
-          const result = await getGroupNameForAllToNewGroup(treeDataProvider);
-          if (!result.name) {
-            return;
-          }
-
-          const color = COLORS[treeDataProvider.getGroups().length % COLORS.length];
-          let groupColor = color;
-          if (!result.useDefaults) {
-            const selectedColorOption = await selectColorOption(color);
-            if (!selectedColorOption || !('colorValue' in selectedColorOption)) {
-              return;
-            }
-            groupColor = selectedColorOption.colorValue;
-          }
-
-          const groupId = await treeDataProvider.addGroup(
-            result.name,
-            groupColor
+        if (fileUris && fileUris.length > 0) {
+          await handleNewGroupCreationFromMultipleFiles(
+            treeDataProvider,
+            mainLabel,
+            fileUris
           );
-
-          if (!groupId) {
-            return;
-          }
-
-          await vscode.commands.executeCommand(
-            'tabstronaut.addAllToNewGroup',
-            groupId
-          );
-          showConfirmation(`Created '${result.name}' and added all open tabs.`);
           quickPick.hide();
           return;
         }
 
-        const result = await getGroupName(treeDataProvider);
+        const result = await getGroupNameForAllToNewGroup(treeDataProvider);
         if (!result.name) {
           return;
         }
@@ -180,13 +156,11 @@ export async function selectTabGroup(
           return;
         }
 
-        for (const uri of fileUris) {
-          await treeDataProvider.addToGroup(groupId, uri.fsPath);
-        }
-
-        showConfirmation(
-          `Created '${result.name}' and added ${fileUris.length} file(s).`
+        await vscode.commands.executeCommand(
+          'tabstronaut.addAllToNewGroup',
+          groupId
         );
+        showConfirmation(`Created '${result.name}' and added all open tabs.`);
         quickPick.hide();
         return;
       }
