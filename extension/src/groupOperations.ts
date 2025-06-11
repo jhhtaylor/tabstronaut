@@ -134,7 +134,7 @@ export async function selectTabGroup(
         if (fileUris.length > 0) {
           await handleNewGroupCreationFromMultipleFiles(
             treeDataProvider,
-            'New Tab Group from all tabs...',
+            'New Tab Group from current tab...',
             fileUris
           );
           quickPick.hide();
@@ -478,7 +478,7 @@ export async function addFilesToGroupCommand(
   if (selectedGroup.id === 'new') {
     await handleNewGroupCreationFromMultipleFiles(
       treeDataProvider,
-      'New Tab Group from all tabs...',
+      'New Tab Group from current tab...',
       fileUris
     );
     return;
