@@ -76,15 +76,20 @@ export async function selectTabGroup(
 ): Promise<CustomQuickPickItem | undefined> {
   const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
 
+  const newGroupLabel = fileUris && fileUris.length > 0
+    ? 'New Tab Group from selected files...'
+    : 'New Tab Group from current tab...';
+  const newGroupButtonTooltip = fileUris && fileUris.length > 0
+    ? 'New Tab Group from all open tabs...'
+    : 'New Tab Group from all tabs...';
+
   quickPick.items = [
     {
-      label: 'New Tab Group from current tab...',
+      label: newGroupLabel,
       buttons: [
         {
           iconPath: new vscode.ThemeIcon('new-folder'),
-          tooltip: fileUris
-            ? 'New Tab Group from all selected files...'
-            : 'New Tab Group from all tabs...',
+          tooltip: newGroupButtonTooltip,
         },
       ],
     },
@@ -118,12 +123,14 @@ export async function selectTabGroup(
       resolve(undefined);
     });
 
+    const mainLabel = newGroupLabel;
+
     quickPick.onDidTriggerItemButton(async (e) => {
       const item = e.item as CustomQuickPickItem;
 
-      if (item.label === 'New Tab Group from current tab...') {
-        if (fileUris && fileUris.length > 0) {
-          const result = await getGroupName(treeDataProvider);
+      if (item.label === mainLabel) {
+        if (!fileUris || fileUris.length === 0) {
+          const result = await getGroupNameForAllToNewGroup(treeDataProvider);
           if (!result.name) {
             return;
           }
@@ -147,18 +154,16 @@ export async function selectTabGroup(
             return;
           }
 
-          for (const uri of fileUris) {
-            await treeDataProvider.addToGroup(groupId, uri.fsPath);
-          }
-
-          showConfirmation(
-            `Created '${result.name}' and added ${fileUris.length} file(s).`
+          await vscode.commands.executeCommand(
+            'tabstronaut.addAllToNewGroup',
+            groupId
           );
+          showConfirmation(`Created '${result.name}' and added all open tabs.`);
           quickPick.hide();
           return;
         }
 
-        const result = await getGroupNameForAllToNewGroup(treeDataProvider);
+        const result = await getGroupName(treeDataProvider);
         if (!result.name) {
           return;
         }
@@ -182,11 +187,13 @@ export async function selectTabGroup(
           return;
         }
 
-        await vscode.commands.executeCommand(
-          'tabstronaut.addAllToNewGroup',
-          groupId
+        for (const uri of fileUris) {
+          await treeDataProvider.addToGroup(groupId, uri.fsPath);
+        }
+
+        showConfirmation(
+          `Created '${result.name}' and added ${fileUris.length} file(s).`
         );
-        showConfirmation(`Created '${result.name}' and added all open tabs.`);
         quickPick.hide();
         return;
       }
@@ -260,7 +267,7 @@ export async function handleNewGroupCreation(
   filePath: string
 ): Promise<void> {
   let result: GroupNameResult;
-  if (groupLabel === 'New Tab Group from current tab...') {
+  if (!groupLabel.includes('all')) {
     result = await getGroupName(treeDataProvider);
   } else {
     result = await getGroupNameForAllToNewGroup(treeDataProvider);
@@ -289,10 +296,10 @@ export async function handleNewGroupCreation(
     return;
   }
 
-  if (groupLabel === 'New Tab Group from current tab...') {
+  if (!groupLabel.includes('all')) {
     treeDataProvider.addToGroup(groupId, filePath);
     showConfirmation(`Created '${result.name}' and added 1 file.`);
-  } else if (groupLabel === 'New Tab Group from all tabs...') {
+  } else {
     await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
     showConfirmation(`Created '${result.name}' and added all open tabs.`);
   }
@@ -320,10 +327,7 @@ export async function handleTabGroupAction(
     return;
   }
 
-  if (
-    selectedGroup.label === 'New Tab Group from current tab...' ||
-    selectedGroup.label === 'New Tab Group from all tabs...'
-  ) {
+  if (selectedGroup.label.startsWith('New Tab Group from')) {
     await handleNewGroupCreation(treeDataProvider, selectedGroup.label, filePath);
   } else if (selectedGroup.id) {
     await handleAddToExistingGroup(treeDataProvider, selectedGroup.id, filePath);
@@ -335,7 +339,7 @@ export async function handleNewGroupCreationFromMultipleFiles(
   groupLabel: string,
   fileUris: vscode.Uri[]
 ): Promise<void> {
-  const isAll = groupLabel === 'New Tab Group from all tabs...';
+  const isAll = groupLabel.includes('all');
 
   const result = isAll
     ? await getGroupNameForAllToNewGroup(treeDataProvider)
@@ -493,10 +497,7 @@ export async function addFilesToGroupCommand(
     return;
   }
 
-  if (
-    selectedGroup.label === 'New Tab Group from current tab...' ||
-    selectedGroup.label === 'New Tab Group from all tabs...'
-  ) {
+  if (selectedGroup.label.startsWith('New Tab Group from')) {
     await handleNewGroupCreationFromMultipleFiles(
       treeDataProvider,
       selectedGroup.label,
