@@ -1,0 +1,152 @@
+/// <reference types="mocha" />
+import { strictEqual } from 'assert';
+import * as vscode from 'vscode';
+import { TabstronautDataProvider } from '../../src/tabstronautDataProvider';
+import { Group } from '../../src/models/Group';
+import {
+  getNewGroupName,
+  selectColorOption,
+  handleAddToExistingGroup,
+  addAllOpenTabsToGroup,
+} from '../../src/groupOperations';
+
+class MockMemento implements vscode.Memento {
+  private store: Record<string, any>;
+  constructor(initial: Record<string, any> = {}) {
+    this.store = initial;
+  }
+  keys(): readonly string[] {
+    throw new Error('Method not implemented.');
+  }
+  get<T>(key: string, defaultValue?: T): T {
+    if (key in this.store) {
+      return this.store[key] as T;
+    }
+    return defaultValue as T;
+  }
+  update(key: string, value: any): Thenable<void> {
+    this.store[key] = value;
+    return Promise.resolve();
+  }
+}
+
+describe('groupOperations.getNewGroupName', () => {
+  let origInput: any;
+  let origError: any;
+
+  beforeEach(() => {
+    origInput = vscode.window.showInputBox;
+    origError = vscode.window.showErrorMessage;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(vscode.window, 'showInputBox', { value: origInput, configurable: true });
+    Object.defineProperty(vscode.window, 'showErrorMessage', { value: origError, configurable: true });
+  });
+
+  it('returns undefined when user cancels', async () => {
+    Object.defineProperty(vscode.window, 'showInputBox', {
+      value: async () => undefined,
+      configurable: true,
+    });
+    const result = await getNewGroupName(new Group('G1', '1'));
+    strictEqual(result, undefined);
+  });
+
+  it('returns provided name', async () => {
+    Object.defineProperty(vscode.window, 'showInputBox', {
+      value: async () => 'MyGroup',
+      configurable: true,
+    });
+    const result = await getNewGroupName(new Group('G1', '1'));
+    strictEqual(result, 'MyGroup');
+  });
+
+  it('shows error on blank name', async () => {
+    let msg: string | undefined;
+    Object.defineProperty(vscode.window, 'showInputBox', {
+      value: async () => '   ',
+      configurable: true,
+    });
+    Object.defineProperty(vscode.window, 'showErrorMessage', {
+      value: (m: string) => {
+        msg = m;
+        return undefined;
+      },
+      configurable: true,
+    });
+    const result = await getNewGroupName(new Group('G1', '1'));
+    strictEqual(result, undefined);
+    strictEqual(msg, 'Invalid Tab Group name. Please try again.');
+  });
+});
+
+describe('groupOperations.selectColorOption', () => {
+  let origQuickPick: any;
+
+  beforeEach(() => {
+    origQuickPick = vscode.window.showQuickPick;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(vscode.window, 'showQuickPick', { value: origQuickPick, configurable: true });
+  });
+
+  it('returns selected color and puts current color first', async () => {
+    let options: any[] | undefined;
+    Object.defineProperty(vscode.window, 'showQuickPick', {
+      value: async (opts: any[]) => {
+        options = opts;
+        return opts[0];
+      },
+      configurable: true,
+    });
+    const result = (await selectColorOption('terminal.ansiBlue')) as any;
+    strictEqual(options?.[0].colorValue, 'terminal.ansiBlue');
+    strictEqual(result.colorValue, 'terminal.ansiBlue');
+  });
+});
+
+describe('groupOperations.handleAddToExistingGroup', () => {
+  it('adds file to group', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('G1');
+    await handleAddToExistingGroup(provider, id!, '/tmp/file1');
+    provider.clearRefreshInterval();
+    const group = provider.getGroup('G1')!;
+    strictEqual(group.items.length, 1);
+    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/file1');
+  });
+});
+
+describe('groupOperations.addAllOpenTabsToGroup', () => {
+  let origAll: any;
+  beforeEach(() => {
+    origAll = vscode.window.tabGroups.all;
+  });
+  afterEach(() => {
+    Object.defineProperty(vscode.window.tabGroups, 'all', { value: origAll, configurable: true });
+  });
+
+  it('adds unique open tabs to group', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('G1');
+    const group = provider.getGroup('G1')!;
+
+    const uri1 = vscode.Uri.file('/tmp/a.txt');
+    const uri2 = vscode.Uri.file('/tmp/b.txt');
+    const tab1 = { input: { uri: uri1 } } as any;
+    const tab2 = { input: { uri: uri1 } } as any; // duplicate
+    const tab3 = { input: { uri: uri2 } } as any;
+    Object.defineProperty(vscode.window.tabGroups, 'all', {
+      value: [{ tabs: [tab1, tab2] }, { tabs: [tab3] }],
+      configurable: true,
+    });
+
+    await addAllOpenTabsToGroup(provider, group);
+    provider.clearRefreshInterval();
+    strictEqual(group.items.length, 2);
+    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/a.txt');
+    strictEqual(group.items[1].resourceUri?.fsPath, '/tmp/b.txt');
+  });
+});
