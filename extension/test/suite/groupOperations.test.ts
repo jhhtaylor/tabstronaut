@@ -120,12 +120,12 @@ describe('groupOperations.handleAddToExistingGroup', () => {
 });
 
 describe('groupOperations.addAllOpenTabsToGroup', () => {
-  let origAll: any;
+  let origTabGroups: any;
   beforeEach(() => {
-    origAll = vscode.window.tabGroups.all;
+    origTabGroups = vscode.window.tabGroups;
   });
   afterEach(() => {
-    Object.defineProperty(vscode.window.tabGroups, 'all', { value: origAll, configurable: true });
+    Object.defineProperty(vscode.window, 'tabGroups', { value: origTabGroups, configurable: true });
   });
 
   it('adds unique open tabs to group', async () => {
@@ -138,8 +138,8 @@ describe('groupOperations.addAllOpenTabsToGroup', () => {
     const tab1 = { input: { uri: uri1 } } as any;
     const tab2 = { input: { uri: uri1 } } as any; // duplicate
     const tab3 = { input: { uri: uri2 } } as any;
-    Object.defineProperty(vscode.window.tabGroups, 'all', {
-      value: [{ tabs: [tab1, tab2] }, { tabs: [tab3] }],
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [{ tabs: [tab1, tab2] }, { tabs: [tab3] }] },
       configurable: true,
     });
 
