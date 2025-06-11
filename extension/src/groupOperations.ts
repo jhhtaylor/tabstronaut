@@ -130,11 +130,10 @@ export async function selectTabGroup(
     quickPick.onDidTriggerItemButton(async (e) => {
       const item = e.item as CustomQuickPickItem;
 
-      if (item.id === 'new') {
+      if (item.id === 'new' || item.label.startsWith('New Tab Group')) {
         if (fileUris.length > 0) {
           await handleNewGroupCreationFromMultipleFiles(
             treeDataProvider,
-            'New Tab Group from current tab...',
             fileUris
           );
           quickPick.hide();
@@ -314,14 +313,9 @@ export async function handleTabGroupAction(
 
 export async function handleNewGroupCreationFromMultipleFiles(
   treeDataProvider: TabstronautDataProvider,
-  groupLabel: string,
   fileUris: vscode.Uri[]
 ): Promise<void> {
-  const isAll = groupLabel === 'New Tab Group from all tabs...';
-
-  const result = isAll
-    ? await getGroupNameForAllToNewGroup(treeDataProvider)
-    : await getGroupName(treeDataProvider);
+  const result = await getGroupName(treeDataProvider);
   if (!result.name) {
     return;
   }
@@ -476,11 +470,7 @@ export async function addFilesToGroupCommand(
   }
 
   if (selectedGroup.id === 'new') {
-    await handleNewGroupCreationFromMultipleFiles(
-      treeDataProvider,
-      'New Tab Group from current tab...',
-      fileUris
-    );
+    await handleNewGroupCreationFromMultipleFiles(treeDataProvider, fileUris);
     return;
   }
 
