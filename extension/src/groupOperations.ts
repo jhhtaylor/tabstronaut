@@ -76,20 +76,15 @@ export async function selectTabGroup(
 ): Promise<CustomQuickPickItem | undefined> {
   const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
 
-  const newGroupLabel = fileUris && fileUris.length > 0
-    ? 'New Tab Group from selected files...'
-    : 'New Tab Group from current tab...';
-  const newGroupButtonTooltip = fileUris && fileUris.length > 0
-    ? 'New Tab Group from all open tabs...'
-    : 'New Tab Group from all tabs...';
+  const mainLabel = 'New Tab Group from current tab...';
 
   quickPick.items = [
     {
-      label: newGroupLabel,
+      label: mainLabel,
       buttons: [
         {
           iconPath: new vscode.ThemeIcon('new-folder'),
-          tooltip: newGroupButtonTooltip,
+          tooltip: 'New Tab Group from all tabs...',
         },
       ],
     },
@@ -103,9 +98,7 @@ export async function selectTabGroup(
             'new-folder',
             new vscode.ThemeColor(group.colorName)
           ),
-          tooltip: fileUris
-            ? 'Add selected files to Tab Group'
-            : 'Add all tabs to Tab Group',
+          tooltip: 'Add all tabs to Tab Group',
         },
       ],
     })),
@@ -123,7 +116,7 @@ export async function selectTabGroup(
       resolve(undefined);
     });
 
-    const mainLabel = newGroupLabel;
+
 
     quickPick.onDidTriggerItemButton(async (e) => {
       const item = e.item as CustomQuickPickItem;
