@@ -118,7 +118,11 @@ export function activate(context: vscode.ExtensionContext) {
       "tabstronaut.openTabGroupContextMenu",
       async (uri?: vscode.Uri, uris?: vscode.Uri[]) => {
         const selectedUris =
-          uris && uris.length > 0 ? uris : uri ? [uri] : [];
+          uris && uris.length > 0
+            ? uris
+            : uri
+            ? [uri]
+            : [];
 
         if (selectedUris.length > 0) {
           await addFilesToGroupCommand(treeDataProvider, selectedUris);
@@ -545,8 +549,14 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.addFilesToGroup",
-      async (uri: vscode.Uri, uris?: vscode.Uri[]) => {
-        const allUris = uris && uris.length > 1 ? uris : [uri];
+      async (uri?: vscode.Uri, uris?: vscode.Uri[]) => {
+        const allUris = uris && uris.length > 0 ? uris : uri ? [uri] : [];
+
+        if (allUris.length === 0) {
+          await vscode.commands.executeCommand('tabstronaut.openTabGroupContextMenu');
+          return;
+        }
+
         await addFilesToGroupCommand(treeDataProvider, allUris);
       }
     )
