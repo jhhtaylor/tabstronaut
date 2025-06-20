@@ -72,11 +72,31 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const ungroupedProvider = new UngroupedProvider(treeDataProvider);
-  vscode.window.createTreeView("tabstronautUngrouped", {
-    treeDataProvider: ungroupedProvider,
-    showCollapseAll: false,
-    dragAndDropController: treeDataProvider,
-  });
+  try {
+    vscode.window.createTreeView("tabstronautUngrouped", {
+      treeDataProvider: ungroupedProvider,
+      showCollapseAll: false,
+      dragAndDropController: treeDataProvider,
+    });
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.includes("No view is registered with id: tabstronautUngrouped")
+    ) {
+      vscode.window
+        .showInformationMessage(
+          "Tabstronaut needs to reload VS Code to enable Ungrouped Tabs.",
+          "Reload"
+        )
+        .then((selection) => {
+          if (selection === "Reload") {
+            vscode.commands.executeCommand("workbench.action.reloadWindow");
+          }
+        });
+    } else {
+      throw err;
+    }
+  }
 
   let recentlyDeletedGroup:
     | (Group & { index: number; previousGroupId?: string })

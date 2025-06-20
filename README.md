@@ -49,7 +49,9 @@ Your changes will be saved automatically.
 
 ## Known Issues
 
-There are no known issues at the moment. If you encounter a bug, please open an [Issue](https://github.com/jhhtaylor/tabstronaut/issues) on the GitHub repository.
+After upgrading to **v1.3.2**, VS Code may display `No view is registered with id: tabstronautUngrouped` until the window is reloaded. Selecting **Reload** when prompted resolves the issue.
+
+If you encounter any other problem, please open an [Issue](https://github.com/jhhtaylor/tabstronaut/issues) on the GitHub repository.
 
 ## Release Notes
 
