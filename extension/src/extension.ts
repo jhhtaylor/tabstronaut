@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { TabstronautDataProvider } from "./tabstronautDataProvider";
+import { UngroupedProvider } from "./ungroupedProvider";
 import { Group } from "./models/Group";
 import { showConfirmation } from "./utils";
 import { handleOpenTab, openFileSmart } from "./fileOperations";
@@ -25,6 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
   config.get("showConfirmationMessages");
 
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
+
+  vscode.window.tabGroups.onDidChangeTabs(() => {
+    treeDataProvider.refreshUngroupedTabs();
+  });
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
     const index = treeDataProvider.getGroupIndex(group.id);
@@ -62,6 +67,13 @@ export function activate(context: vscode.ExtensionContext) {
 
   const treeView = vscode.window.createTreeView("tabstronaut", {
     treeDataProvider: treeDataProvider,
+    showCollapseAll: false,
+    dragAndDropController: treeDataProvider,
+  });
+
+  const ungroupedProvider = new UngroupedProvider(treeDataProvider);
+  vscode.window.createTreeView("tabstronautUngrouped", {
+    treeDataProvider: ungroupedProvider,
     showCollapseAll: false,
     dragAndDropController: treeDataProvider,
   });

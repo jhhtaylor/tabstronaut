@@ -17,7 +17,7 @@ Tabstronaut excels in tab management for VS Code by enabling users to archive an
 - Drag-and-drop mastery
   - Effortlessly reorder tabs or entire groups and give them colors or timestamps to keep everything tidy.
 - Share and revisit your workspaces
-  - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes. 
+  - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes.
 
 ## Tips
 
