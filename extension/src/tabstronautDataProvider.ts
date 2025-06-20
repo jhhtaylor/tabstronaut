@@ -391,8 +391,11 @@ export class TabstronautDataProvider
     } else {
       result.push(...groups);
     }
-    result.push(this.ungroupedGroup);
     return Promise.resolve(result);
+  }
+
+  public getUngroupedItems(): vscode.TreeItem[] {
+    return this.ungroupedGroup.items;
   }
 
   getParent(element: Group): vscode.ProviderResult<Group> {

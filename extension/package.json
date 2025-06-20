@@ -161,6 +161,12 @@
         {
           "id": "tabstronaut",
           "name": "Tab Groups"
+        },
+        {
+          "id": "tabstronautUngrouped",
+          "name": "Ungrouped Tabs",
+          "visibility": "collapsed",
+          "priority": 100
         }
       ]
     },
