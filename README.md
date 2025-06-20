@@ -16,9 +16,6 @@ Tabstronaut excels in tab management for VS Code by enabling users to archive an
   - Collect your current or all open tabs into organized groups with a single click.
 - Drag-and-drop mastery
   - Effortlessly reorder tabs or entire groups and give them colors or timestamps to keep everything tidy.
-- Manage ungrouped tabs automatically
-  - View all currently open tabs that aren't in a group and drag them into groups with ease.
-  - The ungrouped section appears as its own panel pinned to the bottom of the Tabstronaut view.
 - Share and revisit your workspaces
   - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes.
 
