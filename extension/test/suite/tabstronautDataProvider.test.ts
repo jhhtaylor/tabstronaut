@@ -199,4 +199,31 @@ describe('TabstronautDataProvider.sortGroup', () => {
     strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/a.js');
     strictEqual(group.items[1].resourceUri?.fsPath, '/tmp/b.ts');
   });
+
+  it('adds new groups at the bottom by default', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('G1');
+    await provider.addGroup('G2');
+    provider.clearRefreshInterval();
+    const groups = provider.getGroups();
+    strictEqual(groups[0].label, 'G1');
+    strictEqual(groups[1].label, 'G2');
+  });
+
+  it('respects newTabGroupPosition setting', async () => {
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    const original = config.get('newTabGroupPosition');
+    await config.update('newTabGroupPosition', 'top', true);
+
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('G1');
+    await provider.addGroup('G2');
+    provider.clearRefreshInterval();
+
+    const groups = provider.getGroups();
+    strictEqual(groups[0].label, 'G2');
+    strictEqual(groups[1].label, 'G1');
+
+    await config.update('newTabGroupPosition', original, true);
+  });
 });

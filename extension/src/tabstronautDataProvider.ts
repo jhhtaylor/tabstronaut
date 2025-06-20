@@ -465,12 +465,19 @@ export class TabstronautDataProvider
   async addGroup(
     label: string,
     colorName?: string,
-    position = 0
+    position?: number
   ): Promise<string | undefined> {
     const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
 
     const entries = Array.from(this.groupsMap.entries());
     const newGroupsMap = new Map<string, Group>();
+
+    if (position === undefined) {
+      const setting = vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get<"top" | "bottom">("newTabGroupPosition", "bottom");
+      position = setting === "top" ? 0 : entries.length;
+    }
 
     let inserted = false;
     entries.forEach(([id, group], index) => {
