@@ -118,6 +118,24 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(dstGroup.items.length, 1);
   });
 
+  it('handleDrop removes tab when dropped on empty area', async () => {
+    const memento = new MockMemento({});
+    const provider = new TabstronautDataProvider(memento);
+
+    const g1 = await provider.addGroup('G1');
+    await provider.addToGroup(g1!, '/tmp/file1');
+
+    const srcGroup = provider.getGroup('G1')!;
+    const tabItem = srcGroup.items[0];
+
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag([tabItem], dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(undefined, dragData, new vscode.CancellationTokenSource().token);
+
+    provider.clearRefreshInterval();
+    strictEqual(provider.getGroup('G1'), undefined);
+  });
+
   it('handles file paths containing commas when dragging tabs', async () => {
     const memento = new MockMemento({});
     const provider = new TabstronautDataProvider(memento);

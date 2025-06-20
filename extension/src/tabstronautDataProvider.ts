@@ -232,6 +232,43 @@ export class TabstronautDataProvider
         } else {
           showConfirmation(`Removed '${tab.label}' from Tab Group.`);
         }
+      } else if (id.startsWith("tab:") && !target) {
+        const tabId = id.replace("tab:", "");
+        const sourceGroup = [...this.groupsMap.values()].find((g) =>
+          g.items.some((i) => i.id === tabId)
+        );
+        const tab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
+        if (!tab || !sourceGroup) {
+          continue;
+        }
+
+        const wasLastTab = sourceGroup.items.length === 1;
+        let backupGroup: Group | undefined;
+        if (wasLastTab) {
+          backupGroup = {
+            ...sourceGroup,
+            items: [...sourceGroup.items],
+            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
+            addItem: sourceGroup.addItem.bind(sourceGroup),
+            containsFile: sourceGroup.containsFile.bind(sourceGroup),
+          };
+        }
+
+        sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+
+        if (wasLastTab && !sourceGroup.isPinned) {
+          if (this.onGroupAutoDeleted && backupGroup) {
+            this.onGroupAutoDeleted(backupGroup);
+          }
+          this.groupsMap.delete(sourceGroup.id);
+        }
+
+        this.refreshUngroupedTabs();
+        await this.updateWorkspaceState();
+
+        showConfirmation(`Removed '${tab.label}' from Tab Group.`);
       } else if (id.startsWith("tab:") && target instanceof vscode.TreeItem && target.contextValue === "tab") {
         const tabId = id.replace("tab:", "");
         const sourceGroup = [...this.groupsMap.values(), this.ungroupedGroup].find((g) =>

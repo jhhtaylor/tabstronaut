@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.3]
+
+- Tabs can be dragged from a Tab Group to the Ungrouped view to remove them from the group.
+
 ## [1.3.2]
 
 - Added option to sort tabs alphabetically within a group.
