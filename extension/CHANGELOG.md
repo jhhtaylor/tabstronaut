@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.3]
+
+- Reload VS Code automatically if the Ungrouped Tabs view fails to register after upgrading.
+
 ## [1.3.2]
 
 - New Ungrouped Tabs section.
