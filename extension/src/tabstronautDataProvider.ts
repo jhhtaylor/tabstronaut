@@ -55,7 +55,7 @@ export class TabstronautDataProvider
       this.groupsMap.set(id, newGroup);
     }
 
-    this.ungroupedGroup = new Group("Ungrouped Tabs", "ungrouped");
+    this.ungroupedGroup = new Group("Ungrouped Tabs", "ungrouped", new Date(), undefined, true);
     this.ungroupedGroup.contextValue = "ungrouped";
     this.ungroupedGroup.description = "";
     this.refreshUngroupedTabs();
@@ -72,7 +72,7 @@ export class TabstronautDataProvider
     token: vscode.CancellationToken
   ): Promise<void> {
     const ids = source
-      .filter((item) => !(item instanceof Group && item.id === this.ungroupedGroup.id))
+      .filter((item) => !(item instanceof Group && item.isPinned))
       .map((item) => {
         return item instanceof Group ? `group:${item.id}` : `tab:${item.id}`;
       });
@@ -142,8 +142,8 @@ export class TabstronautDataProvider
           !draggedGroup ||
           !targetGroup ||
           draggedGroup.id === targetGroup.id ||
-          draggedGroup.id === this.ungroupedGroup.id ||
-          targetGroup.id === this.ungroupedGroup.id
+          draggedGroup.isPinned ||
+          targetGroup.isPinned
         ) {
           return;
         }
@@ -210,14 +210,14 @@ export class TabstronautDataProvider
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
 
-        if (wasLastTab && sourceGroup.id !== this.ungroupedGroup.id) {
+        if (wasLastTab && !sourceGroup.isPinned) {
           if (this.onGroupAutoDeleted && backupGroup) {
             this.onGroupAutoDeleted(backupGroup);
           }
           this.groupsMap.delete(sourceGroup.id);
         }
 
-        if (target.id !== this.ungroupedGroup.id) {
+        if (!(target instanceof Group && target.isPinned)) {
           const newItem = target.createTabItem(tabPath);
           target.items.push(newItem);
         }
@@ -225,7 +225,7 @@ export class TabstronautDataProvider
         this.refreshUngroupedTabs();
         await this.updateWorkspaceState();
 
-        if (target.id !== this.ungroupedGroup.id) {
+        if (!(target instanceof Group && target.isPinned)) {
           showConfirmation(
             `Moved '${tab.label}' to Tab Group '${target.label}'.`
           );
@@ -257,7 +257,7 @@ export class TabstronautDataProvider
         const draggedPath = draggedTab.resourceUri?.fsPath || "";
         const normalizedDragged = generateNormalizedPath(draggedPath);
         let existingItem: TabItem | undefined;
-        if (targetGroup.id !== this.ungroupedGroup.id) {
+        if (!targetGroup.isPinned) {
           existingItem = targetGroup.items.find(
             (item) =>
               generateNormalizedPath(item.resourceUri?.fsPath || "") ===
@@ -286,7 +286,7 @@ export class TabstronautDataProvider
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
 
-        if (wasLastTab && sourceGroup.id !== this.ungroupedGroup.id) {
+        if (wasLastTab && !sourceGroup.isPinned) {
           if (this.onGroupAutoDeleted && backupGroup) {
             this.onGroupAutoDeleted(backupGroup);
           }
@@ -296,7 +296,7 @@ export class TabstronautDataProvider
         if (targetGroup === sourceGroup) {
           const adjustedIndex = targetIndex;
           targetGroup.items.splice(adjustedIndex, 0, draggedTab);
-        } else if (targetGroup.id !== this.ungroupedGroup.id) {
+        } else if (!targetGroup.isPinned) {
           const newItem = targetGroup.createTabItem(draggedPath);
           targetGroup.items.splice(targetIndex, 0, newItem);
         }
@@ -306,7 +306,7 @@ export class TabstronautDataProvider
 
         if (targetGroup === sourceGroup) {
           showConfirmation(`Reordered '${draggedTab.label}'.`);
-        } else if (targetGroup.id !== this.ungroupedGroup.id) {
+        } else if (!targetGroup.isPinned) {
           showConfirmation(
             `Moved '${draggedTab.label}' to Tab Group '${targetGroup.label}'.`
           );

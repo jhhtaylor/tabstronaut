@@ -7,8 +7,15 @@ export class Group extends vscode.TreeItem {
     id: string;
     creationTime: Date;
     colorName: string;
+    isPinned: boolean;
 
-    constructor(label: string, id: string = '', creationTime: Date = new Date(), colorName?: string) {
+    constructor(
+        label: string,
+        id: string = '',
+        creationTime: Date = new Date(),
+        colorName?: string,
+        isPinned = false,
+    ) {
         super(label, vscode.TreeItemCollapsibleState.Collapsed);
         this.contextValue = 'group';
         this.id = id;
@@ -16,6 +23,7 @@ export class Group extends vscode.TreeItem {
         this.description = generateRelativeTime(this.creationTime);
         this.colorName = colorName || COLORS[Math.abs(generateColorHash(this.id)) % COLORS.length];
         this.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(this.colorName));
+        this.isPinned = isPinned;
     }
 
     createTabItem(filePath: string): TabItem {
