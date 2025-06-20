@@ -479,7 +479,7 @@ export async function sortTabGroupCommand(
   }
 
   const picked = await vscode.window.showQuickPick(
-    ['Sort by Folder', 'Sort by File Type'],
+    ['Sort Alphabetically', 'Sort by Folder', 'Sort by File Type'],
     { placeHolder: 'Sort Tab Group' }
   );
 
@@ -487,6 +487,11 @@ export async function sortTabGroupCommand(
     return;
   }
 
-  const mode = picked === 'Sort by File Type' ? 'fileType' : 'folder';
-  await treeDataProvider.sortGroup(item.id, mode as 'folder' | 'fileType');
+  let mode: 'folder' | 'fileType' | 'alphabetical' = 'folder';
+  if (picked === 'Sort by File Type') {
+    mode = 'fileType';
+  } else if (picked === 'Sort Alphabetically') {
+    mode = 'alphabetical';
+  }
+  await treeDataProvider.sortGroup(item.id, mode);
 }

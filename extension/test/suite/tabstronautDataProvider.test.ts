@@ -187,4 +187,16 @@ describe('TabstronautDataProvider.sortGroup', () => {
       configurable: true,
     });
   });
+
+  it('sorts alphabetically', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('G1');
+    await provider.addToGroup(id!, '/tmp/b.ts');
+    await provider.addToGroup(id!, '/tmp/a.js');
+    await provider.sortGroup(id!, 'alphabetical');
+    provider.clearRefreshInterval();
+    const group = provider.getGroup('G1')!;
+    strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/a.js');
+    strictEqual(group.items[1].resourceUri?.fsPath, '/tmp/b.ts');
+  });
 });
