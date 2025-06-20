@@ -232,7 +232,67 @@ export class TabstronautDataProvider
         } else {
           showConfirmation(`Removed '${tab.label}' from Tab Group.`);
         }
-      } else if (id.startsWith("tab:") && target instanceof vscode.TreeItem && target.contextValue === "tab") {
+      } else if (
+        id.startsWith("tab:") &&
+        (!target ||
+          (target instanceof vscode.TreeItem &&
+            target.contextValue === "instruction"))
+      ) {
+        const tabId = id.replace("tab:", "");
+        const sourceGroup = [
+          ...this.groupsMap.values(),
+          this.ungroupedGroup,
+        ].find((g) => g.items.some((i) => i.id === tabId));
+        const tab = sourceGroup?.items.find((i) => i.id === tabId) as
+          | TabItem
+          | undefined;
+        if (!tab || !sourceGroup) {
+          return;
+        }
+
+        const tabPath = tab.resourceUri?.fsPath || "";
+        const initialCount = this.groupsMap.size;
+        const newName = `Group ${initialCount + 1}`;
+        const newColor = COLORS[initialCount % COLORS.length];
+
+        const wasLastTab = sourceGroup.items.length === 1;
+        let backupGroup: Group | undefined;
+        if (wasLastTab) {
+          backupGroup = {
+            ...sourceGroup,
+            items: [...sourceGroup.items],
+            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
+            addItem: sourceGroup.addItem.bind(sourceGroup),
+            containsFile: sourceGroup.containsFile.bind(sourceGroup),
+          };
+        }
+
+        sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
+
+        if (wasLastTab && !sourceGroup.isPinned) {
+          if (this.onGroupAutoDeleted && backupGroup) {
+            this.onGroupAutoDeleted(backupGroup);
+          }
+          this.groupsMap.delete(sourceGroup.id);
+        }
+
+        const newGroupId = await this.addGroup(newName, newColor);
+        if (!newGroupId) {
+          return;
+        }
+        const newGroup = this.groupsMap.get(newGroupId)!;
+        const newItem = newGroup.createTabItem(tabPath);
+        newGroup.items.push(newItem);
+
+        this.refreshUngroupedTabs();
+        await this.updateWorkspaceState();
+
+        showConfirmation(`Created '${newName}' and added 1 file.`);
+      } else if (
+        id.startsWith("tab:") &&
+        target instanceof vscode.TreeItem &&
+        target.contextValue === "tab"
+      ) {
         const tabId = id.replace("tab:", "");
         const sourceGroup = [...this.groupsMap.values(), this.ungroupedGroup].find((g) =>
           g.items.some((i) => i.id === tabId)
@@ -405,12 +465,19 @@ export class TabstronautDataProvider
   async addGroup(
     label: string,
     colorName?: string,
-    position = 0
+    position?: number
   ): Promise<string | undefined> {
     const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
 
     const entries = Array.from(this.groupsMap.entries());
     const newGroupsMap = new Map<string, Group>();
+
+    if (position === undefined) {
+      const setting = vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get<"top" | "bottom">("newTabGroupPosition", "bottom");
+      position = setting === "top" ? 0 : entries.length;
+    }
 
     let inserted = false;
     entries.forEach(([id, group], index) => {
