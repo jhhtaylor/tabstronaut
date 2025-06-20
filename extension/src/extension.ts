@@ -26,6 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
+  vscode.window.tabGroups.onDidChangeTabs(() => {
+    treeDataProvider.refreshUngroupedTabs();
+  });
+
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
     const index = treeDataProvider.getGroupIndex(group.id);
     const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
