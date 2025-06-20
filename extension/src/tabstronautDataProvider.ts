@@ -767,7 +767,7 @@ export class TabstronautDataProvider
 
   async sortGroup(
     groupId: string,
-    mode: "folder" | "fileType"
+    mode: "folder" | "fileType" | "alphabetical"
   ): Promise<void> {
     const group = this.groupsMap.get(groupId);
     if (!group) {
@@ -777,6 +777,9 @@ export class TabstronautDataProvider
     const getKey = (filePath: string): string => {
       if (mode === "fileType") {
         return path.extname(filePath).toLowerCase();
+      }
+      if (mode === "alphabetical") {
+        return path.basename(filePath).toLowerCase();
       }
       return labelForTopFolder(filePath).toLowerCase();
     };
