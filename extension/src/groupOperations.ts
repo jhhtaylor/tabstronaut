@@ -479,7 +479,7 @@ export async function sortTabGroupCommand(
   }
 
   const picked = await vscode.window.showQuickPick(
-    ['Sort by Folder', 'Sort by File Type', 'Sort Alphabetically'],
+    ['Sort Alphabetically', 'Sort by Folder', 'Sort by File Type'],
     { placeHolder: 'Sort Tab Group' }
   );
 
