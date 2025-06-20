@@ -145,6 +145,12 @@
         "title": "Undo Delete",
         "category": "Tabstronaut",
         "icon": "$(discard)"
+      },
+      {
+        "command": "tabstronaut.undoCloseEditors",
+        "title": "Undo Close Editors",
+        "category": "Tabstronaut",
+        "icon": "$(discard)"
       }
     ],
     "viewsContainers": {
@@ -175,6 +181,11 @@
         {
           "command": "tabstronaut.undoDelete",
           "when": "view == tabstronaut && tabstronaut:canUndoDelete",
+          "group": "navigation@-1"
+        },
+        {
+          "command": "tabstronaut.undoCloseEditors",
+          "when": "view == tabstronaut && tabstronaut:canUndoClose",
           "group": "navigation@-1"
         },
         {

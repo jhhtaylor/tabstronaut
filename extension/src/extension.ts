@@ -82,6 +82,23 @@ export function activate(context: vscode.ExtensionContext) {
     | (Group & { index: number; previousGroupId?: string })
     | null = null;
   let undoTimeout: NodeJS.Timeout | undefined;
+  let recentlyClosedEditors: string[] | null = null;
+  let undoCloseTimeout: NodeJS.Timeout | undefined;
+
+  function getOpenEditorFilePaths(): string[] {
+    const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+    const paths: string[] = [];
+    for (const tab of allTabs) {
+      const input = (tab as any).input;
+      if (input && typeof input === "object" && "uri" in input) {
+        const uri = input.uri;
+        if (uri instanceof vscode.Uri && uri.scheme === "file") {
+          paths.push(uri.fsPath);
+        }
+      }
+    }
+    return paths;
+  }
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.collapseAll", async () => {
@@ -118,6 +135,26 @@ export function activate(context: vscode.ExtensionContext) {
             return;
           }
         }
+
+        recentlyClosedEditors = getOpenEditorFilePaths();
+        vscode.commands.executeCommand(
+          "setContext",
+          "tabstronaut:canUndoClose",
+          true
+        );
+
+        if (undoCloseTimeout) {
+          clearTimeout(undoCloseTimeout);
+        }
+
+        undoCloseTimeout = setTimeout(() => {
+          recentlyClosedEditors = null;
+          vscode.commands.executeCommand(
+            "setContext",
+            "tabstronaut:canUndoClose",
+            false
+          );
+        }, 5000);
 
         vscode.commands.executeCommand("workbench.action.closeAllEditors");
       }
@@ -235,6 +272,26 @@ export function activate(context: vscode.ExtensionContext) {
           .getConfiguration("tabstronaut")
           .get<boolean>("autoCloseOnRestore", false);
         if (autoClose) {
+          recentlyClosedEditors = getOpenEditorFilePaths();
+          vscode.commands.executeCommand(
+            "setContext",
+            "tabstronaut:canUndoClose",
+            true
+          );
+
+          if (undoCloseTimeout) {
+            clearTimeout(undoCloseTimeout);
+          }
+
+          undoCloseTimeout = setTimeout(() => {
+            recentlyClosedEditors = null;
+            vscode.commands.executeCommand(
+              "setContext",
+              "tabstronaut:canUndoClose",
+              false
+            );
+          }, 5000);
+
           await vscode.commands.executeCommand(
             "workbench.action.closeAllEditors"
           );
@@ -271,6 +328,26 @@ export function activate(context: vscode.ExtensionContext) {
           .getConfiguration("tabstronaut")
           .get<boolean>("autoCloseOnRestore", false);
         if (autoClose) {
+          recentlyClosedEditors = getOpenEditorFilePaths();
+          vscode.commands.executeCommand(
+            "setContext",
+            "tabstronaut:canUndoClose",
+            true
+          );
+
+          if (undoCloseTimeout) {
+            clearTimeout(undoCloseTimeout);
+          }
+
+          undoCloseTimeout = setTimeout(() => {
+            recentlyClosedEditors = null;
+            vscode.commands.executeCommand(
+              "setContext",
+              "tabstronaut:canUndoClose",
+              false
+            );
+          }, 5000);
+
           await vscode.commands.executeCommand(
             "workbench.action.closeAllEditors"
           );
@@ -605,6 +682,31 @@ export function activate(context: vscode.ExtensionContext) {
 
       treeDataProvider.refresh();
       showConfirmation("Tab Group restored.");
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.undoCloseEditors", async () => {
+      if (!recentlyClosedEditors) {
+        return;
+      }
+
+      for (const filePath of recentlyClosedEditors) {
+        await openFileSmart(filePath);
+      }
+
+      recentlyClosedEditors = null;
+      if (undoCloseTimeout) {
+        clearTimeout(undoCloseTimeout);
+      }
+
+      vscode.commands.executeCommand(
+        "setContext",
+        "tabstronaut:canUndoClose",
+        false
+      );
+
+      showConfirmation("Restored closed tabs.");
     })
   );
 }
