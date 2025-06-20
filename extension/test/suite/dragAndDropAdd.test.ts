@@ -57,6 +57,26 @@ describe('TabstronautDataProvider handleDrop text/uri-list', () => {
 
     strictEqual(group.items.length, 1);
   });
+
+  it('adds file from uri list to specific position', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const groupId = await provider.addGroup('G1', undefined, 0);
+    await provider.addToGroup(groupId!, '/tmp/a.txt');
+    await provider.addToGroup(groupId!, '/tmp/b.txt');
+    const group = provider.getGroup('G1')!;
+    const targetTab = group.items[1];
+
+    const dragData = new vscode.DataTransfer();
+    const uri = vscode.Uri.file('/tmp/c.txt');
+    dragData.set('text/uri-list', new vscode.DataTransferItem(uri.toString()));
+
+    await provider.handleDrop(targetTab, dragData, new vscode.CancellationTokenSource().token);
+
+    provider.clearRefreshInterval();
+    const updated = provider.getGroup('G1')!;
+    strictEqual(updated.items.length, 3);
+    strictEqual(updated.items[1].resourceUri?.fsPath, '/tmp/c.txt');
+  });
 });
 
 describe('TabstronautDataProvider addToGroup duplicate handling', () => {

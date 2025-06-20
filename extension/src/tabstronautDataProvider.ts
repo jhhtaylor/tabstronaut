@@ -89,6 +89,47 @@ export class TabstronautDataProvider
     token: vscode.CancellationToken
   ): Promise<void> {
     const uriItem = dataTransfer.get("text/uri-list");
+    if (
+      uriItem &&
+      target instanceof vscode.TreeItem &&
+      target.contextValue === "tab"
+    ) {
+      const uriList = (uriItem.value as string)
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      const targetTabId = target.id as string;
+      const targetGroup = [...this.groupsMap.values()].find((g) =>
+        g.items.some((i) => i.id === targetTabId)
+      );
+
+      if (!targetGroup || targetGroup.isPinned) {
+        return;
+      }
+
+      const targetIndex = targetGroup.items.findIndex((i) => i.id === targetTabId);
+      let count = 0;
+      for (const uriString of uriList) {
+        try {
+          const uri = vscode.Uri.parse(uriString);
+          if (uri.scheme === "file") {
+            await this.addToGroup(targetGroup.id, uri.fsPath, true, targetIndex + count);
+            count++;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      if (count > 0) {
+        showConfirmation(
+          `Added ${count} file(s) to Tab Group '${targetGroup.label}'.`
+        );
+      }
+      return;
+    }
+
     if (uriItem && target instanceof Group) {
       const uriList = (uriItem.value as string)
         .split(/\r?\n/)
@@ -485,7 +526,8 @@ export class TabstronautDataProvider
   async addToGroup(
     groupId: string,
     filePath: string,
-    moveGroup = true
+    moveGroup = true,
+    position?: number
   ) {
     const group = this.groupsMap.get(groupId);
     if (!group) {
@@ -502,7 +544,8 @@ export class TabstronautDataProvider
         normalizedFilePath
     );
 
-    let itemPosition: number | null = null;
+    let itemPosition: number | null =
+      position !== undefined ? position : null;
 
     if (existingItem) {
       vscode.window.showWarningMessage(
