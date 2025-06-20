@@ -434,6 +434,12 @@
           "type": "boolean",
           "default": false,
           "description": "Show confirmation messages after adding tabs to groups."
+        },
+        "tabstronaut.newTabGroupPosition": {
+          "type": "string",
+          "enum": ["top", "bottom"],
+          "default": "bottom",
+          "description": "Position for newly created Tab Groups."
         }
         
       }
