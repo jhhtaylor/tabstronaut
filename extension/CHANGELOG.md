@@ -2,13 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
-## [1.3.3]
+## [1.3.2]
 
 - Dropping a tab onto empty space now creates a new Tab Group with the next default name and color.
 - Added `tabstronaut.newTabGroupPosition` setting to control where new groups are inserted, defaulting to the bottom of the list.
-
-## [1.3.2]
-
 - Added option to sort tabs alphabetically within a group.
 
 ## [1.3.1]
