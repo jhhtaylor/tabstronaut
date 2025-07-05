@@ -480,7 +480,7 @@
     "eslint": "^9.30.1",
     "glob": "^11.0.1",
     "minimatch": "^10.0.3",
-    "mocha": "^11.5.0",
+    "mocha": "^11.7.1",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.2",
     "webpack": "^5.98.0",
