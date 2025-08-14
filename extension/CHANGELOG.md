@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.5]
+
+- Avoid opening duplicate tabs by switching to an existing tab if it is already open in another editor group.
+
 ## [1.3.3-1.3.4]
 
 - Hotfixes.

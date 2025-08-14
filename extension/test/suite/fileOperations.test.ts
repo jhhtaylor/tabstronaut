@@ -65,3 +65,4 @@ describe('fileOperations.gatherFileUris', () => {
     deepStrictEqual(result.map((u) => u.fsPath).sort(), expected.sort());
   });
 });
+

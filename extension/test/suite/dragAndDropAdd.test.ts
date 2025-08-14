@@ -76,8 +76,8 @@ describe('TabstronautDataProvider handleDrop new group on empty space', () => {
   it('creates new group with defaults when dropping tab to empty area', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1');
-    const group = provider.getGroup('G1')!;
     await provider.addToGroup(groupId!, '/tmp/file1');
+    const group = provider.getGroup('G1')!;
     const tabId = group.items[0].id;
 
     const dragData = new vscode.DataTransfer();
