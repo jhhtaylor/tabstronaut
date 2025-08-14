@@ -10,6 +10,10 @@ export async function handleOpenTab(item: any, fromButton: boolean) {
     return;
   }
   try {
+    if (await revealExistingTab(uri)) {
+      return;
+    }
+
     const isNotebook = uri.fsPath.endsWith('.ipynb');
     if (isNotebook) {
       await vscode.commands.executeCommand(
@@ -32,6 +36,10 @@ export async function handleOpenTab(item: any, fromButton: boolean) {
 export async function openFileSmart(filePath: string): Promise<void> {
   const uri = vscode.Uri.file(filePath);
   try {
+    if (await revealExistingTab(uri)) {
+      return;
+    }
+
     if (filePath.endsWith('.ipynb')) {
       await vscode.commands.executeCommand(
         'vscode.openWith',
@@ -47,6 +55,27 @@ export async function openFileSmart(filePath: string): Promise<void> {
       `Cannot open '${path.basename(filePath)}'. Please check if the file exists and try again.`
     );
   }
+}
+
+async function revealExistingTab(uri: vscode.Uri): Promise<boolean> {
+  for (const group of vscode.window.tabGroups.all) {
+    for (const tab of group.tabs) {
+      const input = (tab as any).input;
+      if (!input || typeof input !== 'object' || !('uri' in input)) {
+        continue;
+      }
+      const tabUri = (input as any).uri;
+      if (tabUri instanceof vscode.Uri && tabUri.fsPath === uri.fsPath) {
+        const document = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(document, {
+          viewColumn: group.viewColumn,
+          preview: false,
+        });
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 export async function collectFilesRecursively(
