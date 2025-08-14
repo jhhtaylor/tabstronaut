@@ -84,6 +84,12 @@
         "icon": "$(sort-precedence)"
       },
       {
+        "command": "tabstronaut.filterTabGroups",
+        "category": "Tabstronaut",
+        "title": "Filter Tab Groups by Name",
+        "icon": "$(filter)"
+      },
+      {
         "command": "tabstronaut.removeTabGroup",
         "category": "Tabstronaut",
         "title": "Remove Tab Group",
@@ -207,6 +213,11 @@
           "command": "tabstronaut.showMoreOptions",
           "when": "view == tabstronaut",
           "group": "navigation@3"
+        },
+        {
+          "command": "tabstronaut.filterTabGroups",
+          "when": "view == tabstronaut",
+          "group": "navigation@4"
         }
       ],
       "explorer/context": [

@@ -34,6 +34,7 @@ export class TabstronautDataProvider
   private groupsMap: Map<string, Group> = new Map();
   private refreshIntervalId?: NodeJS.Timeout;
   private ungroupedGroup: Group;
+  private groupFilter?: string;
 
   constructor(private workspaceState: vscode.Memento) {
     const groupData = this.workspaceState.get<{
@@ -437,6 +438,20 @@ export class TabstronautDataProvider
     return instructionItem;
   }
 
+  private createNoMatchItem(): vscode.TreeItem {
+    const noMatchItem = new vscode.TreeItem(
+      "No Tab Groups match the current filter"
+    );
+    noMatchItem.contextValue = "instruction";
+    noMatchItem.iconPath = new vscode.ThemeIcon("warning");
+    return noMatchItem;
+  }
+
+  public setGroupFilter(filter: string | undefined): void {
+    this.groupFilter = filter ? filter.toLowerCase() : undefined;
+    this._onDidChangeTreeData.fire();
+  }
+
   getChildren(
     element?: Group | vscode.TreeItem
   ): Thenable<(Group | vscode.TreeItem)[]> {
@@ -444,10 +459,20 @@ export class TabstronautDataProvider
       return Promise.resolve(element.items);
     }
 
-    const groups = Array.from(this.groupsMap.values());
+    let groups = Array.from(this.groupsMap.values());
+    if (this.groupFilter) {
+      const filter = this.groupFilter;
+      groups = groups.filter(
+        (g) =>
+          typeof g.label === "string" &&
+          g.label.toLowerCase().includes(filter)
+      );
+    }
     const result: (Group | vscode.TreeItem)[] = [];
     if (groups.length === 0) {
-      result.push(this.createInstructionItem());
+      result.push(
+        this.groupFilter ? this.createNoMatchItem() : this.createInstructionItem()
+      );
     } else {
       result.push(...groups);
     }
