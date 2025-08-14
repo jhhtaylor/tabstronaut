@@ -65,6 +65,12 @@ export class TabstronautDataProvider
       () => this.refreshCreationTimes(),
       300000
     );
+
+    vscode.commands.executeCommand(
+      "setContext",
+      "tabstronaut:hasGroupFilter",
+      false
+    );
   }
 
   async handleDrag(
@@ -448,8 +454,17 @@ export class TabstronautDataProvider
   }
 
   public setGroupFilter(filter: string | undefined): void {
-    this.groupFilter = filter ? filter.toLowerCase() : undefined;
+    this.groupFilter = filter;
+    vscode.commands.executeCommand(
+      "setContext",
+      "tabstronaut:hasGroupFilter",
+      !!filter
+    );
     this._onDidChangeTreeData.fire();
+  }
+
+  public getGroupFilter(): string | undefined {
+    return this.groupFilter;
   }
 
   getChildren(
@@ -461,7 +476,7 @@ export class TabstronautDataProvider
 
     let groups = Array.from(this.groupsMap.values());
     if (this.groupFilter) {
-      const filter = this.groupFilter;
+      const filter = this.groupFilter.toLowerCase();
       groups = groups.filter(
         (g) =>
           typeof g.label === "string" &&

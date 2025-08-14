@@ -83,17 +83,23 @@
         "title": "Sort Tab Group...",
         "icon": "$(sort-precedence)"
       },
-      {
-        "command": "tabstronaut.filterTabGroups",
-        "category": "Tabstronaut",
-        "title": "Filter Tab Groups by Name",
-        "icon": "$(filter)"
-      },
-      {
-        "command": "tabstronaut.removeTabGroup",
-        "category": "Tabstronaut",
-        "title": "Remove Tab Group",
-        "icon": "$(trash)"
+        {
+          "command": "tabstronaut.filterTabGroups",
+          "category": "Tabstronaut",
+          "title": "Filter Tab Groups by Name",
+          "icon": "$(filter)"
+        },
+        {
+          "command": "tabstronaut.filterTabGroupsActive",
+          "category": "Tabstronaut",
+          "title": "Filter Tab Groups by Name",
+          "icon": "$(filter-filled)"
+        },
+        {
+          "command": "tabstronaut.removeTabGroup",
+          "category": "Tabstronaut",
+          "title": "Remove Tab Group",
+          "icon": "$(trash)"
       },
       {
         "command": "tabstronaut.previewSpecificTab",
@@ -214,12 +220,17 @@
           "when": "view == tabstronaut",
           "group": "navigation@3"
         },
-        {
-          "command": "tabstronaut.filterTabGroups",
-          "when": "view == tabstronaut",
-          "group": "navigation@4"
-        }
-      ],
+          {
+            "command": "tabstronaut.filterTabGroups",
+            "when": "view == tabstronaut && !tabstronaut:hasGroupFilter",
+            "group": "navigation@4"
+          },
+          {
+            "command": "tabstronaut.filterTabGroupsActive",
+            "when": "view == tabstronaut && tabstronaut:hasGroupFilter",
+            "group": "navigation@4"
+          }
+        ],
       "explorer/context": [
         {
           "command": "tabstronaut.addFilesToGroup",

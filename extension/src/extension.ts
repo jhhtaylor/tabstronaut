@@ -394,6 +394,12 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.filterTabGroupsActive", () =>
+      filterTabGroupsCommand(treeDataProvider)
+    )
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.removeTabGroup",
       async (item: any) => {
