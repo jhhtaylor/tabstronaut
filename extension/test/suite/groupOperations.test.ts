@@ -8,6 +8,7 @@ import {
   selectColorOption,
   handleAddToExistingGroup,
   addAllOpenTabsToGroup,
+  filterTabGroupsCommand,
 } from '../../src/groupOperations';
 
 class MockMemento implements vscode.Memento {
@@ -116,6 +117,50 @@ describe('groupOperations.handleAddToExistingGroup', () => {
     const group = provider.getGroup('G1')!;
     strictEqual(group.items.length, 1);
     strictEqual(group.items[0].resourceUri?.fsPath, '/tmp/file1');
+  });
+});
+
+describe('groupOperations.filterTabGroupsCommand', () => {
+  let origInput: any;
+
+  beforeEach(() => {
+    origInput = vscode.window.showInputBox;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(vscode.window, 'showInputBox', {
+      value: origInput,
+      configurable: true,
+    });
+  });
+
+  it('prefills current filter and updates to new value', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    provider.setGroupFilter('foo');
+    let passedValue: string | undefined;
+    Object.defineProperty(vscode.window, 'showInputBox', {
+      value: async (opts: any) => {
+        passedValue = opts.value;
+        return 'bar';
+      },
+      configurable: true,
+    });
+    await filterTabGroupsCommand(provider);
+    provider.clearRefreshInterval();
+    strictEqual(passedValue, 'foo');
+    strictEqual(provider.getGroupFilter(), 'bar');
+  });
+
+  it('clears filter on blank input', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    provider.setGroupFilter('foo');
+    Object.defineProperty(vscode.window, 'showInputBox', {
+      value: async () => '',
+      configurable: true,
+    });
+    await filterTabGroupsCommand(provider);
+    provider.clearRefreshInterval();
+    strictEqual(provider.getGroupFilter(), undefined);
   });
 });
 

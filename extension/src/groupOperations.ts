@@ -495,3 +495,20 @@ export async function sortTabGroupCommand(
   }
   await treeDataProvider.sortGroup(item.id, mode);
 }
+
+export async function filterTabGroupsCommand(
+  treeDataProvider: TabstronautDataProvider
+): Promise<void> {
+  const filter = await vscode.window.showInputBox({
+    value: treeDataProvider.getGroupFilter(),
+    placeHolder: "Filter Tab Groups by name",
+    prompt: "Enter text to filter Tab Groups. Leave empty to clear the filter.",
+  });
+
+  if (filter === undefined) {
+    return;
+  }
+
+  const trimmed = filter.trim();
+  treeDataProvider.setGroupFilter(trimmed === "" ? undefined : trimmed);
+}

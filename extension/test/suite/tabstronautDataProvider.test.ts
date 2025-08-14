@@ -1,6 +1,7 @@
 import { strictEqual, ok } from 'assert';
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from '../../src/tabstronautDataProvider';
+import { Group } from '../../src/models/Group';
 
 class MockMemento implements vscode.Memento {
   private store: Record<string, any>;
@@ -225,5 +226,28 @@ describe('TabstronautDataProvider.sortGroup', () => {
     strictEqual(groups[1].label, 'G1');
 
     await config.update('newTabGroupPosition', original, true);
+  });
+});
+
+describe('TabstronautDataProvider group filter', () => {
+  it('filters groups by name', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Work');
+    await provider.addGroup('Play');
+    provider.setGroupFilter('wor');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+    strictEqual(children.length, 1);
+    strictEqual((children[0] as Group).label, 'Work');
+  });
+
+  it('shows no match item when filter matches nothing', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    provider.setGroupFilter('xyz');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+    strictEqual(children.length, 1);
+    strictEqual(children[0].label, 'No Tab Groups match the current filter');
+    strictEqual(children[0].contextValue, 'instruction');
   });
 });

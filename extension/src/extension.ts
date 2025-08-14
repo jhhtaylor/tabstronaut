@@ -11,6 +11,7 @@ import {
   addAllOpenTabsToGroup,
   addFilesToGroupCommand,
   sortTabGroupCommand,
+  filterTabGroupsCommand,
 } from "./groupOperations";
 
 let treeDataProvider: TabstronautDataProvider;
@@ -383,6 +384,18 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.sortTabGroup",
       (item: any) => sortTabGroupCommand(treeDataProvider, item)
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.filterTabGroups", () =>
+      filterTabGroupsCommand(treeDataProvider)
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.filterTabGroupsActive", () =>
+      filterTabGroupsCommand(treeDataProvider)
     )
   );
 
