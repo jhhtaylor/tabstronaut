@@ -807,6 +807,7 @@ export function activate(context: vscode.ExtensionContext) {
       showConfirmation("Restored closed tabs.");
     })
   );
+  return { testUtils };
 }
 
 export function deactivate() {

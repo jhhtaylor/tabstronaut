@@ -29,7 +29,7 @@ describe('collapse/expand all commands', () => {
         if (command === 'list.collapseAll') {
           return Promise.resolve();
         }
-        return Promise.resolve();
+        return origExecuteCommand(command, ...args);
       },
       configurable: true,
     });
