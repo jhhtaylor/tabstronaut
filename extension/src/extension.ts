@@ -15,6 +15,7 @@ import {
 } from "./groupOperations";
 
 let treeDataProvider: TabstronautDataProvider;
+let collapsedGroups: Set<string>;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -86,6 +87,60 @@ export function activate(context: vscode.ExtensionContext) {
   let recentlyClosedEditors: string[] | null = null;
   let undoCloseTimeout: NodeJS.Timeout | undefined;
 
+  collapsedGroups = new Set<string>();
+
+  const updateCollapsedContext = () => {
+    const allGroups = treeDataProvider.getGroups();
+    const allCollapsed =
+      allGroups.length > 0 && collapsedGroups.size === allGroups.length;
+    vscode.commands.executeCommand(
+      "setContext",
+      "tabstronaut:allCollapsed",
+      allCollapsed
+    );
+  };
+
+  const syncCollapsedGroups = () => {
+    const currentIds = treeDataProvider.getGroups().map((g) => g.id);
+    for (const id of Array.from(collapsedGroups)) {
+      if (!currentIds.includes(id)) {
+        collapsedGroups.delete(id);
+      }
+    }
+    for (const id of currentIds) {
+      if (!collapsedGroups.has(id)) {
+        collapsedGroups.add(id);
+      }
+    }
+    updateCollapsedContext();
+  };
+
+  syncCollapsedGroups();
+
+  context.subscriptions.push(
+    treeDataProvider.onDidChangeTreeData(() => {
+      syncCollapsedGroups();
+    })
+  );
+
+  context.subscriptions.push(
+    treeView.onDidCollapseElement((e) => {
+      if (e.element instanceof Group) {
+        collapsedGroups.add(e.element.id);
+        updateCollapsedContext();
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    treeView.onDidExpandElement((e) => {
+      if (e.element instanceof Group) {
+        collapsedGroups.delete(e.element.id);
+        updateCollapsedContext();
+      }
+    })
+  );
+
   function getOpenEditorFilePaths(): string[] {
     const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
     const paths: string[] = [];
@@ -103,7 +158,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.collapseAll", async () => {
-      const firstGroup = treeDataProvider.getFirstGroup();
+      const visibleGroups = (
+        await treeDataProvider.getChildren()
+      ).filter((g): g is Group => g instanceof Group);
+      const firstGroup = visibleGroups[0];
       if (!firstGroup) {
         return;
       }
@@ -114,6 +172,33 @@ export function activate(context: vscode.ExtensionContext) {
         expand: false,
       });
       vscode.commands.executeCommand("list.collapseAll");
+      collapsedGroups.clear();
+      treeDataProvider
+        .getGroups()
+        .forEach((g) => collapsedGroups.add(g.id));
+      updateCollapsedContext();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.expandAll", async () => {
+      const visibleGroups = (
+        await treeDataProvider.getChildren()
+      ).filter((g): g is Group => g instanceof Group);
+      if (visibleGroups.length === 0) {
+        return;
+      }
+      let first = true;
+      for (const g of visibleGroups) {
+        await treeView.reveal(g, {
+          select: false,
+          focus: first,
+          expand: true,
+        });
+        first = false;
+        collapsedGroups.delete(g.id);
+      }
+      updateCollapsedContext();
     })
   );
 
@@ -722,8 +807,15 @@ export function activate(context: vscode.ExtensionContext) {
       showConfirmation("Restored closed tabs.");
     })
   );
+  return { testUtils };
 }
 
 export function deactivate() {
   treeDataProvider.clearRefreshInterval();
 }
+
+export const testUtils = {
+  getTreeDataProvider: () => treeDataProvider,
+  isGroupCollapsed: (id: string) => collapsedGroups.has(id),
+  clearCollapsedGroups: () => collapsedGroups.clear(),
+};

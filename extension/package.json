@@ -60,6 +60,12 @@
         "icon": "$(collapse-all)"
       },
       {
+        "command": "tabstronaut.expandAll",
+        "category": "Tabstronaut",
+        "title": "Expand all Tab Groups",
+        "icon": "$(expand-all)"
+      },
+      {
         "command": "tabstronaut.confirmCloseAllEditors",
         "category": "Tabstronaut",
         "title": "Close all open editor tabs",
@@ -83,23 +89,23 @@
         "title": "Sort Tab Group...",
         "icon": "$(sort-precedence)"
       },
-        {
-          "command": "tabstronaut.filterTabGroups",
-          "category": "Tabstronaut",
-          "title": "Filter Tab Groups by Name...",
-          "icon": "$(filter)"
-        },
-        {
-          "command": "tabstronaut.filterTabGroupsActive",
-          "category": "Tabstronaut",
-          "title": "Filter Tab Groups by Name...",
-          "icon": "$(filter-filled)"
-        },
-        {
-          "command": "tabstronaut.removeTabGroup",
-          "category": "Tabstronaut",
-          "title": "Remove Tab Group",
-          "icon": "$(trash)"
+      {
+        "command": "tabstronaut.filterTabGroups",
+        "category": "Tabstronaut",
+        "title": "Filter Tab Groups by Name...",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "tabstronaut.filterTabGroupsActive",
+        "category": "Tabstronaut",
+        "title": "Filter Tab Groups by Name...",
+        "icon": "$(filter-filled)"
+      },
+      {
+        "command": "tabstronaut.removeTabGroup",
+        "category": "Tabstronaut",
+        "title": "Remove Tab Group",
+        "icon": "$(trash)"
       },
       {
         "command": "tabstronaut.previewSpecificTab",
@@ -207,7 +213,12 @@
         },
         {
           "command": "tabstronaut.collapseAll",
-          "when": "view == tabstronaut",
+          "when": "view == tabstronaut && !tabstronaut:allCollapsed",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tabstronaut.expandAll",
+          "when": "view == tabstronaut && tabstronaut:allCollapsed",
           "group": "navigation@1"
         },
         {
@@ -230,7 +241,7 @@
           "when": "view == tabstronaut",
           "group": "navigation@4"
         }
-        ],
+      ],
       "explorer/context": [
         {
           "command": "tabstronaut.addFilesToGroup",
@@ -304,6 +315,10 @@
           "when": "false"
         },
         {
+          "command": "tabstronaut.expandAll",
+          "when": "false"
+        },
+        {
           "command": "tabstronaut.confirmCloseAllEditors",
           "when": "false"
         },
@@ -361,6 +376,26 @@
         },
         {
           "command": "tabstronaut.undoDelete",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.addAllToNewGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.restoreTabsByGroupNumber",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.filterTabGroups",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.filterTabGroupsActive",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.undoCloseEditors",
           "when": "false"
         }
       ]
@@ -470,11 +505,13 @@
         },
         "tabstronaut.newTabGroupPosition": {
           "type": "string",
-          "enum": ["top", "bottom"],
+          "enum": [
+            "top",
+            "bottom"
+          ],
           "default": "bottom",
           "description": "Position for newly created Tab Groups."
         }
-        
       }
     }
   },
