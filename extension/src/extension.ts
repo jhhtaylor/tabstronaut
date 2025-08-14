@@ -99,10 +99,27 @@ export function activate(context: vscode.ExtensionContext) {
     );
   };
 
-  vscode.commands.executeCommand(
-    "setContext",
-    "tabstronaut:allCollapsed",
-    false
+  const syncCollapsedGroups = () => {
+    const currentIds = treeDataProvider.getGroups().map((g) => g.id);
+    for (const id of Array.from(collapsedGroups)) {
+      if (!currentIds.includes(id)) {
+        collapsedGroups.delete(id);
+      }
+    }
+    for (const id of currentIds) {
+      if (!collapsedGroups.has(id)) {
+        collapsedGroups.add(id);
+      }
+    }
+    updateCollapsedContext();
+  };
+
+  syncCollapsedGroups();
+
+  context.subscriptions.push(
+    treeDataProvider.onDidChangeTreeData(() => {
+      syncCollapsedGroups();
+    })
   );
 
   context.subscriptions.push(
