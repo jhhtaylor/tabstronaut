@@ -6,6 +6,7 @@ All notable changes to the Tabstronaut extension will be documented in this file
 
 - Avoid opening duplicate tabs by switching to an existing tab if it is already open in another editor group.
 - Added button to toggle between collapsing and expanding all Tab Groups.
+- Fixed expand all command when a group filter is active.
 
 ## [1.3.3-1.3.4]
 

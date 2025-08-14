@@ -140,7 +140,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.collapseAll", async () => {
-      const firstGroup = treeDataProvider.getFirstGroup();
+      const visibleGroups = (
+        await treeDataProvider.getChildren()
+      ).filter((g): g is Group => g instanceof Group);
+      const firstGroup = visibleGroups[0];
       if (!firstGroup) {
         return;
       }
@@ -161,20 +164,22 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.expandAll", async () => {
-      const groups = treeDataProvider.getGroups();
-      if (groups.length === 0) {
+      const visibleGroups = (
+        await treeDataProvider.getChildren()
+      ).filter((g): g is Group => g instanceof Group);
+      if (visibleGroups.length === 0) {
         return;
       }
       let first = true;
-      for (const g of groups) {
+      for (const g of visibleGroups) {
         await treeView.reveal(g, {
           select: false,
           focus: first,
           expand: true,
         });
         first = false;
+        collapsedGroups.delete(g.id);
       }
-      collapsedGroups.clear();
       updateCollapsedContext();
     })
   );
