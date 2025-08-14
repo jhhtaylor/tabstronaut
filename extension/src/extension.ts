@@ -86,6 +86,43 @@ export function activate(context: vscode.ExtensionContext) {
   let recentlyClosedEditors: string[] | null = null;
   let undoCloseTimeout: NodeJS.Timeout | undefined;
 
+  const collapsedGroups = new Set<string>();
+
+  const updateCollapsedContext = () => {
+    const allGroups = treeDataProvider.getGroups();
+    const allCollapsed =
+      allGroups.length > 0 && collapsedGroups.size === allGroups.length;
+    vscode.commands.executeCommand(
+      "setContext",
+      "tabstronaut:allCollapsed",
+      allCollapsed
+    );
+  };
+
+  vscode.commands.executeCommand(
+    "setContext",
+    "tabstronaut:allCollapsed",
+    false
+  );
+
+  context.subscriptions.push(
+    treeView.onDidCollapseElement((e) => {
+      if (e.element instanceof Group) {
+        collapsedGroups.add(e.element.id);
+        updateCollapsedContext();
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    treeView.onDidExpandElement((e) => {
+      if (e.element instanceof Group) {
+        collapsedGroups.delete(e.element.id);
+        updateCollapsedContext();
+      }
+    })
+  );
+
   function getOpenEditorFilePaths(): string[] {
     const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
     const paths: string[] = [];
@@ -114,6 +151,31 @@ export function activate(context: vscode.ExtensionContext) {
         expand: false,
       });
       vscode.commands.executeCommand("list.collapseAll");
+      collapsedGroups.clear();
+      treeDataProvider
+        .getGroups()
+        .forEach((g) => collapsedGroups.add(g.id));
+      updateCollapsedContext();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.expandAll", async () => {
+      const groups = treeDataProvider.getGroups();
+      if (groups.length === 0) {
+        return;
+      }
+      let first = true;
+      for (const g of groups) {
+        await treeView.reveal(g, {
+          select: false,
+          focus: first,
+          expand: true,
+        });
+        first = false;
+      }
+      collapsedGroups.clear();
+      updateCollapsedContext();
     })
   );
 

@@ -60,6 +60,12 @@
         "icon": "$(collapse-all)"
       },
       {
+        "command": "tabstronaut.expandAll",
+        "category": "Tabstronaut",
+        "title": "Expand all Tab Groups",
+        "icon": "$(expand-all)"
+      },
+      {
         "command": "tabstronaut.confirmCloseAllEditors",
         "category": "Tabstronaut",
         "title": "Close all open editor tabs",
@@ -207,7 +213,12 @@
         },
         {
           "command": "tabstronaut.collapseAll",
-          "when": "view == tabstronaut",
+          "when": "view == tabstronaut && !tabstronaut:allCollapsed",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tabstronaut.expandAll",
+          "when": "view == tabstronaut && tabstronaut:allCollapsed",
           "group": "navigation@1"
         },
         {
@@ -301,6 +312,10 @@
         },
         {
           "command": "tabstronaut.collapseAll",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.expandAll",
           "when": "false"
         },
         {
