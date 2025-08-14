@@ -89,23 +89,23 @@
         "title": "Sort Tab Group...",
         "icon": "$(sort-precedence)"
       },
-        {
-          "command": "tabstronaut.filterTabGroups",
-          "category": "Tabstronaut",
-          "title": "Filter Tab Groups by Name...",
-          "icon": "$(filter)"
-        },
-        {
-          "command": "tabstronaut.filterTabGroupsActive",
-          "category": "Tabstronaut",
-          "title": "Filter Tab Groups by Name...",
-          "icon": "$(filter-filled)"
-        },
-        {
-          "command": "tabstronaut.removeTabGroup",
-          "category": "Tabstronaut",
-          "title": "Remove Tab Group",
-          "icon": "$(trash)"
+      {
+        "command": "tabstronaut.filterTabGroups",
+        "category": "Tabstronaut",
+        "title": "Filter Tab Groups by Name...",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "tabstronaut.filterTabGroupsActive",
+        "category": "Tabstronaut",
+        "title": "Filter Tab Groups by Name...",
+        "icon": "$(filter-filled)"
+      },
+      {
+        "command": "tabstronaut.removeTabGroup",
+        "category": "Tabstronaut",
+        "title": "Remove Tab Group",
+        "icon": "$(trash)"
       },
       {
         "command": "tabstronaut.previewSpecificTab",
@@ -241,7 +241,7 @@
           "when": "view == tabstronaut",
           "group": "navigation@4"
         }
-        ],
+      ],
       "explorer/context": [
         {
           "command": "tabstronaut.addFilesToGroup",
@@ -377,6 +377,26 @@
         {
           "command": "tabstronaut.undoDelete",
           "when": "false"
+        },
+        {
+          "command": "tabstronaut.addAllToNewGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.restoreTabsByGroupNumber",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.filterTabGroups",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.filterTabGroupsActive",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.undoCloseEditors",
+          "when": "false"
         }
       ]
     },
@@ -485,11 +505,13 @@
         },
         "tabstronaut.newTabGroupPosition": {
           "type": "string",
-          "enum": ["top", "bottom"],
+          "enum": [
+            "top",
+            "bottom"
+          ],
           "default": "bottom",
           "description": "Position for newly created Tab Groups."
         }
-        
       }
     }
   },
