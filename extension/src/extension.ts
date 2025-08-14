@@ -15,6 +15,7 @@ import {
 } from "./groupOperations";
 
 let treeDataProvider: TabstronautDataProvider;
+let collapsedGroups: Set<string>;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -86,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
   let recentlyClosedEditors: string[] | null = null;
   let undoCloseTimeout: NodeJS.Timeout | undefined;
 
-  const collapsedGroups = new Set<string>();
+  collapsedGroups = new Set<string>();
 
   const updateCollapsedContext = () => {
     const allGroups = treeDataProvider.getGroups();
@@ -811,3 +812,9 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
   treeDataProvider.clearRefreshInterval();
 }
+
+export const testUtils = {
+  getTreeDataProvider: () => treeDataProvider,
+  isGroupCollapsed: (id: string) => collapsedGroups.has(id),
+  clearCollapsedGroups: () => collapsedGroups.clear(),
+};
