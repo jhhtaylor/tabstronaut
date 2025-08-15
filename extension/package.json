@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.3.5",
+  "version": "1.3.6",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -92,13 +92,13 @@
       {
         "command": "tabstronaut.filterTabGroups",
         "category": "Tabstronaut",
-        "title": "Filter Tab Groups by Name...",
+        "title": "  Filter Tab Groups by Name...",
         "icon": "$(filter)"
       },
       {
         "command": "tabstronaut.filterTabGroupsActive",
         "category": "Tabstronaut",
-        "title": "Filter Tab Groups by Name...",
+        "title": "✓ Filter Tab Groups by Name...",
         "icon": "$(filter-filled)"
       },
       {
@@ -234,18 +234,18 @@
           "group": "navigation@1"
         },
         {
-          "command": "tabstronaut.confirmCloseAllEditors",
-          "when": "view == tabstronaut",
-          "group": "navigation@2"
-        },
-        {
           "command": "tabstronaut.filterTabGroups",
           "when": "view == tabstronaut && !tabstronaut:hasGroupFilter",
-          "group": "navigation@3"
+          "group": "navigation@2"
         },
         {
           "command": "tabstronaut.filterTabGroupsActive",
           "when": "view == tabstronaut && tabstronaut:hasGroupFilter",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tabstronaut.confirmCloseAllEditors",
+          "when": "view == tabstronaut",
           "group": "navigation@3"
         },
         {

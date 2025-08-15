@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.6]
+
+- Reordered title bar actions for more intuitive navigation.
+
 ## [1.3.5]
 
 - Added filter Tab Groups listed, by name.
