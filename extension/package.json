@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.3.6",
+  "version": "1.3.7",
   "engines": {
     "vscode": "^1.99.0"
   },
