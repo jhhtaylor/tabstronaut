@@ -66,11 +66,20 @@ async function revealExistingTab(uri: vscode.Uri): Promise<boolean> {
       }
       const tabUri = (input as any).uri;
       if (tabUri instanceof vscode.Uri && tabUri.fsPath === uri.fsPath) {
-        const document = await vscode.workspace.openTextDocument(uri);
-        await vscode.window.showTextDocument(document, {
-          viewColumn: group.viewColumn,
-          preview: false,
-        });
+        const isNotebook = uri.fsPath.endsWith('.ipynb');
+        if (isNotebook) {
+          await vscode.commands.executeCommand(
+            'vscode.openWith',
+            uri,
+            'jupyter-notebook'
+          );
+        } else {
+          const document = await vscode.workspace.openTextDocument(uri);
+          await vscode.window.showTextDocument(document, {
+            viewColumn: group.viewColumn,
+            preview: false,
+          });
+        }
         return true;
       }
     }
