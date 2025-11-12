@@ -17,6 +17,136 @@ import {
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
 
+type TabstronautSettingKey = "autoCloseOnRestore" | "autoRemoveClosedTabs";
+
+const exclusiveSettingGroups: ReadonlyArray<{
+  settings: ReadonlyArray<TabstronautSettingKey>;
+}> = [
+  {
+    settings: ["autoCloseOnRestore", "autoRemoveClosedTabs"],
+  },
+];
+
+const settingLabels: Record<TabstronautSettingKey, string> = {
+  autoCloseOnRestore: "Close tabs before restoring groups",
+  autoRemoveClosedTabs: "Automatically remove closed tabs",
+};
+
+let isAdjustingExclusiveSettings = false;
+
+async function disableSettingAcrossScopes(setting: TabstronautSettingKey) {
+  const config = vscode.workspace.getConfiguration("tabstronaut");
+  const inspect = config.inspect<boolean>(setting);
+  const updates: Thenable<void>[] = [];
+  let updated = false;
+
+  if (inspect) {
+    if (typeof inspect.globalValue !== "undefined") {
+      updates.push(
+        config.update(setting, false, vscode.ConfigurationTarget.Global)
+      );
+      updated = true;
+    }
+
+    if (typeof inspect.workspaceValue !== "undefined") {
+      updates.push(
+        config.update(setting, false, vscode.ConfigurationTarget.Workspace)
+      );
+      updated = true;
+    }
+
+    if (typeof inspect.workspaceFolderValue !== "undefined") {
+      const folders = vscode.workspace.workspaceFolders ?? [];
+      for (const folder of folders) {
+        const folderConfig = vscode.workspace.getConfiguration(
+          "tabstronaut",
+          folder.uri
+        );
+        updates.push(
+          folderConfig.update(
+            setting,
+            false,
+            vscode.ConfigurationTarget.WorkspaceFolder
+          )
+        );
+      }
+      if (folders.length > 0) {
+        updated = true;
+      }
+    }
+  }
+
+  if (!updated) {
+    updates.push(
+      config.update(setting, false, vscode.ConfigurationTarget.Global)
+    );
+    updated = true;
+  }
+
+  await Promise.all(updates);
+
+  return updated;
+}
+
+function findExclusiveGroup(setting: TabstronautSettingKey) {
+  return exclusiveSettingGroups.find((group) =>
+    group.settings.includes(setting)
+  );
+}
+
+async function enforceExclusiveSettings(activeSetting: TabstronautSettingKey) {
+  if (isAdjustingExclusiveSettings) {
+    return;
+  }
+
+  const group = findExclusiveGroup(activeSetting);
+  if (!group) {
+    return;
+  }
+
+  const config = vscode.workspace.getConfiguration("tabstronaut");
+  const enabled = group.settings.filter((setting) =>
+    config.get<boolean>(setting, false)
+  );
+
+  if (enabled.length <= 1) {
+    return;
+  }
+
+  const settingsToDisable = enabled.filter(
+    (setting) => setting !== activeSetting
+  );
+
+  if (settingsToDisable.length === 0) {
+    return;
+  }
+
+  isAdjustingExclusiveSettings = true;
+  try {
+    const disabledLabels: string[] = [];
+    for (const setting of settingsToDisable) {
+      const changed = await disableSettingAcrossScopes(setting);
+      if (changed) {
+        disabledLabels.push(settingLabels[setting]);
+      }
+    }
+
+    if (disabledLabels.length > 0) {
+      const activeLabel = settingLabels[activeSetting];
+      const disabledList = disabledLabels.join(
+        disabledLabels.length > 1 ? ", " : ""
+      );
+      const verb = disabledLabels.length > 1 ? "were" : "was";
+      const pronoun = disabledLabels.length > 1 ? "they" : "it";
+      vscode.window.showInformationMessage(
+        `${disabledList} ${verb} disabled because ${pronoun} cannot be used with ${activeLabel}.`
+      );
+    }
+  } finally {
+    isAdjustingExclusiveSettings = false;
+  }
+}
+
 export function activate(context: vscode.ExtensionContext) {
 
   const config = vscode.workspace.getConfiguration("tabstronaut");
@@ -26,12 +156,35 @@ export function activate(context: vscode.ExtensionContext) {
   config.get("moveTabGroupOnTabChange");
   config.get("autoCloseOnRestore");
   config.get("showConfirmationMessages");
+  config.get("promptForGroupDetails");
 
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
-  vscode.window.tabGroups.onDidChangeTabs(() => {
-    treeDataProvider.refreshUngroupedTabs();
-  });
+  void enforceExclusiveSettings("autoCloseOnRestore");
+
+  context.subscriptions.push(
+    vscode.window.tabGroups.onDidChangeTabs(async (event) => {
+      treeDataProvider.refreshUngroupedTabs();
+
+      const autoRemoveClosedTabs = vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get<boolean>("autoRemoveClosedTabs", false);
+
+      if (!autoRemoveClosedTabs) {
+        return;
+      }
+
+      for (const closedTab of event.closed) {
+        const filePath = getFilePathFromTab(closedTab);
+        if (!filePath) {
+          continue;
+        }
+        await treeDataProvider.removeFileFromAllGroups(filePath, {
+          skipConfirmation: true,
+        });
+      }
+    })
+  );
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
     const index = treeDataProvider.getGroupIndex(group.id);
@@ -145,15 +298,26 @@ export function activate(context: vscode.ExtensionContext) {
     const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
     const paths: string[] = [];
     for (const tab of allTabs) {
-      const input = (tab as any).input;
-      if (input && typeof input === "object" && "uri" in input) {
-        const uri = input.uri;
-        if (uri instanceof vscode.Uri && uri.scheme === "file") {
-          paths.push(uri.fsPath);
-        }
+      const filePath = getFilePathFromTab(tab);
+      if (filePath) {
+        paths.push(filePath);
       }
     }
     return paths;
+  }
+
+  function getFilePathFromTab(tab: vscode.Tab): string | undefined {
+    const input = (tab as any).input;
+    if (!input || typeof input !== "object" || !("uri" in input)) {
+      return undefined;
+    }
+
+    const uri = (input as any).uri;
+    if (!(uri instanceof vscode.Uri) || uri.scheme !== "file") {
+      return undefined;
+    }
+
+    return uri.fsPath;
   }
 
   context.subscriptions.push(
@@ -610,7 +774,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  vscode.workspace.onDidChangeConfiguration((e) => {
+  vscode.workspace.onDidChangeConfiguration(async (e) => {
     if (e.affectsConfiguration("tabstronaut.addPaths")) {
       treeDataProvider.rebuildAndRefresh();
       vscode.window.showInformationMessage(
@@ -636,11 +800,18 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(
         "Tabstronaut auto-close setting updated."
       );
+      await enforceExclusiveSettings("autoCloseOnRestore");
     }
     if (e.affectsConfiguration("tabstronaut.showConfirmationMessages")) {
       vscode.window.showInformationMessage(
         "Tabstronaut confirmation message setting updated."
       );
+    }
+    if (e.affectsConfiguration("tabstronaut.autoRemoveClosedTabs")) {
+      vscode.window.showInformationMessage(
+        "Tabstronaut auto-remove closed tabs setting updated."
+      );
+      await enforceExclusiveSettings("autoRemoveClosedTabs");
     }
   });
 

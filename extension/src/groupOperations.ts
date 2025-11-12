@@ -13,6 +13,18 @@ export async function getGroupName(
   treeDataProvider: TabstronautDataProvider,
   prompt: string | undefined = undefined
 ): Promise<GroupNameResult> {
+  const config = vscode.workspace.getConfiguration('tabstronaut');
+  const promptForGroupDetails = config.get<boolean>(
+    'promptForGroupDetails',
+    false
+  );
+  if (!promptForGroupDetails) {
+    return {
+      name: `Group ${treeDataProvider.getGroups().length + 1}`,
+      useDefaults: true,
+    };
+  }
+
   const inputBox = vscode.window.createInputBox();
   inputBox.placeholder =
     "Enter a Tab Group name. Press 'Enter' without typing to use the default.";
