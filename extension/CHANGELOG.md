@@ -2,6 +2,14 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.3.8]
+
+- Added a setting to skip the name and color prompts when creating new Tab Groups, using the defaults automatically instead.
+
+## [1.3.7]
+
+- Fixed Jupyter notebooks opening as JSON instead of in the notebook view.
+
 ## [1.3.6]
 
 - Reordered title bar actions for more intuitive navigation.
