@@ -508,12 +508,17 @@
         "tabstronaut.autoCloseOnRestore": {
           "type": "boolean",
           "default": false,
-          "description": "Close all currently open tabs before restoring a Tab Group for clean context switching."
+          "description": "Close all currently open tabs before restoring a Tab Group for clean context switching. Cannot be used together with Automatically remove closed tabs."
         },
         "tabstronaut.showConfirmationMessages": {
           "type": "boolean",
           "default": false,
           "description": "Show confirmation messages after adding tabs to groups."
+        },
+        "tabstronaut.autoRemoveClosedTabs": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically remove closed tabs from any Tab Groups that include them. Cannot be used together with Close tabs before restoring groups."
         },
         "tabstronaut.promptForGroupDetails": {
           "type": "boolean",
