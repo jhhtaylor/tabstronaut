@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.3.7",
+  "version": "1.3.8",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -514,6 +514,11 @@
           "type": "boolean",
           "default": false,
           "description": "Show confirmation messages after adding tabs to groups."
+        },
+        "tabstronaut.promptForGroupDetails": {
+          "type": "boolean",
+          "default": false,
+          "description": "Prompt to name and choose a color for new Tab Groups before creation."
         },
         "tabstronaut.newTabGroupPosition": {
           "type": "string",

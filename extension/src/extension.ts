@@ -26,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
   config.get("moveTabGroupOnTabChange");
   config.get("autoCloseOnRestore");
   config.get("showConfirmationMessages");
+  config.get("promptForGroupDetails");
 
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
