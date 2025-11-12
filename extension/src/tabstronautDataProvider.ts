@@ -43,6 +43,7 @@ export class TabstronautDataProvider
         items: string[];
         creationTime: string;
         colorName: string;
+        activeFilePath?: string;
       };
     }>("tabGroups", {});
     for (const id in groupData) {
@@ -53,6 +54,9 @@ export class TabstronautDataProvider
         groupData[id].colorName
       );
       groupData[id].items.forEach((filePath) => newGroup.addItem(filePath));
+      if (typeof groupData[id].activeFilePath === "string") {
+        newGroup.activeFilePath = groupData[id].activeFilePath;
+      }
       this.groupsMap.set(id, newGroup);
     }
 
@@ -546,6 +550,7 @@ export class TabstronautDataProvider
         items: string[];
         creationTime?: string;
         colorName?: string;
+        activeFilePath?: string;
       };
     }>("tabGroups", {});
 
@@ -557,6 +562,9 @@ export class TabstronautDataProvider
           : new Date();
         const group = new Group(g.label, id, creationTime, g.colorName);
         g.items.forEach((filePath) => group.addItem(filePath));
+        if (typeof g.activeFilePath === "string") {
+          group.activeFilePath = g.activeFilePath;
+        }
         return group;
       }
     }
@@ -570,6 +578,7 @@ export class TabstronautDataProvider
         items: string[];
         creationTime?: string;
         colorName?: string;
+        activeFilePath?: string;
       };
     }>("tabGroups", {});
     const groups: Group[] = [];
@@ -584,6 +593,9 @@ export class TabstronautDataProvider
         groupData[id].colorName
       );
       groupData[id].items.forEach((filePath) => group.addItem(filePath));
+      if (typeof groupData[id].activeFilePath === "string") {
+        group.activeFilePath = groupData[id].activeFilePath;
+      }
       groups.push(group);
     }
     return groups;
@@ -640,6 +652,18 @@ export class TabstronautDataProvider
       group.items.splice(itemPosition, 0, newItem);
     } else {
       group.items.push(newItem);
+    }
+
+    if (!group.activeFilePath) {
+      group.activeFilePath = filePath;
+    }
+
+    const activeEditorPath = vscode.window.activeTextEditor?.document.uri.fsPath;
+    if (activeEditorPath) {
+      const normalizedActive = generateNormalizedPath(activeEditorPath);
+      if (normalizedActive === normalizedFilePath) {
+        group.activeFilePath = activeEditorPath;
+      }
     }
 
     await this.updateWorkspaceState();
@@ -717,15 +741,21 @@ export class TabstronautDataProvider
     this._onDidChangeTreeData.fire();
   }
 
-  async removeFromGroup(groupId: string, filePath: string): Promise<void> {
+  async removeFromGroup(
+    groupId: string,
+    filePath: string,
+    options?: { skipConfirmation?: boolean }
+  ): Promise<void> {
     const group = this.groupsMap.get(groupId);
     if (!group || !filePath) {
       return;
     }
   
-    const shouldConfirm = vscode.workspace
-      .getConfiguration("tabstronaut")
-      .get("confirmRemoveAndClose", true);
+    const shouldConfirm =
+      !options?.skipConfirmation &&
+      vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get("confirmRemoveAndClose", true);
   
     const isLastTab =
       group.items.length === 1 &&
@@ -759,11 +789,23 @@ export class TabstronautDataProvider
     group.items = group.items.filter(
       (item) => item.resourceUri?.fsPath !== filePath
     );
-  
+
+    if (group.activeFilePath) {
+      const normalizedActive = generateNormalizedPath(group.activeFilePath);
+      const stillExists = group.items.some(
+        (item) =>
+          generateNormalizedPath(item.resourceUri?.fsPath || "") ===
+          normalizedActive
+      );
+      if (!stillExists) {
+        group.activeFilePath = group.items[0]?.resourceUri?.fsPath;
+      }
+    }
+
     const shouldMoveGroup = vscode.workspace
       .getConfiguration("tabstronaut")
       .get("moveTabGroupOnTabChange", true);
-  
+
     if (group.items.length > 0 && shouldMoveGroup) {
       this.moveGroupToTopAndUpdateTimestamp(groupId);
     } else if (group.items.length === 0) {
@@ -778,6 +820,23 @@ export class TabstronautDataProvider
     return Array.from(this.groupsMap.values())[0];
   }
 
+  async removeFileFromAllGroups(
+    filePath: string,
+    options?: { skipConfirmation?: boolean }
+  ): Promise<void> {
+    if (!filePath) {
+      return;
+    }
+
+    const groupsWithFile = Array.from(this.groupsMap.values()).filter((group) =>
+      group.containsFile(filePath)
+    );
+
+    for (const group of groupsWithFile) {
+      await this.removeFromGroup(group.id, filePath, options);
+    }
+  }
+
   public getGroupIndex(groupId: string): number {
     return Array.from(this.groupsMap.keys()).indexOf(groupId);
   }
@@ -786,13 +845,46 @@ export class TabstronautDataProvider
     return Array.from(this.groupsMap.keys())[index];
   }
 
-  async updateWorkspaceState(): Promise<void> {
+  async updateActiveFileForGroups(
+    filePath: string | undefined
+  ): Promise<void> {
+    if (!filePath) {
+      return;
+    }
+
+    const normalized = generateNormalizedPath(filePath);
+    let updated = false;
+
+    this.groupsMap.forEach((group) => {
+      const contains = group.items.some(
+        (item) =>
+          generateNormalizedPath(item.resourceUri?.fsPath || "") === normalized
+      );
+      if (contains && group.activeFilePath !== filePath) {
+        group.activeFilePath = filePath;
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      await this.updateWorkspaceState({
+        skipRefresh: true,
+        skipUngroupedRefresh: true,
+      });
+    }
+  }
+
+  async updateWorkspaceState(options?: {
+    skipRefresh?: boolean;
+    skipUngroupedRefresh?: boolean;
+  }): Promise<void> {
     let groupData: {
       [key: string]: {
         label: string;
         items: string[];
         creationTime: string;
         colorName: string;
+        activeFilePath?: string;
       };
     } = {};
     this.groupsMap.forEach((group, id) => {
@@ -803,6 +895,9 @@ export class TabstronautDataProvider
           items: items,
           creationTime: group.creationTime.toISOString(),
           colorName: group.colorName,
+          ...(group.activeFilePath
+            ? { activeFilePath: group.activeFilePath }
+            : {}),
         };
       } else {
         vscode.window.showErrorMessage(
@@ -811,8 +906,12 @@ export class TabstronautDataProvider
       }
     });
     await this.workspaceState.update("tabGroups", groupData);
-    this.refreshUngroupedTabs();
-    this._onDidChangeTreeData.fire();
+    if (!options?.skipUngroupedRefresh) {
+      this.refreshUngroupedTabs();
+    }
+    if (!options?.skipRefresh) {
+      this._onDidChangeTreeData.fire();
+    }
   }
 
   handleFileRename(oldPath: string, newPath: string) {
@@ -831,6 +930,15 @@ export class TabstronautDataProvider
           item.resourceUri = vscode.Uri.file(newPath);
           item.label = path.basename(newPath);
           item.id = generateUuidv4();
+
+          if (group.activeFilePath) {
+            const normalizedActive = generateNormalizedPath(
+              group.activeFilePath
+            );
+            if (normalizedActive === normalizedOldPath) {
+              group.activeFilePath = newPath;
+            }
+          }
 
           found = true;
           break;
@@ -912,7 +1020,9 @@ export class TabstronautDataProvider
           Array.isArray(group.items) &&
           group.items.every((item: any) => typeof item === "string") &&
           typeof group.creationTime === "string" &&
-          typeof group.colorName === "string"
+          typeof group.colorName === "string" &&
+          (typeof group.activeFilePath === "undefined" ||
+            typeof group.activeFilePath === "string")
         );
       });
 
@@ -991,6 +1101,9 @@ export class TabstronautDataProvider
       groupData[id].items.forEach((filePath: string) =>
         newGroup.addItem(filePath)
       );
+      if (typeof groupData[id].activeFilePath === "string") {
+        newGroup.activeFilePath = groupData[id].activeFilePath;
+      }
       this.groupsMap.set(id, newGroup);
     }
   }

@@ -3,7 +3,7 @@ import * as path from "path";
 import { TabstronautDataProvider } from "./tabstronautDataProvider";
 import { UngroupedProvider } from "./ungroupedProvider";
 import { Group } from "./models/Group";
-import { showConfirmation } from "./utils";
+import { showConfirmation, generateNormalizedPath } from "./utils";
 import { handleOpenTab, openFileSmart } from "./fileOperations";
 import {
   handleTabGroupAction,
@@ -16,6 +16,142 @@ import {
 
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
+
+type TabstronautSettingKey = "autoCloseOnRestore" | "autoRemoveClosedTabs";
+
+const exclusiveSettingGroups: ReadonlyArray<{
+  settings: ReadonlyArray<TabstronautSettingKey>;
+}> = [
+  {
+    settings: ["autoCloseOnRestore", "autoRemoveClosedTabs"],
+  },
+];
+
+const settingLabels: Record<TabstronautSettingKey, string> = {
+  autoCloseOnRestore: "Close tabs before restoring groups",
+  autoRemoveClosedTabs: "Automatically remove closed tabs",
+};
+
+let isAdjustingExclusiveSettings = false;
+
+function isAutoRemoveClosedTabsEnabled() {
+  return vscode.workspace
+    .getConfiguration("tabstronaut")
+    .get<boolean>("autoRemoveClosedTabs", false);
+}
+
+async function disableSettingAcrossScopes(setting: TabstronautSettingKey) {
+  const config = vscode.workspace.getConfiguration("tabstronaut");
+  const inspect = config.inspect<boolean>(setting);
+  const updates: Thenable<void>[] = [];
+  let updated = false;
+
+  if (inspect) {
+    if (typeof inspect.globalValue !== "undefined") {
+      updates.push(
+        config.update(setting, false, vscode.ConfigurationTarget.Global)
+      );
+      updated = true;
+    }
+
+    if (typeof inspect.workspaceValue !== "undefined") {
+      updates.push(
+        config.update(setting, false, vscode.ConfigurationTarget.Workspace)
+      );
+      updated = true;
+    }
+
+    if (typeof inspect.workspaceFolderValue !== "undefined") {
+      const folders = vscode.workspace.workspaceFolders ?? [];
+      for (const folder of folders) {
+        const folderConfig = vscode.workspace.getConfiguration(
+          "tabstronaut",
+          folder.uri
+        );
+        updates.push(
+          folderConfig.update(
+            setting,
+            false,
+            vscode.ConfigurationTarget.WorkspaceFolder
+          )
+        );
+      }
+      if (folders.length > 0) {
+        updated = true;
+      }
+    }
+  }
+
+  if (!updated) {
+    updates.push(
+      config.update(setting, false, vscode.ConfigurationTarget.Global)
+    );
+    updated = true;
+  }
+
+  await Promise.all(updates);
+
+  return updated;
+}
+
+function findExclusiveGroup(setting: TabstronautSettingKey) {
+  return exclusiveSettingGroups.find((group) =>
+    group.settings.includes(setting)
+  );
+}
+
+async function enforceExclusiveSettings(activeSetting: TabstronautSettingKey) {
+  if (isAdjustingExclusiveSettings) {
+    return;
+  }
+
+  const group = findExclusiveGroup(activeSetting);
+  if (!group) {
+    return;
+  }
+
+  const config = vscode.workspace.getConfiguration("tabstronaut");
+  const enabled = group.settings.filter((setting) =>
+    config.get<boolean>(setting, false)
+  );
+
+  if (enabled.length <= 1) {
+    return;
+  }
+
+  const settingsToDisable = enabled.filter(
+    (setting) => setting !== activeSetting
+  );
+
+  if (settingsToDisable.length === 0) {
+    return;
+  }
+
+  isAdjustingExclusiveSettings = true;
+  try {
+    const disabledLabels: string[] = [];
+    for (const setting of settingsToDisable) {
+      const changed = await disableSettingAcrossScopes(setting);
+      if (changed) {
+        disabledLabels.push(settingLabels[setting]);
+      }
+    }
+
+    if (disabledLabels.length > 0) {
+      const activeLabel = settingLabels[activeSetting];
+      const disabledList = disabledLabels.join(
+        disabledLabels.length > 1 ? ", " : ""
+      );
+      const verb = disabledLabels.length > 1 ? "were" : "was";
+      const pronoun = disabledLabels.length > 1 ? "they" : "it";
+      vscode.window.showInformationMessage(
+        `${disabledList} ${verb} disabled because ${pronoun} cannot be used with ${activeLabel}.`
+      );
+    }
+  } finally {
+    isAdjustingExclusiveSettings = false;
+  }
+}
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -30,9 +166,27 @@ export function activate(context: vscode.ExtensionContext) {
 
   treeDataProvider = new TabstronautDataProvider(context.workspaceState);
 
-  vscode.window.tabGroups.onDidChangeTabs(() => {
-    treeDataProvider.refreshUngroupedTabs();
-  });
+  void enforceExclusiveSettings("autoCloseOnRestore");
+
+  context.subscriptions.push(
+    vscode.window.tabGroups.onDidChangeTabs(async (event) => {
+      treeDataProvider.refreshUngroupedTabs();
+
+      if (!isAutoRemoveClosedTabsEnabled()) {
+        return;
+      }
+
+      for (const closedTab of event.closed) {
+        const filePath = getFilePathFromTab(closedTab);
+        if (!filePath) {
+          continue;
+        }
+        await treeDataProvider.removeFileFromAllGroups(filePath, {
+          skipConfirmation: true,
+        });
+      }
+    })
+  );
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
     const index = treeDataProvider.getGroupIndex(group.id);
@@ -88,6 +242,20 @@ export function activate(context: vscode.ExtensionContext) {
   let recentlyClosedEditors: string[] | null = null;
   let undoCloseTimeout: NodeJS.Timeout | undefined;
 
+  const clearUndoCloseState = () => {
+    recentlyClosedEditors = null;
+    if (undoCloseTimeout) {
+      clearTimeout(undoCloseTimeout);
+      undoCloseTimeout = undefined;
+    }
+
+    void vscode.commands.executeCommand(
+      "setContext",
+      "tabstronaut:canUndoClose",
+      false
+    );
+  };
+
   collapsedGroups = new Set<string>();
 
   const updateCollapsedContext = () => {
@@ -124,6 +292,23 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  const recordActiveEditor = (editor: vscode.TextEditor | undefined) => {
+    if (!editor || editor.document.uri.scheme !== "file") {
+      return;
+    }
+    void treeDataProvider.updateActiveFileForGroups(
+      editor.document.uri.fsPath
+    );
+  };
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      recordActiveEditor(editor);
+    })
+  );
+
+  recordActiveEditor(vscode.window.activeTextEditor);
+
   context.subscriptions.push(
     treeView.onDidCollapseElement((e) => {
       if (e.element instanceof Group) {
@@ -146,15 +331,26 @@ export function activate(context: vscode.ExtensionContext) {
     const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
     const paths: string[] = [];
     for (const tab of allTabs) {
-      const input = (tab as any).input;
-      if (input && typeof input === "object" && "uri" in input) {
-        const uri = input.uri;
-        if (uri instanceof vscode.Uri && uri.scheme === "file") {
-          paths.push(uri.fsPath);
-        }
+      const filePath = getFilePathFromTab(tab);
+      if (filePath) {
+        paths.push(filePath);
       }
     }
     return paths;
+  }
+
+  function getFilePathFromTab(tab: vscode.Tab): string | undefined {
+    const input = (tab as any).input;
+    if (!input || typeof input !== "object" || !("uri" in input)) {
+      return undefined;
+    }
+
+    const uri = (input as any).uri;
+    if (!(uri instanceof vscode.Uri) || uri.scheme !== "file") {
+      return undefined;
+    }
+
+    return uri.fsPath;
   }
 
   context.subscriptions.push(
@@ -224,7 +420,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         recentlyClosedEditors = getOpenEditorFilePaths();
-        vscode.commands.executeCommand(
+        void vscode.commands.executeCommand(
           "setContext",
           "tabstronaut:canUndoClose",
           true
@@ -235,15 +431,10 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         undoCloseTimeout = setTimeout(() => {
-          recentlyClosedEditors = null;
-          vscode.commands.executeCommand(
-            "setContext",
-            "tabstronaut:canUndoClose",
-            false
-          );
+          clearUndoCloseState();
         }, 5000);
 
-        vscode.commands.executeCommand("workbench.action.closeAllEditors");
+        void vscode.commands.executeCommand("workbench.action.closeAllEditors");
       }
     )
   );
@@ -342,6 +533,8 @@ export function activate(context: vscode.ExtensionContext) {
             addedFiles.add(filePath);
           }
         }
+
+        recordActiveEditor(vscode.window.activeTextEditor);
       }
     )
   );
@@ -371,12 +564,7 @@ export function activate(context: vscode.ExtensionContext) {
           }
 
           undoCloseTimeout = setTimeout(() => {
-            recentlyClosedEditors = null;
-            vscode.commands.executeCommand(
-              "setContext",
-              "tabstronaut:canUndoClose",
-              false
-            );
+            clearUndoCloseState();
           }, 5000);
 
           await vscode.commands.executeCommand(
@@ -384,18 +572,55 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
 
-        for (const tabItem of group.items) {
-          const filePath = tabItem.resourceUri?.fsPath;
-          if (filePath) {
-            try {
-              await openFileSmart(filePath);
-            } catch {
-              vscode.window.showErrorMessage(
-                `Cannot open '${path.basename(
-                  filePath
-                )}'. Please check if the file exists and try again.`
-              );
-            }
+        const autoRemove = isAutoRemoveClosedTabsEnabled();
+
+        const filePaths = group.items
+          .map((tabItem) => tabItem.resourceUri?.fsPath)
+          .filter((filePath): filePath is string => Boolean(filePath));
+
+        const activePath = autoRemove ? group.activeFilePath : undefined;
+        const normalizedActive = activePath
+          ? generateNormalizedPath(activePath)
+          : undefined;
+        const activeTarget = normalizedActive
+          ? filePaths.find(
+              (filePath) =>
+                generateNormalizedPath(filePath) === normalizedActive
+            )
+          : undefined;
+
+        const shouldPreserveFocus = Boolean(autoRemove && activeTarget);
+
+        const nonActiveFiles = shouldPreserveFocus
+          ? filePaths.filter(
+              (filePath) =>
+                generateNormalizedPath(filePath) !== normalizedActive
+            )
+          : filePaths;
+
+        for (const filePath of nonActiveFiles) {
+          try {
+            await openFileSmart(filePath, {
+              preserveFocus: shouldPreserveFocus,
+            });
+          } catch {
+            vscode.window.showErrorMessage(
+              `Cannot open '${path.basename(
+                filePath
+              )}'. Please check if the file exists and try again.`
+            );
+          }
+        }
+
+        if (shouldPreserveFocus && activeTarget) {
+          try {
+            await openFileSmart(activeTarget);
+          } catch {
+            vscode.window.showErrorMessage(
+              `Cannot open '${path.basename(
+                activeTarget
+              )}'. Please check if the file exists and try again.`
+            );
           }
         }
       }
@@ -427,12 +652,7 @@ export function activate(context: vscode.ExtensionContext) {
           }
 
           undoCloseTimeout = setTimeout(() => {
-            recentlyClosedEditors = null;
-            vscode.commands.executeCommand(
-              "setContext",
-              "tabstronaut:canUndoClose",
-              false
-            );
+            clearUndoCloseState();
           }, 5000);
 
           await vscode.commands.executeCommand(
@@ -440,18 +660,55 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
 
-        for (const tabItem of group.items) {
-          const filePath = tabItem.resourceUri?.fsPath;
-          if (filePath) {
-            try {
-              await openFileSmart(filePath);
-            } catch {
-              vscode.window.showErrorMessage(
-                `Cannot open '${path.basename(
-                  filePath
-                )}'. Please check if the file exists and try again.`
-              );
-            }
+        const autoRemove = isAutoRemoveClosedTabsEnabled();
+
+        const filePaths = group.items
+          .map((tabItem) => tabItem.resourceUri?.fsPath)
+          .filter((filePath): filePath is string => Boolean(filePath));
+
+        const activePath = autoRemove ? group.activeFilePath : undefined;
+        const normalizedActive = activePath
+          ? generateNormalizedPath(activePath)
+          : undefined;
+        const activeTarget = normalizedActive
+          ? filePaths.find(
+              (filePath) =>
+                generateNormalizedPath(filePath) === normalizedActive
+            )
+          : undefined;
+
+        const shouldPreserveFocus = Boolean(autoRemove && activeTarget);
+
+        const nonActiveFiles = shouldPreserveFocus
+          ? filePaths.filter(
+              (filePath) =>
+                generateNormalizedPath(filePath) !== normalizedActive
+            )
+          : filePaths;
+
+        for (const filePath of nonActiveFiles) {
+          try {
+            await openFileSmart(filePath, {
+              preserveFocus: shouldPreserveFocus,
+            });
+          } catch {
+            vscode.window.showErrorMessage(
+              `Cannot open '${path.basename(
+                filePath
+              )}'. Please check if the file exists and try again.`
+            );
+          }
+        }
+
+        if (shouldPreserveFocus && activeTarget) {
+          try {
+            await openFileSmart(activeTarget);
+          } catch {
+            vscode.window.showErrorMessage(
+              `Cannot open '${path.basename(
+                activeTarget
+              )}'. Please check if the file exists and try again.`
+            );
           }
         }
       }
@@ -611,7 +868,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  vscode.workspace.onDidChangeConfiguration((e) => {
+  vscode.workspace.onDidChangeConfiguration(async (e) => {
     if (e.affectsConfiguration("tabstronaut.addPaths")) {
       treeDataProvider.rebuildAndRefresh();
       vscode.window.showInformationMessage(
@@ -637,11 +894,25 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(
         "Tabstronaut auto-close setting updated."
       );
+      await enforceExclusiveSettings("autoCloseOnRestore");
     }
     if (e.affectsConfiguration("tabstronaut.showConfirmationMessages")) {
       vscode.window.showInformationMessage(
         "Tabstronaut confirmation message setting updated."
       );
+    }
+    if (e.affectsConfiguration("tabstronaut.autoRemoveClosedTabs")) {
+      const autoRemoveEnabled = isAutoRemoveClosedTabsEnabled();
+      vscode.window.showInformationMessage(
+        autoRemoveEnabled
+          ? "Tabstronaut auto-remove closed tabs enabled."
+          : "Tabstronaut auto-remove closed tabs disabled."
+      );
+      await enforceExclusiveSettings("autoRemoveClosedTabs");
+
+      if (autoRemoveEnabled) {
+        clearUndoCloseState();
+      }
     }
   });
 
@@ -786,25 +1057,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.undoCloseEditors", async () => {
-      if (!recentlyClosedEditors) {
+      const pathsToRestore = recentlyClosedEditors;
+      if (!pathsToRestore) {
         return;
       }
 
-      for (const filePath of recentlyClosedEditors) {
+      for (const filePath of pathsToRestore) {
         await openFileSmart(filePath);
       }
 
-      recentlyClosedEditors = null;
-      if (undoCloseTimeout) {
-        clearTimeout(undoCloseTimeout);
-      }
-
-      vscode.commands.executeCommand(
-        "setContext",
-        "tabstronaut:canUndoClose",
-        false
-      );
-
+      clearUndoCloseState();
       showConfirmation("Restored closed tabs.");
     })
   );

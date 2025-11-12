@@ -438,6 +438,13 @@ export async function addAllOpenTabsToGroup(
     }
   }
 
+  const activeEditor = vscode.window.activeTextEditor;
+  if (activeEditor && activeEditor.document.uri.scheme === 'file') {
+    await treeDataProvider.updateActiveFileForGroups(
+      activeEditor.document.uri.fsPath
+    );
+  }
+
   showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
 }
 

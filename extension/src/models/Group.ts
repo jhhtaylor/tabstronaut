@@ -8,6 +8,7 @@ export class Group extends vscode.TreeItem {
     creationTime: Date;
     colorName: string;
     isPinned: boolean;
+    activeFilePath?: string;
 
     constructor(
         label: string,

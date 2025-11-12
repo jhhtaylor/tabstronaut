@@ -33,10 +33,13 @@ export async function handleOpenTab(item: any, fromButton: boolean) {
   }
 }
 
-export async function openFileSmart(filePath: string): Promise<void> {
+export async function openFileSmart(
+  filePath: string,
+  options?: { preserveFocus?: boolean }
+): Promise<void> {
   const uri = vscode.Uri.file(filePath);
   try {
-    if (await revealExistingTab(uri)) {
+    if (await revealExistingTab(uri, options)) {
       return;
     }
 
@@ -48,7 +51,10 @@ export async function openFileSmart(filePath: string): Promise<void> {
       );
     } else {
       const document = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(document, { preview: false });
+      await vscode.window.showTextDocument(document, {
+        preview: false,
+        preserveFocus: options?.preserveFocus,
+      });
     }
   } catch {
     vscode.window.showErrorMessage(
@@ -57,7 +63,10 @@ export async function openFileSmart(filePath: string): Promise<void> {
   }
 }
 
-async function revealExistingTab(uri: vscode.Uri): Promise<boolean> {
+async function revealExistingTab(
+  uri: vscode.Uri,
+  options?: { preserveFocus?: boolean }
+): Promise<boolean> {
   for (const group of vscode.window.tabGroups.all) {
     for (const tab of group.tabs) {
       const input = (tab as any).input;
@@ -78,6 +87,7 @@ async function revealExistingTab(uri: vscode.Uri): Promise<boolean> {
           await vscode.window.showTextDocument(document, {
             viewColumn: group.viewColumn,
             preview: false,
+            preserveFocus: options?.preserveFocus,
           });
         }
         return true;
