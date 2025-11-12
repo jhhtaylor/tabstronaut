@@ -717,15 +717,21 @@ export class TabstronautDataProvider
     this._onDidChangeTreeData.fire();
   }
 
-  async removeFromGroup(groupId: string, filePath: string): Promise<void> {
+  async removeFromGroup(
+    groupId: string,
+    filePath: string,
+    options?: { skipConfirmation?: boolean }
+  ): Promise<void> {
     const group = this.groupsMap.get(groupId);
     if (!group || !filePath) {
       return;
     }
   
-    const shouldConfirm = vscode.workspace
-      .getConfiguration("tabstronaut")
-      .get("confirmRemoveAndClose", true);
+    const shouldConfirm =
+      !options?.skipConfirmation &&
+      vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get("confirmRemoveAndClose", true);
   
     const isLastTab =
       group.items.length === 1 &&
@@ -776,6 +782,23 @@ export class TabstronautDataProvider
 
   public getFirstGroup(): Group | undefined {
     return Array.from(this.groupsMap.values())[0];
+  }
+
+  async removeFileFromAllGroups(
+    filePath: string,
+    options?: { skipConfirmation?: boolean }
+  ): Promise<void> {
+    if (!filePath) {
+      return;
+    }
+
+    const groupsWithFile = Array.from(this.groupsMap.values()).filter((group) =>
+      group.containsFile(filePath)
+    );
+
+    for (const group of groupsWithFile) {
+      await this.removeFromGroup(group.id, filePath, options);
+    }
   }
 
   public getGroupIndex(groupId: string): number {
