@@ -49,7 +49,6 @@ export async function getGroupName(
 
     inputBox.onDidAccept(() => {
       const value = inputBox.value;
-      inputBox.hide();
       if (value.trim() === '') {
         finalize({
           name: `Group ${treeDataProvider.getGroups().length + 1}`,
@@ -58,20 +57,24 @@ export async function getGroupName(
       } else {
         finalize({ name: value, useDefaults: false });
       }
+      inputBox.hide();
+      inputBox.dispose();
     });
 
     inputBox.onDidTriggerButton((button) => {
       if (button === defaultButton) {
-        inputBox.hide();
         finalize({
           name: `Group ${treeDataProvider.getGroups().length + 1}`,
           useDefaults: true,
         });
+        inputBox.hide();
+        inputBox.dispose();
       }
     });
 
     inputBox.onDidHide(() => {
       finalize({ name: undefined, useDefaults: false });
+      inputBox.dispose();
     });
 
     inputBox.show();
