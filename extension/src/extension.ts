@@ -16,6 +16,9 @@ import {
 
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
+let handleTabChangeEventImpl:
+  | ((event: vscode.TabChangeEvent) => Promise<void>)
+  | undefined;
 
 type TabstronautSettingKey = "autoCloseOnRestore" | "autoRemoveClosedTabs";
 
@@ -162,28 +165,32 @@ export function activate(context: vscode.ExtensionContext) {
 
   void enforceExclusiveSettings("autoCloseOnRestore");
 
+  const handleTabChangeEvent = async (event: vscode.TabChangeEvent) => {
+    treeDataProvider.refreshUngroupedTabs();
+
+    const autoRemoveClosedTabs = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<boolean>("autoRemoveClosedTabs", false);
+
+    if (!autoRemoveClosedTabs) {
+      return;
+    }
+
+    for (const closedTab of event.closed) {
+      const filePath = getFilePathFromTab(closedTab);
+      if (!filePath) {
+        continue;
+      }
+      await treeDataProvider.removeFileFromAllGroups(filePath, {
+        skipConfirmation: true,
+      });
+    }
+  };
+
+  handleTabChangeEventImpl = handleTabChangeEvent;
+
   context.subscriptions.push(
-    vscode.window.tabGroups.onDidChangeTabs(async (event) => {
-      treeDataProvider.refreshUngroupedTabs();
-
-      const autoRemoveClosedTabs = vscode.workspace
-        .getConfiguration("tabstronaut")
-        .get<boolean>("autoRemoveClosedTabs", false);
-
-      if (!autoRemoveClosedTabs) {
-        return;
-      }
-
-      for (const closedTab of event.closed) {
-        const filePath = getFilePathFromTab(closedTab);
-        if (!filePath) {
-          continue;
-        }
-        await treeDataProvider.removeFileFromAllGroups(filePath, {
-          skipConfirmation: true,
-        });
-      }
-    })
+    vscode.window.tabGroups.onDidChangeTabs(handleTabChangeEvent)
   );
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
@@ -983,10 +990,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
   treeDataProvider.clearRefreshInterval();
+  handleTabChangeEventImpl = undefined;
 }
 
 export const testUtils = {
   getTreeDataProvider: () => treeDataProvider,
   isGroupCollapsed: (id: string) => collapsedGroups.has(id),
   clearCollapsedGroups: () => collapsedGroups.clear(),
+  handleTabChangeEvent: async (event: vscode.TabChangeEvent) => {
+    if (handleTabChangeEventImpl) {
+      await handleTabChangeEventImpl(event);
+    }
+  },
 };

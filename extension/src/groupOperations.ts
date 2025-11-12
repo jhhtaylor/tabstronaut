@@ -38,23 +38,32 @@ export async function getGroupName(
   inputBox.buttons = [defaultButton];
 
   return await new Promise<GroupNameResult>((resolve) => {
+    let resolved = false;
+    const finalize = (result: GroupNameResult) => {
+      if (resolved) {
+        return;
+      }
+      resolved = true;
+      resolve(result);
+    };
+
     inputBox.onDidAccept(() => {
       const value = inputBox.value;
       inputBox.hide();
       if (value.trim() === '') {
-        resolve({
+        finalize({
           name: `Group ${treeDataProvider.getGroups().length + 1}`,
           useDefaults: false,
         });
       } else {
-        resolve({ name: value, useDefaults: false });
+        finalize({ name: value, useDefaults: false });
       }
     });
 
     inputBox.onDidTriggerButton((button) => {
       if (button === defaultButton) {
         inputBox.hide();
-        resolve({
+        finalize({
           name: `Group ${treeDataProvider.getGroups().length + 1}`,
           useDefaults: true,
         });
@@ -62,7 +71,7 @@ export async function getGroupName(
     });
 
     inputBox.onDidHide(() => {
-      resolve({ name: undefined, useDefaults: false });
+      finalize({ name: undefined, useDefaults: false });
     });
 
     inputBox.show();

@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { TabstronautDataProvider } from '../../src/tabstronautDataProvider';
 import { Group } from '../../src/models/Group';
 import {
+  getGroupName,
   getNewGroupName,
   selectColorOption,
   handleAddToExistingGroup,
@@ -79,6 +80,90 @@ describe('groupOperations.getNewGroupName', () => {
     const result = await getNewGroupName(new Group('G1', '1'));
     strictEqual(result, undefined);
     strictEqual(msg, 'Invalid Tab Group name. Please try again.');
+  });
+});
+
+describe('groupOperations.getGroupName', () => {
+  let origCreateInputBox: any;
+
+  beforeEach(() => {
+    origCreateInputBox = vscode.window.createInputBox;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(vscode.window, 'createInputBox', {
+      value: origCreateInputBox,
+      configurable: true,
+    });
+  });
+
+  it('skips prompting and uses defaults when prompts are disabled', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    const originalSetting = config.get('promptForGroupDetails');
+    await config.update('promptForGroupDetails', false, true);
+
+    Object.defineProperty(vscode.window, 'createInputBox', {
+      value: () => {
+        throw new Error('Input box should not be shown when prompts are disabled.');
+      },
+      configurable: true,
+    });
+
+    try {
+      const result = await getGroupName(provider);
+      strictEqual(result.name, 'Group 1');
+      strictEqual(result.useDefaults, true);
+    } finally {
+      provider.clearRefreshInterval();
+      await config.update('promptForGroupDetails', originalSetting, true);
+    }
+  });
+
+  it('allows selecting defaults through the quick input button', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    const originalSetting = config.get('promptForGroupDetails');
+    await config.update('promptForGroupDetails', true, true);
+
+    let triggerButtonCallback: ((button: vscode.QuickInputButton) => void) | undefined;
+    let hideCallback: (() => void) | undefined;
+
+    const mockInputBox: any = {
+      buttons: [] as vscode.QuickInputButton[],
+      value: '',
+      placeholder: '',
+      onDidAccept: () => {},
+      onDidTriggerButton: (cb: (button: vscode.QuickInputButton) => void) => {
+        triggerButtonCallback = cb;
+      },
+      onDidHide: (cb: () => void) => {
+        hideCallback = cb;
+      },
+      show: () => {
+        setTimeout(() => {
+          triggerButtonCallback?.(mockInputBox.buttons[0]);
+        }, 0);
+      },
+      hide: () => {
+        hideCallback?.();
+      },
+      dispose: () => {},
+    };
+
+    Object.defineProperty(vscode.window, 'createInputBox', {
+      value: () => mockInputBox,
+      configurable: true,
+    });
+
+    try {
+      const result = await getGroupName(provider);
+      strictEqual(result.name, 'Group 1');
+      strictEqual(result.useDefaults, true);
+    } finally {
+      provider.clearRefreshInterval();
+      await config.update('promptForGroupDetails', originalSetting, true);
+    }
   });
 });
 
