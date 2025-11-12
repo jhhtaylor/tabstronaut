@@ -518,7 +518,7 @@
         "tabstronaut.autoRemoveClosedTabs": {
           "type": "boolean",
           "default": false,
-          "description": "Automatically remove closed tabs from any Tab Groups that include them. Cannot be used together with Close tabs before restoring groups."
+          "description": "Automatically remove closed tabs from any Tab Groups that include them. Cannot be used together with Close tabs before restoring groups. Note: Undo delete will not be available when this setting is enabled."
         },
         "tabstronaut.promptForGroupDetails": {
           "type": "boolean",

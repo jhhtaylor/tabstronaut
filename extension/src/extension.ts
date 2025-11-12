@@ -194,6 +194,16 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   treeDataProvider.onGroupAutoDeleted = (group: Group) => {
+    const autoRemoveClosedTabs = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<boolean>("autoRemoveClosedTabs", false);
+
+    // Don't allow undo when autoRemoveClosedTabs is enabled
+    // because restoring would create tabs in the group without corresponding open editors
+    if (autoRemoveClosedTabs) {
+      return;
+    }
+
     const index = treeDataProvider.getGroupIndex(group.id);
     const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
     recentlyDeletedGroup = {
@@ -679,6 +689,20 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
 
+        const autoRemoveClosedTabs = vscode.workspace
+          .getConfiguration("tabstronaut")
+          .get<boolean>("autoRemoveClosedTabs", false);
+
+        // Delete the group
+        treeDataProvider.deleteGroup(group.id);
+        treeDataProvider.refresh();
+
+        // Don't allow undo when autoRemoveClosedTabs is enabled
+        // because restoring would create tabs in the group without corresponding open editors
+        if (autoRemoveClosedTabs) {
+          return;
+        }
+
         const index = treeDataProvider.getGroupIndex(group.id);
         const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
         recentlyDeletedGroup = {
@@ -689,7 +713,6 @@ export function activate(context: vscode.ExtensionContext) {
           addItem: group.addItem.bind(group),
           containsFile: group.containsFile.bind(group),
         };
-        treeDataProvider.deleteGroup(group.id);
 
         vscode.commands.executeCommand(
           "setContext",
@@ -710,8 +733,6 @@ export function activate(context: vscode.ExtensionContext) {
             false
           );
         }, 5000);
-
-        treeDataProvider.refresh();
       }
     )
   );
@@ -815,9 +836,18 @@ export function activate(context: vscode.ExtensionContext) {
       );
     }
     if (e.affectsConfiguration("tabstronaut.autoRemoveClosedTabs")) {
-      vscode.window.showInformationMessage(
-        "Tabstronaut auto-remove closed tabs setting updated."
-      );
+      const config = vscode.workspace.getConfiguration("tabstronaut");
+      const isEnabled = config.get<boolean>("autoRemoveClosedTabs", false);
+
+      if (isEnabled) {
+        vscode.window.showInformationMessage(
+          "Auto-remove closed tabs enabled. Note: Undo delete will not be available with this setting."
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          "Tabstronaut auto-remove closed tabs setting updated."
+        );
+      }
       await enforceExclusiveSettings("autoRemoveClosedTabs");
     }
   });
@@ -913,6 +943,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.undoDelete", async () => {
+      const autoRemoveClosedTabs = vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get<boolean>("autoRemoveClosedTabs", false);
+
+      // Safety check: don't allow undo when autoRemoveClosedTabs is enabled
+      if (autoRemoveClosedTabs) {
+        return;
+      }
+
       if (!recentlyDeletedGroup) {
         return;
       }
