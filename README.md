@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="extension/media/Tabstronaut.png" alt="Logo" width="200"/>
+  <img src="media/Tabstronaut.png" alt="Logo" width="200"/>
 </p>
 
 Tabstronaut excels in tab management for VS Code by enabling users to archive and retrieve specific tab groups. It ensures frequently-used or feature-specific tabs are systematically stored for future access.
 
-![Tabstronaut in action](extension/media/tabstronaut-demo.gif)
+![Tabstronaut in action](media/tabstronaut-demo.gif)
 
 ## Support the creator
 
@@ -53,4 +53,4 @@ If you encounter any other problem, please open an [Issue](https://github.com/jh
 
 ## Release Notes
 
-For a detailed list of all updates in bullet point format, see our [Change Log](extension/CHANGELOG.md).
+For a detailed list of all updates in bullet point format, see our [Change Log](CHANGELOG.md).
