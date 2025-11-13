@@ -132,6 +132,5 @@ dist
 # macOS Finder metadata file
 .DS_Store
 
-# Copied README and LICENSE files for VSCode extension
-/extension/README.md
-/extension/LICENSE
+# Built Visual Studio Code Extensions
+*.vsix
