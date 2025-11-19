@@ -883,10 +883,35 @@ export class TabstronautDataProvider
     }
   }
 
+  private getImportExportDirectory(): string {
+    const configuredPath = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<string>("importExportDirectory", "")
+      .trim();
+
+    if (configuredPath === "") {
+      // No configuration - use workspace root or home directory
+      return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ||
+        require("os").homedir();
+    }
+
+    // Check if path is absolute
+    if (path.isAbsolute(configuredPath)) {
+      return configuredPath;
+    }
+
+    // Relative path - resolve relative to workspace root
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (workspaceRoot) {
+      return path.resolve(workspaceRoot, configuredPath);
+    }
+
+    // No workspace - treat as absolute from home directory
+    return path.resolve(require("os").homedir(), configuredPath);
+  }
+
   async exportGroupsToFile(): Promise<void> {
-    const defaultPath =
-      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ||
-      require("os").homedir();
+    const defaultPath = this.getImportExportDirectory();
 
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.file(
@@ -911,11 +936,14 @@ export class TabstronautDataProvider
   }
 
   async importGroupsFromFile(): Promise<void> {
+    const defaultPath = this.getImportExportDirectory();
+
     const [uri] =
       (await vscode.window.showOpenDialog({
         canSelectMany: false,
         filters: { jsonFiles: ["json"] },
         openLabel: "Import Tab Groups",
+        defaultUri: vscode.Uri.file(defaultPath),
       })) || [];
 
     if (!uri) {

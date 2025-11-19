@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.3.10",
+  "version": "1.4.0",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -533,6 +533,11 @@
           ],
           "default": "bottom",
           "description": "Position for newly created Tab Groups."
+        },
+        "tabstronaut.importExportDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Default directory for importing and exporting Tab Groups. Supports absolute paths (e.g., '/tmp' or 'C:\\Temp') or relative paths from workspace root (e.g., 'tab-groups'). Leave empty to use workspace root (or home directory if no workspace is open)."
         }
       }
     }

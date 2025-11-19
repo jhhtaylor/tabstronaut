@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.4.0]
+
+- Added `importExportDirectory` setting to configure a default directory for importing and exporting Tab Groups.
+
 ## [1.3.9-1.3.10]
 
 - Hotfixes.
