@@ -1,12 +1,12 @@
 {
   "name": "tabstronaut",
-  "displayName": "Tabstronaut - Tab Groups",
+  "displayName": "Tab Groups - Tabstronaut",
   "publisher": "jhhtaylor",
   "author": {
     "name": "Jon Taylor",
     "email": "jhhtaylor@gmail.com"
   },
-  "description": "A cosmic solution to group VS Code editor tabs",
+  "description": "Save and restore groups of editor tabs in VS Code",
   "icon": "media/Tabstronaut.png",
   "galleryBanner": {
     "color": "#FF914D",
@@ -21,7 +21,7 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.4.0",
+  "version": "1.4.1",
   "engines": {
     "vscode": "^1.99.0"
   },

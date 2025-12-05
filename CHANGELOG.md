@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.4.1]
+
+- Rebranded from "Tabstronaut - Tab Groups" to "Tab Groups - Tabstronaut" for better discoverability.
+
 ## [1.4.0]
 
 - Added `importExportDirectory` setting to configure a default directory for importing and exporting Tab Groups.

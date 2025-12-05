@@ -10,6 +10,8 @@ Tabstronaut excels in tab management for VS Code by enabling users to archive an
 
 <a href="https://www.buymeacoffee.com/jhhtaylor" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217" height="60"></a>
 
+Love this extension? You can support its development with a small donation - completely optional! Your support helps me keep creating and improving tools like this.
+
 ## Features
 
 - Create tab groups instantly
@@ -21,7 +23,7 @@ Tabstronaut excels in tab management for VS Code by enabling users to archive an
 
 ## Tips
 
-💡 Check out [@tabstronaut_dev](https://x.com/tabstronaut_dev) for Tabstronaut tips and how-to videos.
+Check out [@tabstronaut_dev](https://x.com/tabstronaut_dev) for Tabstronaut tips and how-to videos.
 
 ### Quick Access to Tabstronaut's Context Menu
 
@@ -40,10 +42,10 @@ Tabstronaut now supports keybindings to restore tab groups. Here's how to make t
 To tailor Tabstronaut to your preferences:
 
 - Click the "..." (More Options...) button in the Tabstronaut title bar and click "Settings".
- 
+
 OR
 
-- Open **VS Code Settings**: **`Ctrl+Shift+P`** ➡️ "Preferences: Open Settings (UI)" and search for "Tabstronaut".
+- Open **VS Code Settings**: **`Ctrl+Shift+P`** → "Preferences: Open Settings (UI)" and search for "Tabstronaut".
 
 Your changes will be saved automatically.
 
