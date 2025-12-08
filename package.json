@@ -1,6 +1,6 @@
 {
   "name": "tabstronaut",
-  "displayName": "Tab Groups - Tabstronaut",
+  "displayName": "Tabstronaut - Tab Groups",
   "publisher": "jhhtaylor",
   "author": {
     "name": "Jon Taylor",
@@ -21,7 +21,10 @@
     "url": "https://github.com/jhhtaylor/tabstronaut/issues",
     "email": "jhhtaylor@gmail.com"
   },
-  "version": "1.4.1",
+  "sponsor": {
+    "url": "https://www.buymeacoffee.com/jhhtaylor"
+  },
+  "version": "1.4.2",
   "engines": {
     "vscode": "^1.99.0"
   },

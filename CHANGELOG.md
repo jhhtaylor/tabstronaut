@@ -2,9 +2,9 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
-## [1.4.1]
+## [1.4.1-1.4.2]
 
-- Rebranded from "Tabstronaut - Tab Groups" to "Tab Groups - Tabstronaut" for better discoverability.
+- Updated wording in extension.
 
 ## [1.4.0]
 
