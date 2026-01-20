@@ -25,8 +25,14 @@ export async function handleOpenTab(item: any, fromButton: boolean) {
       const currentEditor = vscode.window.activeTextEditor;
       const isCurrentActiveTab = currentEditor?.document.uri.fsPath === uri.fsPath;
       const preview = !isCurrentActiveTab && fromButton;
-      const doc = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(doc, { preview });
+      // Try to open as text document first
+      try {
+        const doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(doc, { preview });
+      } catch {
+        // If it's a binary file, use vscode.open instead
+        await vscode.commands.executeCommand("vscode.open", uri);
+      }
     }
   } catch {
     vscode.window.showErrorMessage(`Cannot open '${path.basename(uri.fsPath)}'.`);
@@ -47,8 +53,14 @@ export async function openFileSmart(filePath: string): Promise<void> {
         'jupyter-notebook'
       );
     } else {
-      const document = await vscode.workspace.openTextDocument(uri);
-      await vscode.window.showTextDocument(document, { preview: false });
+      // Try to open as text document first
+      try {
+        const document = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(document, { preview: false });
+      } catch {
+        // If it's a binary file, use vscode.open instead
+        await vscode.commands.executeCommand("vscode.open", uri);
+      }
     }
   } catch {
     vscode.window.showErrorMessage(
