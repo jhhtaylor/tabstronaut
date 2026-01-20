@@ -86,11 +86,17 @@ async function revealExistingTab(uri: vscode.Uri): Promise<boolean> {
             'jupyter-notebook'
           );
         } else {
-          const document = await vscode.workspace.openTextDocument(uri);
-          await vscode.window.showTextDocument(document, {
-            viewColumn: group.viewColumn,
-            preview: false,
-          });
+          // Try to open as text document first
+          try {
+            const document = await vscode.workspace.openTextDocument(uri);
+            await vscode.window.showTextDocument(document, {
+              viewColumn: group.viewColumn,
+              preview: false,
+            });
+          } catch {
+            // If it's a binary file, use vscode.open instead
+            await vscode.commands.executeCommand("vscode.open", uri);
+          }
         }
         return true;
       }

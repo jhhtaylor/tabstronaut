@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.4.2",
+  "version": "1.4.3",
   "engines": {
     "vscode": "^1.99.0"
   },

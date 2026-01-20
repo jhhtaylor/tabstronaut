@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.4.3]
+
+- Improved file opening to handle binary files like images and PDFs. (Thanks @NyxJae - #196)
+
 ## [1.4.1-1.4.2]
 
 - Updated wording in extension.
