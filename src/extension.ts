@@ -12,6 +12,7 @@ import {
   addFilesToGroupCommand,
   sortTabGroupCommand,
   filterTabGroupsCommand,
+  handleAddSubGroup,
 } from "./groupOperations";
 
 let treeDataProvider: TabstronautDataProvider;
@@ -210,9 +211,11 @@ export function activate(context: vscode.ExtensionContext) {
       ...group,
       index,
       previousGroupId: prevId,
+      deletedParentId: group.parentId,
       createTabItem: group.createTabItem.bind(group),
       addItem: group.addItem.bind(group),
       containsFile: group.containsFile.bind(group),
+      containsFileRecursive: group.containsFileRecursive.bind(group),
     };
 
     vscode.commands.executeCommand(
@@ -251,7 +254,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   let recentlyDeletedGroup:
-    | (Group & { index: number; previousGroupId?: string })
+    | (Group & { index: number; previousGroupId?: string; deletedParentId?: string })
     | null = null;
   let undoTimeout: NodeJS.Timeout | undefined;
   let recentlyClosedEditors: string[] | null = null;
@@ -526,6 +529,26 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  const restoreGroupTabsRecursive = async (group: Group) => {
+    for (const tabItem of group.items) {
+      const filePath = tabItem.resourceUri?.fsPath;
+      if (filePath) {
+        try {
+          await openFileSmart(filePath);
+        } catch {
+          vscode.window.showErrorMessage(
+            `Cannot open '${path.basename(
+              filePath
+            )}'. Please check if the file exists and try again.`
+          );
+        }
+      }
+    }
+    for (const child of group.children) {
+      await restoreGroupTabsRecursive(child);
+    }
+  };
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.restoreAllTabsInGroup",
@@ -564,20 +587,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
 
-        for (const tabItem of group.items) {
-          const filePath = tabItem.resourceUri?.fsPath;
-          if (filePath) {
-            try {
-              await openFileSmart(filePath);
-            } catch {
-              vscode.window.showErrorMessage(
-                `Cannot open '${path.basename(
-                  filePath
-                )}'. Please check if the file exists and try again.`
-              );
-            }
-          }
-        }
+        await restoreGroupTabsRecursive(group);
       }
     )
   );
@@ -620,20 +630,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
 
-        for (const tabItem of group.items) {
-          const filePath = tabItem.resourceUri?.fsPath;
-          if (filePath) {
-            try {
-              await openFileSmart(filePath);
-            } catch {
-              vscode.window.showErrorMessage(
-                `Cannot open '${path.basename(
-                  filePath
-                )}'. Please check if the file exists and try again.`
-              );
-            }
-          }
-        }
+        await restoreGroupTabsRecursive(group);
       }
     )
   );
@@ -709,9 +706,11 @@ export function activate(context: vscode.ExtensionContext) {
           ...group,
           index,
           previousGroupId: prevId,
+          deletedParentId: group.parentId,
           createTabItem: group.createTabItem.bind(group),
           addItem: group.addItem.bind(group),
           containsFile: group.containsFile.bind(group),
+          containsFileRecursive: group.containsFileRecursive.bind(group),
         };
 
         vscode.commands.executeCommand(
@@ -904,6 +903,19 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.addSubGroup",
+      async (item: any) => {
+        if (item.contextValue !== "group") {
+          return;
+        }
+        const group: Group = item;
+        await handleAddSubGroup(treeDataProvider, group);
+      }
+    )
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.exportTabGroups", async () => {
       await treeDataProvider.exportGroupsToFile();
     })
@@ -955,33 +967,62 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      let insertIndex = recentlyDeletedGroup.index;
-      if (recentlyDeletedGroup.previousGroupId) {
-        const prevIdx = treeDataProvider.getGroupIndex(
-          recentlyDeletedGroup.previousGroupId
-        );
-        if (prevIdx !== -1) {
-          insertIndex = prevIdx + 1;
+      const restoreTabsToGroup = async (group: Group, targetGroupId: string) => {
+        for (const tab of group.items) {
+          const uri = tab.resourceUri;
+          if (uri) {
+            await treeDataProvider.addToGroup(targetGroupId, uri.fsPath, false);
+          }
         }
-      }
+        // Restore children recursively
+        for (const child of group.children) {
+          const childId = await treeDataProvider.addSubGroup(
+            targetGroupId,
+            child.label as string,
+            child.colorName
+          );
+          if (childId) {
+            await restoreTabsToGroup(child, childId);
+          }
+        }
+      };
 
-      const restored = await treeDataProvider.addGroup(
-        recentlyDeletedGroup.label as string,
-        recentlyDeletedGroup.colorName,
-        insertIndex
-      );
+      // If the deleted group had a parent, try to restore it there
+      const parentId = recentlyDeletedGroup.deletedParentId;
+      const parentGroup = parentId ? treeDataProvider.findGroupById(parentId) : undefined;
+
+      let restored: string | undefined;
+      if (parentGroup) {
+        // Restore as a sub-group
+        restored = await treeDataProvider.addSubGroup(
+          parentId!,
+          recentlyDeletedGroup.label as string,
+          recentlyDeletedGroup.colorName
+        );
+      } else {
+        // Restore as a root group
+        let insertIndex = recentlyDeletedGroup.index;
+        if (recentlyDeletedGroup.previousGroupId) {
+          const prevIdx = treeDataProvider.getGroupIndex(
+            recentlyDeletedGroup.previousGroupId
+          );
+          if (prevIdx !== -1) {
+            insertIndex = prevIdx + 1;
+          }
+        }
+        restored = await treeDataProvider.addGroup(
+          recentlyDeletedGroup.label as string,
+          recentlyDeletedGroup.colorName,
+          insertIndex
+        );
+      }
 
       if (!restored) {
         vscode.window.showErrorMessage("Cannot restore Tab Group.");
         return;
       }
 
-      for (const tab of recentlyDeletedGroup.items) {
-        const uri = tab.resourceUri;
-        if (uri) {
-          await treeDataProvider.addToGroup(restored, uri.fsPath, false);
-        }
-      }
+      await restoreTabsToGroup(recentlyDeletedGroup, restored);
 
       recentlyDeletedGroup = null;
       if (undoTimeout) {

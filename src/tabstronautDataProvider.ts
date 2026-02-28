@@ -10,6 +10,14 @@ import {
   labelForTopFolder,
 } from "./utils";
 
+interface GroupStorageData {
+  label: string;
+  items: string[];
+  children?: { [id: string]: GroupStorageData };
+  creationTime: string;
+  colorName: string;
+}
+
 export class TabstronautDataProvider
   implements
     vscode.TreeDataProvider<Group | vscode.TreeItem>,
@@ -38,22 +46,11 @@ export class TabstronautDataProvider
 
   constructor(private workspaceState: vscode.Memento) {
     const groupData = this.workspaceState.get<{
-      [id: string]: {
-        label: string;
-        items: string[];
-        creationTime: string;
-        colorName: string;
-      };
+      [id: string]: GroupStorageData;
     }>("tabGroups", {});
     for (const id in groupData) {
-      let newGroup = new Group(
-        groupData[id].label,
-        id,
-        new Date(groupData[id].creationTime),
-        groupData[id].colorName
-      );
-      groupData[id].items.forEach((filePath) => newGroup.addItem(filePath));
-      this.groupsMap.set(id, newGroup);
+      const group = this.deserializeGroup(id, groupData[id]);
+      this.groupsMap.set(id, group);
     }
 
     this.ungroupedGroup = new Group("Ungrouped Tabs", "ungrouped", new Date(), undefined, true);
@@ -71,6 +68,213 @@ export class TabstronautDataProvider
       "tabstronaut:hasGroupFilter",
       false
     );
+  }
+
+  private deserializeGroup(id: string, data: GroupStorageData, parentId?: string): Group {
+    const group = new Group(
+      data.label,
+      id,
+      new Date(data.creationTime),
+      data.colorName
+    );
+    group.parentId = parentId;
+    data.items.forEach((filePath) => group.addItem(filePath));
+
+    const childrenData = data.children || {};
+    for (const childId in childrenData) {
+      const childGroup = this.deserializeGroup(childId, childrenData[childId], id);
+      group.children.push(childGroup);
+    }
+
+    return group;
+  }
+
+  private serializeGroup(group: Group): GroupStorageData | undefined {
+    if (typeof group.label !== "string") {
+      vscode.window.showErrorMessage(
+        "Invalid Tab Group name. Please try again."
+      );
+      return undefined;
+    }
+    const children: { [id: string]: GroupStorageData } = {};
+    for (const child of group.children) {
+      const childData = this.serializeGroup(child);
+      if (childData) {
+        children[child.id] = childData;
+      }
+    }
+    return {
+      label: group.label,
+      items: group.items.map((item) => item.resourceUri?.fsPath as string),
+      children,
+      creationTime: group.creationTime.toISOString(),
+      colorName: group.colorName,
+    };
+  }
+
+  public findGroupById(id: string): Group | undefined {
+    for (const group of this.groupsMap.values()) {
+      const found = this.findInTree(group, id);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  }
+
+  private findInTree(group: Group, id: string): Group | undefined {
+    if (group.id === id) {
+      return group;
+    }
+    for (const child of group.children) {
+      const found = this.findInTree(child, id);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  }
+
+  public findParentGroup(childId: string): Group | undefined {
+    for (const group of this.groupsMap.values()) {
+      const found = this.findParentInTree(group, childId);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  }
+
+  private findParentInTree(group: Group, childId: string): Group | undefined {
+    for (const child of group.children) {
+      if (child.id === childId) {
+        return group;
+      }
+      const found = this.findParentInTree(child, childId);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  }
+
+  private findSourceGroupForTab(tabId: string): Group | undefined {
+    for (const group of this.groupsMap.values()) {
+      const found = this.findSourceGroupForTabInTree(group, tabId);
+      if (found) {
+        return found;
+      }
+    }
+    // Also check ungrouped
+    if (this.ungroupedGroup.items.some((i) => i.id === tabId)) {
+      return this.ungroupedGroup;
+    }
+    return undefined;
+  }
+
+  private findSourceGroupForTabInTree(group: Group, tabId: string): Group | undefined {
+    if (group.items.some((i) => i.id === tabId)) {
+      return group;
+    }
+    for (const child of group.children) {
+      const found = this.findSourceGroupForTabInTree(child, tabId);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  }
+
+  private getAllGroupsFlat(): Group[] {
+    const result: Group[] = [];
+    for (const group of this.groupsMap.values()) {
+      this.collectGroupsFlat(group, result);
+    }
+    return result;
+  }
+
+  private collectGroupsFlat(group: Group, result: Group[]): void {
+    result.push(group);
+    for (const child of group.children) {
+      this.collectGroupsFlat(child, result);
+    }
+  }
+
+  private removeGroupFromTree(groupId: string): boolean {
+    // Check if it's a root group
+    if (this.groupsMap.has(groupId)) {
+      this.groupsMap.delete(groupId);
+      return true;
+    }
+    // Check nested groups
+    for (const group of this.groupsMap.values()) {
+      if (this.removeFromChildren(group, groupId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private removeFromChildren(parent: Group, childId: string): boolean {
+    const index = parent.children.findIndex((c) => c.id === childId);
+    if (index !== -1) {
+      parent.children.splice(index, 1);
+      return true;
+    }
+    for (const child of parent.children) {
+      if (this.removeFromChildren(child, childId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private findTopmostCascadeTarget(group: Group): Group {
+    // Walk up ancestors: if parent would become empty after this child is removed,
+    // the parent will also be cascade-deleted, so include it in the backup.
+    let topmost = group;
+    let currentId = group.parentId;
+    while (currentId) {
+      const parent = this.findGroupById(currentId);
+      if (!parent) {
+        break;
+      }
+      // Parent will become empty if it has no items and this is its only child
+      if (parent.items.length === 0 && parent.children.length === 1 && !parent.isPinned) {
+        topmost = parent;
+        currentId = parent.parentId;
+      } else {
+        break;
+      }
+    }
+    return topmost;
+  }
+
+  private cascadeDeleteEmpty(groupId: string): void {
+    const group = this.findGroupById(groupId);
+    if (!group) {
+      return;
+    }
+    if (group.items.length === 0 && group.children.length === 0 && !group.isPinned) {
+      const parentId = group.parentId;
+      this.removeGroupFromTree(groupId);
+      if (parentId) {
+        this.cascadeDeleteEmpty(parentId);
+      }
+    }
+  }
+
+  private cloneGroupForBackup(group: Group): Group {
+    const backup: Group = {
+      ...group,
+      items: [...group.items],
+      children: group.children.map((c) => this.cloneGroupForBackup(c)),
+      createTabItem: group.createTabItem.bind(group),
+      addItem: group.addItem.bind(group),
+      containsFile: group.containsFile.bind(group),
+      containsFileRecursive: group.containsFileRecursive.bind(group),
+    };
+    return backup;
   }
 
   async handleDrag(
@@ -142,7 +346,7 @@ export class TabstronautDataProvider
     for (const id of draggedIds) {
       if (id.startsWith("group:")) {
         const groupId = id.replace("group:", "");
-        const draggedGroup = this.groupsMap.get(groupId);
+        const draggedGroup = this.findGroupById(groupId);
         const targetGroup = target instanceof Group ? target : undefined;
 
         if (
@@ -155,31 +359,46 @@ export class TabstronautDataProvider
           return;
         }
 
-        const groups = Array.from(this.groupsMap.values());
-        const draggedIndex = groups.findIndex((g) => g.id === draggedGroup.id);
-        const targetIndex = groups.findIndex((g) => g.id === targetGroup.id);
-
-        if (draggedIndex === -1 || targetIndex === -1) {
+        // Prevent nesting a group inside itself or its descendants
+        if (this.findInTree(draggedGroup, targetGroup.id)) {
           return;
         }
 
-        groups.splice(draggedIndex, 1);
-        const insertPos = groups.findIndex((g) => g.id === targetGroup.id);
-        const adjustedIndex =
-          draggedIndex < targetIndex ? insertPos + 1 : insertPos;
-        groups.splice(adjustedIndex, 0, draggedGroup);
+        // If both are root-level siblings, reorder them
+        if (!draggedGroup.parentId && !targetGroup.parentId) {
+          const groups = Array.from(this.groupsMap.values());
+          const draggedIndex = groups.findIndex((g) => g.id === draggedGroup.id);
+          const targetIndex = groups.findIndex((g) => g.id === targetGroup.id);
 
-        this.groupsMap = new Map(groups.map((g) => [g.id, g]));
-        this.refresh();
-        await this.updateWorkspaceState();
-        showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
+          if (draggedIndex === -1 || targetIndex === -1) {
+            return;
+          }
+
+          groups.splice(draggedIndex, 1);
+          const insertPos = groups.findIndex((g) => g.id === targetGroup.id);
+          const adjustedIndex =
+            draggedIndex < targetIndex ? insertPos + 1 : insertPos;
+          groups.splice(adjustedIndex, 0, draggedGroup);
+
+          this.groupsMap = new Map(groups.map((g) => [g.id, g]));
+          this.refresh();
+          await this.updateWorkspaceState();
+          showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
+        } else {
+          // Move group: remove from current location
+          this.removeGroupFromTree(draggedGroup.id);
+          // Add as child of target
+          draggedGroup.parentId = targetGroup.id;
+          targetGroup.children.push(draggedGroup);
+          this.refresh();
+          await this.updateWorkspaceState();
+          showConfirmation(`Moved '${draggedGroup.label}' into '${targetGroup.label}'.`);
+        }
       }
 
       if (id.startsWith("tab:") && target instanceof Group) {
         const tabId = id.replace("tab:", "");
-        const sourceGroup = [...this.groupsMap.values(), this.ungroupedGroup].find((g) =>
-          g.items.some((i) => i.id === tabId)
-        );
+        const sourceGroup = this.findSourceGroupForTab(tabId);
 
         const tab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
@@ -204,24 +423,23 @@ export class TabstronautDataProvider
         }
 
         const wasLastTab = sourceGroup.items.length === 1;
+        const wasEmptyAfter = wasLastTab && sourceGroup.children.length === 0;
         let backupGroup: Group | undefined;
-        if (wasLastTab) {
-          backupGroup = {
-            ...sourceGroup,
-            items: [...sourceGroup.items],
-            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
-            addItem: sourceGroup.addItem.bind(sourceGroup),
-            containsFile: sourceGroup.containsFile.bind(sourceGroup),
-          };
+        if (wasEmptyAfter) {
+          backupGroup = this.cloneGroupForBackup(sourceGroup);
         }
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
 
-        if (wasLastTab && !sourceGroup.isPinned) {
+        if (wasEmptyAfter && !sourceGroup.isPinned) {
           if (this.onGroupAutoDeleted && backupGroup) {
             this.onGroupAutoDeleted(backupGroup);
           }
-          this.groupsMap.delete(sourceGroup.id);
+          const parentId = sourceGroup.parentId;
+          this.removeGroupFromTree(sourceGroup.id);
+          if (parentId) {
+            this.cascadeDeleteEmpty(parentId);
+          }
         }
 
         if (!(target instanceof Group && target.isPinned)) {
@@ -246,10 +464,7 @@ export class TabstronautDataProvider
             target.contextValue === "instruction"))
       ) {
         const tabId = id.replace("tab:", "");
-        const sourceGroup = [
-          ...this.groupsMap.values(),
-          this.ungroupedGroup,
-        ].find((g) => g.items.some((i) => i.id === tabId));
+        const sourceGroup = this.findSourceGroupForTab(tabId);
         const tab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
@@ -263,24 +478,23 @@ export class TabstronautDataProvider
         const newColor = COLORS[initialCount % COLORS.length];
 
         const wasLastTab = sourceGroup.items.length === 1;
+        const wasEmptyAfter = wasLastTab && sourceGroup.children.length === 0;
         let backupGroup: Group | undefined;
-        if (wasLastTab) {
-          backupGroup = {
-            ...sourceGroup,
-            items: [...sourceGroup.items],
-            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
-            addItem: sourceGroup.addItem.bind(sourceGroup),
-            containsFile: sourceGroup.containsFile.bind(sourceGroup),
-          };
+        if (wasEmptyAfter) {
+          backupGroup = this.cloneGroupForBackup(sourceGroup);
         }
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
 
-        if (wasLastTab && !sourceGroup.isPinned) {
+        if (wasEmptyAfter && !sourceGroup.isPinned) {
           if (this.onGroupAutoDeleted && backupGroup) {
             this.onGroupAutoDeleted(backupGroup);
           }
-          this.groupsMap.delete(sourceGroup.id);
+          const parentId = sourceGroup.parentId;
+          this.removeGroupFromTree(sourceGroup.id);
+          if (parentId) {
+            this.cascadeDeleteEmpty(parentId);
+          }
         }
 
         const newGroupId = await this.addGroup(newName, newColor);
@@ -301,9 +515,7 @@ export class TabstronautDataProvider
         target.contextValue === "tab"
       ) {
         const tabId = id.replace("tab:", "");
-        const sourceGroup = [...this.groupsMap.values(), this.ungroupedGroup].find((g) =>
-          g.items.some((i) => i.id === tabId)
-        );
+        const sourceGroup = this.findSourceGroupForTab(tabId);
         const draggedTab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
@@ -312,9 +524,7 @@ export class TabstronautDataProvider
         }
 
         const targetTabId = target.id as string;
-        const targetGroup = [...this.groupsMap.values(), this.ungroupedGroup].find((g) =>
-          g.items.some((i) => i.id === targetTabId)
-        );
+        const targetGroup = this.findSourceGroupForTab(targetTabId);
         if (!targetGroup) {
           return;
         }
@@ -340,24 +550,23 @@ export class TabstronautDataProvider
         }
 
         const wasLastTab = sourceGroup.items.length === 1;
+        const wasEmptyAfter = wasLastTab && sourceGroup.children.length === 0;
         let backupGroup: Group | undefined;
-        if (wasLastTab) {
-          backupGroup = {
-            ...sourceGroup,
-            items: [...sourceGroup.items],
-            createTabItem: sourceGroup.createTabItem.bind(sourceGroup),
-            addItem: sourceGroup.addItem.bind(sourceGroup),
-            containsFile: sourceGroup.containsFile.bind(sourceGroup),
-          };
+        if (wasEmptyAfter) {
+          backupGroup = this.cloneGroupForBackup(sourceGroup);
         }
 
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
 
-        if (wasLastTab && !sourceGroup.isPinned) {
+        if (wasEmptyAfter && !sourceGroup.isPinned) {
           if (this.onGroupAutoDeleted && backupGroup) {
             this.onGroupAutoDeleted(backupGroup);
           }
-          this.groupsMap.delete(sourceGroup.id);
+          const parentId = sourceGroup.parentId;
+          this.removeGroupFromTree(sourceGroup.id);
+          if (parentId) {
+            this.cascadeDeleteEmpty(parentId);
+          }
         }
 
         if (targetGroup === sourceGroup) {
@@ -385,9 +594,10 @@ export class TabstronautDataProvider
   }
 
   private refreshCreationTimes(): void {
-    this.groupsMap.forEach((group) => {
+    const allGroups = this.getAllGroupsFlat();
+    for (const group of allGroups) {
       group.description = generateRelativeTime(group.creationTime);
-    });
+    }
     this.refresh();
   }
 
@@ -411,7 +621,7 @@ export class TabstronautDataProvider
       }
       seen.add(normalized);
       const inGroup = Array.from(this.groupsMap.values()).some((g) =>
-        g.containsFile(filePath)
+        g.containsFileRecursive(filePath)
       );
       if (!inGroup) {
         ungrouped.push(filePath);
@@ -471,7 +681,7 @@ export class TabstronautDataProvider
     element?: Group | vscode.TreeItem
   ): Thenable<(Group | vscode.TreeItem)[]> {
     if (element instanceof Group) {
-      return Promise.resolve(element.items);
+      return Promise.resolve([...element.children, ...element.items]);
     }
 
     let groups = Array.from(this.groupsMap.values());
@@ -498,7 +708,13 @@ export class TabstronautDataProvider
     return this.ungroupedGroup.items;
   }
 
-  getParent(element: Group): vscode.ProviderResult<Group> {
+  getParent(element: Group | vscode.TreeItem): vscode.ProviderResult<Group> {
+    if (element instanceof Group && element.parentId) {
+      return this.findGroupById(element.parentId) || null;
+    }
+    if (element instanceof TabItem && element.groupId) {
+      return this.findGroupById(element.groupId) || null;
+    }
     return null;
   }
 
@@ -539,54 +755,38 @@ export class TabstronautDataProvider
     return newGroup.id;
   }
 
-  getGroup(groupName: string): Group | undefined {
-    const tabGroups = this.workspaceState.get<{
-      [id: string]: {
-        label: string;
-        items: string[];
-        creationTime?: string;
-        colorName?: string;
-      };
-    }>("tabGroups", {});
-
-    for (const id in tabGroups) {
-      const g = tabGroups[id];
-      if (g.label === groupName) {
-        const creationTime = g.creationTime
-          ? new Date(g.creationTime)
-          : new Date();
-        const group = new Group(g.label, id, creationTime, g.colorName);
-        g.items.forEach((filePath) => group.addItem(filePath));
-        return group;
-      }
+  async addSubGroup(
+    parentGroupId: string,
+    label: string,
+    colorName?: string
+  ): Promise<string | undefined> {
+    const parentGroup = this.findGroupById(parentGroupId);
+    if (!parentGroup) {
+      return undefined;
     }
-    return undefined;
+
+    const newGroup = new Group(label, generateUuidv4(), new Date(), colorName);
+    newGroup.parentId = parentGroupId;
+    parentGroup.children.push(newGroup);
+
+    await this.updateWorkspaceState();
+    this._onDidChangeTreeData.fire();
+    return newGroup.id;
+  }
+
+  getGroup(groupName: string): Group | undefined {
+    const allGroups = this.getAllGroupsFlat();
+    return allGroups.find(
+      (g) => typeof g.label === "string" && g.label === groupName
+    );
   }
 
   public getGroups(): Group[] {
-    const groupData = this.workspaceState.get<{
-      [id: string]: {
-        label: string;
-        items: string[];
-        creationTime?: string;
-        colorName?: string;
-      };
-    }>("tabGroups", {});
-    const groups: Group[] = [];
-    for (const id in groupData) {
-      const creationTime = groupData[id].creationTime
-        ? new Date(groupData[id].creationTime as string)
-        : new Date();
-      const group = new Group(
-        groupData[id].label,
-        id,
-        creationTime,
-        groupData[id].colorName
-      );
-      groupData[id].items.forEach((filePath) => group.addItem(filePath));
-      groups.push(group);
-    }
-    return groups;
+    return this.getAllGroupsFlat();
+  }
+
+  public getRootGroups(): Group[] {
+    return Array.from(this.groupsMap.values());
   }
 
   async addToGroup(
@@ -594,7 +794,7 @@ export class TabstronautDataProvider
     filePath: string,
     moveGroup = true
   ) {
-    const group = this.groupsMap.get(groupId);
+    const group = this.findGroupById(groupId);
     if (!group) {
       return;
     }
@@ -630,7 +830,7 @@ export class TabstronautDataProvider
       const shouldMoveGroup = vscode.workspace
         .getConfiguration("tabstronaut")
         .get("moveTabGroupOnTabChange", true);
-      if (shouldMoveGroup && moveGroup) {
+      if (shouldMoveGroup && moveGroup && !group.parentId) {
         this.moveGroupToTopAndUpdateTimestamp(groupId);
       }
     }
@@ -642,9 +842,27 @@ export class TabstronautDataProvider
       group.items.push(newItem);
     }
 
+    // Remove the file from ancestor groups (move, not copy within hierarchy)
+    this.removeFileFromAncestors(group, normalizedFilePath);
+
     await this.updateWorkspaceState();
     this.refreshUngroupedTabs();
     this._onDidChangeTreeData.fire();
+  }
+
+  private removeFileFromAncestors(group: Group, normalizedFilePath: string): void {
+    let ancestorId = group.parentId;
+    while (ancestorId) {
+      const ancestor = this.findGroupById(ancestorId);
+      if (!ancestor) {
+        break;
+      }
+      ancestor.items = ancestor.items.filter(
+        (item) =>
+          generateNormalizedPath(item.resourceUri?.fsPath || "") !== normalizedFilePath
+      );
+      ancestorId = ancestor.parentId;
+    }
   }
 
   private moveGroupToTopAndUpdateTimestamp(groupId: string) {
@@ -669,12 +887,19 @@ export class TabstronautDataProvider
   }
 
   rebuildAndRefresh(): void {
-    this.groupsMap.forEach((group) => {
+    const rebuildGroup = (group: Group) => {
       const items = [...group.items];
       group.items = [];
       items.forEach((itemPath) =>
         group.addItem(itemPath.resourceUri?.fsPath as string)
       );
+      for (const child of group.children) {
+        rebuildGroup(child);
+      }
+    };
+
+    this.groupsMap.forEach((group) => {
+      rebuildGroup(group);
     });
 
     this.refreshUngroupedTabs();
@@ -686,7 +911,7 @@ export class TabstronautDataProvider
     newName: string,
     newColor: string
   ): Promise<void> {
-    const group = this.groupsMap.get(groupId);
+    const group = this.findGroupById(groupId);
     if (group) {
       const isNameChanged = group.label !== newName;
       const isColorChanged = group.colorName !== newColor;
@@ -701,7 +926,7 @@ export class TabstronautDataProvider
       const shouldMoveGroup = vscode.workspace
         .getConfiguration("tabstronaut")
         .get("moveTabGroupOnTabChange", true);
-      if (shouldMoveGroup && (isNameChanged || isColorChanged)) {
+      if (shouldMoveGroup && (isNameChanged || isColorChanged) && !group.parentId) {
         this.moveGroupToTopAndUpdateTimestamp(groupId);
       }
 
@@ -711,7 +936,15 @@ export class TabstronautDataProvider
   }
 
   async deleteGroup(groupId: string): Promise<void> {
-    this.groupsMap.delete(groupId);
+    const group = this.findGroupById(groupId);
+    if (!group) {
+      return;
+    }
+    const parentId = group.parentId;
+    this.removeGroupFromTree(groupId);
+    if (parentId) {
+      this.cascadeDeleteEmpty(parentId);
+    }
     await this.updateWorkspaceState();
     this.refreshUngroupedTabs();
     this._onDidChangeTreeData.fire();
@@ -722,22 +955,24 @@ export class TabstronautDataProvider
     filePath: string,
     options?: { skipConfirmation?: boolean }
   ): Promise<void> {
-    const group = this.groupsMap.get(groupId);
+    const group = this.findGroupById(groupId);
     if (!group || !filePath) {
       return;
     }
-  
+
     const shouldConfirm =
       !options?.skipConfirmation &&
       vscode.workspace
         .getConfiguration("tabstronaut")
         .get("confirmRemoveAndClose", true);
-  
+
     const isLastTab =
       group.items.length === 1 &&
       group.items[0].resourceUri?.fsPath === filePath;
-  
-    if (isLastTab && shouldConfirm) {
+
+    const wouldBeEmpty = isLastTab && group.children.length === 0;
+
+    if (wouldBeEmpty && shouldConfirm) {
       const shouldDelete: string | undefined = await vscode.window.showQuickPick(
         ["Yes", "No"],
         {
@@ -745,40 +980,43 @@ export class TabstronautDataProvider
             "This is the last Tab in the Tab Group. Removing this Tab will also remove the Tab Group. Proceed?",
         }
       );
-  
+
       if (!shouldDelete || shouldDelete === "No") {
         return;
       }
     }
-  
-    if (isLastTab && this.onGroupAutoDeleted) {
-      const backupGroup: Group = {
-        ...group,
-        items: [...group.items],
-        createTabItem: group.createTabItem.bind(group),
-        addItem: group.addItem.bind(group),
-        containsFile: group.containsFile.bind(group),
-      };
+
+    if (wouldBeEmpty && this.onGroupAutoDeleted) {
+      // Walk up to find the topmost ancestor that will also be cascade-deleted
+      const topmostDeleted = this.findTopmostCascadeTarget(group);
+      const backupGroup = this.cloneGroupForBackup(topmostDeleted);
       this.onGroupAutoDeleted(backupGroup);
     }
-  
+
     group.items = group.items.filter(
       (item) => item.resourceUri?.fsPath !== filePath
     );
-  
+
     const shouldMoveGroup = vscode.workspace
       .getConfiguration("tabstronaut")
       .get("moveTabGroupOnTabChange", true);
-  
-    if (group.items.length > 0 && shouldMoveGroup) {
-      this.moveGroupToTopAndUpdateTimestamp(groupId);
-    } else if (group.items.length === 0) {
-      this.groupsMap.delete(groupId);
+
+    if (group.items.length > 0 || group.children.length > 0) {
+      if (shouldMoveGroup && !group.parentId) {
+        this.moveGroupToTopAndUpdateTimestamp(groupId);
+      }
+    } else {
+      // Group is empty (no items, no children) — cascade delete
+      const parentId = group.parentId;
+      this.removeGroupFromTree(groupId);
+      if (parentId) {
+        this.cascadeDeleteEmpty(parentId);
+      }
     }
-  
+
     await this.updateWorkspaceState();
     this._onDidChangeTreeData.fire();
-  }  
+  }
 
   public getFirstGroup(): Group | undefined {
     return Array.from(this.groupsMap.values())[0];
@@ -792,7 +1030,8 @@ export class TabstronautDataProvider
       return;
     }
 
-    const groupsWithFile = Array.from(this.groupsMap.values()).filter((group) =>
+    const allGroups = this.getAllGroupsFlat();
+    const groupsWithFile = allGroups.filter((group) =>
       group.containsFile(filePath)
     );
 
@@ -810,27 +1049,11 @@ export class TabstronautDataProvider
   }
 
   async updateWorkspaceState(): Promise<void> {
-    let groupData: {
-      [key: string]: {
-        label: string;
-        items: string[];
-        creationTime: string;
-        colorName: string;
-      };
-    } = {};
+    const groupData: { [key: string]: GroupStorageData } = {};
     this.groupsMap.forEach((group, id) => {
-      if (typeof group.label === "string") {
-        let items = group.items.map((item) => item.resourceUri?.fsPath as string);
-        groupData[id] = {
-          label: group.label,
-          items: items,
-          creationTime: group.creationTime.toISOString(),
-          colorName: group.colorName,
-        };
-      } else {
-        vscode.window.showErrorMessage(
-          "Invalid Tab Group name. Please try again."
-        );
+      const data = this.serializeGroup(group);
+      if (data) {
+        groupData[id] = data;
       }
     });
     await this.workspaceState.update("tabGroups", groupData);
@@ -841,8 +1064,7 @@ export class TabstronautDataProvider
   handleFileRename(oldPath: string, newPath: string) {
     const normalizedOldPath = generateNormalizedPath(oldPath);
 
-    let found = false;
-    this.groupsMap.forEach((group) => {
+    const renameInGroup = (group: Group): boolean => {
       for (let i = 0; i < group.items.length; i++) {
         const item = group.items[i];
         const itemPath = item.resourceUri?.fsPath;
@@ -854,16 +1076,22 @@ export class TabstronautDataProvider
           item.resourceUri = vscode.Uri.file(newPath);
           item.label = path.basename(newPath);
           item.id = generateUuidv4();
-
-          found = true;
-          break;
+          return true;
         }
       }
-
-      if (found) {
-        return;
+      for (const child of group.children) {
+        if (renameInGroup(child)) {
+          return true;
+        }
       }
-    });
+      return false;
+    };
+
+    for (const group of this.groupsMap.values()) {
+      if (renameInGroup(group)) {
+        break;
+      }
+    }
 
     this.updateWorkspaceState().catch((err) => {});
     this.refresh();
@@ -956,16 +1184,7 @@ export class TabstronautDataProvider
     try {
       const importedGroups: { [id: string]: any } = JSON.parse(content);
 
-      const isValid = Object.entries(importedGroups).every(([id, group]) => {
-        return (
-          typeof id === "string" &&
-          typeof group.label === "string" &&
-          Array.isArray(group.items) &&
-          group.items.every((item: any) => typeof item === "string") &&
-          typeof group.creationTime === "string" &&
-          typeof group.colorName === "string"
-        );
-      });
+      const isValid = this.validateImportData(importedGroups);
 
       if (!isValid) {
         vscode.window.showErrorMessage(
@@ -991,11 +1210,31 @@ export class TabstronautDataProvider
     }
   }
 
+  private validateImportData(data: { [id: string]: any }): boolean {
+    return Object.entries(data).every(([id, group]) => {
+      if (
+        typeof id !== "string" ||
+        typeof group.label !== "string" ||
+        !Array.isArray(group.items) ||
+        !group.items.every((item: any) => typeof item === "string") ||
+        typeof group.creationTime !== "string" ||
+        typeof group.colorName !== "string"
+      ) {
+        return false;
+      }
+      // Validate children recursively if present
+      if (group.children && typeof group.children === "object") {
+        return this.validateImportData(group.children);
+      }
+      return true;
+    });
+  }
+
   async sortGroup(
     groupId: string,
     mode: "folder" | "fileType" | "alphabetical"
   ): Promise<void> {
-    const group = this.groupsMap.get(groupId);
+    const group = this.findGroupById(groupId);
     if (!group) {
       return;
     }
@@ -1028,21 +1267,12 @@ export class TabstronautDataProvider
 
   private rebuildStateFromStorage(): void {
     this.groupsMap.clear();
-    const groupData = this.workspaceState.get<{ [id: string]: any }>(
-      "tabGroups",
-      {}
-    );
+    const groupData = this.workspaceState.get<{
+      [id: string]: GroupStorageData;
+    }>("tabGroups", {});
     for (const id in groupData) {
-      let newGroup = new Group(
-        groupData[id].label,
-        id,
-        new Date(groupData[id].creationTime),
-        groupData[id].colorName
-      );
-      groupData[id].items.forEach((filePath: string) =>
-        newGroup.addItem(filePath)
-      );
-      this.groupsMap.set(id, newGroup);
+      const group = this.deserializeGroup(id, groupData[id]);
+      this.groupsMap.set(id, group);
     }
   }
 }

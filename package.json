@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.4.3",
+  "version": "1.4.4",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -184,6 +184,12 @@
         "category": "Tabstronaut",
         "title": "Restore Tabs by Group Number",
         "icon": "$(debug-continue-small)"
+      },
+      {
+        "command": "tabstronaut.addSubGroup",
+        "category": "Tabstronaut",
+        "title": "Add Sub-Group...",
+        "icon": "$(list-tree)"
       }
     ],
     "viewsContainers": {
@@ -287,24 +293,29 @@
           "group": "inline@1"
         },
         {
-          "command": "tabstronaut.restoreAllTabsInGroup",
+          "command": "tabstronaut.addSubGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
         },
         {
-          "command": "tabstronaut.sortTabGroup",
+          "command": "tabstronaut.restoreAllTabsInGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@3"
         },
         {
-          "command": "tabstronaut.editTabGroup",
+          "command": "tabstronaut.sortTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@4"
         },
         {
-          "command": "tabstronaut.removeTabGroup",
+          "command": "tabstronaut.editTabGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@5"
+        },
+        {
+          "command": "tabstronaut.removeTabGroup",
+          "when": "view == tabstronaut && viewItem == group",
+          "group": "inline@6"
         },
         {
           "command": "tabstronaut.restoreSpecificTab",
@@ -411,6 +422,10 @@
         },
         {
           "command": "tabstronaut.undoCloseEditors",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.addSubGroup",
           "when": "false"
         }
       ]

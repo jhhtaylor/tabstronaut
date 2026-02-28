@@ -4,7 +4,9 @@ import { generateRelativeTime, generateRelativeDescription, generateColorHash, C
 
 export class Group extends vscode.TreeItem {
     items: TabItem[] = [];
+    children: Group[] = [];
     id: string;
+    parentId?: string;
     creationTime: Date;
     colorName: string;
     isPinned: boolean;
@@ -50,6 +52,13 @@ export class Group extends vscode.TreeItem {
             (i) =>
                 generateNormalizedPath(i.resourceUri?.fsPath || '') === normalized
         );
+    }
+
+    containsFileRecursive(filePath: string): boolean {
+        if (this.containsFile(filePath)) {
+            return true;
+        }
+        return this.children.some((child) => child.containsFileRecursive(filePath));
     }
 
     addItem(filePath: string) {

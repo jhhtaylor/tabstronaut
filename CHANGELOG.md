@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.4.4]
+
+- Added nested Tab Groups — groups can now contain sub-groups, ad infinitum.
+
 ## [1.4.3]
 
 - Improved file opening to handle binary files like images and PDFs. (Thanks @NyxJae - #196)

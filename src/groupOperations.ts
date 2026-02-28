@@ -100,6 +100,32 @@ export async function selectTabGroup(
 ): Promise<CustomQuickPickItem | undefined> {
   const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
 
+  const buildGroupItems = (groups: Group[], prefix = ''): CustomQuickPickItem[] => {
+    const items: CustomQuickPickItem[] = [];
+    for (const group of groups) {
+      const label = prefix
+        ? `${prefix} > ${typeof group.label === 'string' ? group.label : ''}`
+        : (typeof group.label === 'string' ? group.label : '');
+      items.push({
+        label,
+        id: group.id,
+        buttons: [
+          {
+            iconPath: new vscode.ThemeIcon(
+              'new-folder',
+              new vscode.ThemeColor(group.colorName)
+            ),
+            tooltip: 'Add all tabs to Tab Group',
+          },
+        ],
+      });
+      if (group.children.length > 0) {
+        items.push(...buildGroupItems(group.children, label));
+      }
+    }
+    return items;
+  };
+
   quickPick.items = [
     {
       label: 'New Tab Group from current tab...',
@@ -111,19 +137,7 @@ export async function selectTabGroup(
       ],
     },
     { label: '', kind: vscode.QuickPickItemKind.Separator },
-    ...treeDataProvider.getGroups().map((group) => ({
-      label: typeof group.label === 'string' ? group.label : '',
-      id: group.id,
-      buttons: [
-        {
-          iconPath: new vscode.ThemeIcon(
-            'new-folder',
-            new vscode.ThemeColor(group.colorName)
-          ),
-          tooltip: 'Add all tabs to Tab Group',
-        },
-      ],
-    })),
+    ...buildGroupItems(treeDataProvider.getRootGroups()),
   ];
 
   quickPick.placeholder = 'Select a Tab Group';
@@ -492,6 +506,43 @@ export async function addFilesToGroupCommand(
   showConfirmation(
     `Added ${fileUris.length} file(s) to Tab Group '${selectedGroup.label}'.`
   );
+}
+
+export async function handleAddSubGroup(
+  treeDataProvider: TabstronautDataProvider,
+  parentGroup: Group
+): Promise<void> {
+  const allGroups = treeDataProvider.getGroups();
+  const result = await getGroupName(treeDataProvider);
+  if (!result.name) {
+    return;
+  }
+
+  const defaultColor = COLORS[allGroups.length % COLORS.length];
+  let groupColor = defaultColor;
+  if (!result.useDefaults) {
+    const selectedColorOption = (await selectColorOption(defaultColor)) as
+      | ColorOption
+      | undefined;
+    if (!selectedColorOption) {
+      return;
+    }
+    groupColor = selectedColorOption.colorValue;
+  }
+
+  const groupId = await treeDataProvider.addSubGroup(
+    parentGroup.id,
+    result.name,
+    groupColor
+  );
+  if (!groupId) {
+    vscode.window.showErrorMessage(
+      `Cannot create Sub-Group with name: ${result.name}.`
+    );
+    return;
+  }
+
+  showConfirmation(`Created sub-group '${result.name}' inside '${parentGroup.label}'.`);
 }
 
 export async function sortTabGroupCommand(
