@@ -71,9 +71,9 @@ describe('auto remove closed tabs setting', () => {
         changed: [],
       } as vscode.TabChangeEvent);
 
-      // When the last tab is removed, the group should be auto-deleted
+      // The tab should be removed but the group should persist
       const group = provider.getGroup('G1');
-      strictEqual(group, undefined);
+      strictEqual(group!.items.length, 0);
     } finally {
       await config.update('autoRemoveClosedTabs', originalSetting, true);
     }

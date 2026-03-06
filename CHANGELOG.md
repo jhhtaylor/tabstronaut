@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.4.5]
+
+- Improved drag-and-drop for Tab Groups — drag onto a group to reorder, drag onto a tab to nest, drag to empty space to promote to top level.
+- Tab Groups now persist when empty — removing the last tab no longer auto-deletes the group.
+
 ## [1.4.4]
 
 - Added nested Tab Groups — groups can now contain sub-groups, ad infinitum.

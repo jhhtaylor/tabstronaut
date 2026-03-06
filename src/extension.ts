@@ -194,52 +194,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.tabGroups.onDidChangeTabs(handleTabChangeEvent)
   );
 
-  treeDataProvider.onGroupAutoDeleted = (group: Group) => {
-    const autoRemoveClosedTabs = vscode.workspace
-      .getConfiguration("tabstronaut")
-      .get<boolean>("autoRemoveClosedTabs", false);
-
-    // Don't allow undo when autoRemoveClosedTabs is enabled
-    // because restoring would create tabs in the group without corresponding open editors
-    if (autoRemoveClosedTabs) {
-      return;
-    }
-
-    const index = treeDataProvider.getGroupIndex(group.id);
-    const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
-    recentlyDeletedGroup = {
-      ...group,
-      index,
-      previousGroupId: prevId,
-      deletedParentId: group.parentId,
-      createTabItem: group.createTabItem.bind(group),
-      addItem: group.addItem.bind(group),
-      containsFile: group.containsFile.bind(group),
-      containsFileRecursive: group.containsFileRecursive.bind(group),
-    };
-
-    vscode.commands.executeCommand(
-      "setContext",
-      "tabstronaut:canUndoDelete",
-      true
-    );
-
-    if (undoTimeout) {
-      clearTimeout(undoTimeout);
-    }
-
-    undoTimeout = setTimeout(() => {
-      recentlyDeletedGroup = null;
-      treeDataProvider.refresh();
-
-      vscode.commands.executeCommand(
-        "setContext",
-        "tabstronaut:canUndoDelete",
-        false
-      );
-    }, 5000);
-  };
-
   const treeView = vscode.window.createTreeView("tabstronaut", {
     treeDataProvider: treeDataProvider,
     showCollapseAll: false,

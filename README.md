@@ -17,7 +17,7 @@ Love this extension? You can support its development with a small donation - com
 - Create tab groups instantly
   - Collect your current or all open tabs into organized groups with a single click.
 - Drag-and-drop mastery
-  - Effortlessly reorder tabs or entire groups and give them colors or timestamps to keep everything tidy.
+  - Drag a group onto another group to reorder, onto a tab to nest it inside that group, or onto empty space to promote it to the top level.
 - Share and revisit your workspaces
   - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes.
 

@@ -23,8 +23,6 @@ export class TabstronautDataProvider
     vscode.TreeDataProvider<Group | vscode.TreeItem>,
     vscode.TreeDragAndDropController<Group | vscode.TreeItem>
 {
-  onGroupAutoDeleted?: (group: Group) => void;
-
   readonly dropMimeTypes = [
     "application/vnd.code.tree.tabstronaut",
     "text/uri-list",
@@ -229,54 +227,6 @@ export class TabstronautDataProvider
     return false;
   }
 
-  private findTopmostCascadeTarget(group: Group): Group {
-    // Walk up ancestors: if parent would become empty after this child is removed,
-    // the parent will also be cascade-deleted, so include it in the backup.
-    let topmost = group;
-    let currentId = group.parentId;
-    while (currentId) {
-      const parent = this.findGroupById(currentId);
-      if (!parent) {
-        break;
-      }
-      // Parent will become empty if it has no items and this is its only child
-      if (parent.items.length === 0 && parent.children.length === 1 && !parent.isPinned) {
-        topmost = parent;
-        currentId = parent.parentId;
-      } else {
-        break;
-      }
-    }
-    return topmost;
-  }
-
-  private cascadeDeleteEmpty(groupId: string): void {
-    const group = this.findGroupById(groupId);
-    if (!group) {
-      return;
-    }
-    if (group.items.length === 0 && group.children.length === 0 && !group.isPinned) {
-      const parentId = group.parentId;
-      this.removeGroupFromTree(groupId);
-      if (parentId) {
-        this.cascadeDeleteEmpty(parentId);
-      }
-    }
-  }
-
-  private cloneGroupForBackup(group: Group): Group {
-    const backup: Group = {
-      ...group,
-      items: [...group.items],
-      children: group.children.map((c) => this.cloneGroupForBackup(c)),
-      createTabItem: group.createTabItem.bind(group),
-      addItem: group.addItem.bind(group),
-      containsFile: group.containsFile.bind(group),
-      containsFileRecursive: group.containsFileRecursive.bind(group),
-    };
-    return backup;
-  }
-
   async handleDrag(
     source: (Group | vscode.TreeItem)[],
     dataTransfer: vscode.DataTransfer,
@@ -347,13 +297,60 @@ export class TabstronautDataProvider
       if (id.startsWith("group:")) {
         const groupId = id.replace("group:", "");
         const draggedGroup = this.findGroupById(groupId);
-        const targetGroup = target instanceof Group ? target : undefined;
+        if (!draggedGroup || draggedGroup.isPinned) {
+          return;
+        }
+
+        // Determine if dropped on a group, a tab, or empty space
+        const isDropOnGroup = target instanceof Group;
+        const isDropOnTab =
+          target instanceof vscode.TreeItem &&
+          target.contextValue === "tab";
+
+        if (!isDropOnGroup && !isDropOnTab) {
+          // Drop on empty space: promote to root level
+          if (!draggedGroup.parentId) {
+            return;
+          }
+          this.removeGroupFromTree(draggedGroup.id);
+          draggedGroup.parentId = undefined;
+          this.groupsMap.set(draggedGroup.id, draggedGroup);
+          this.refresh();
+          await this.updateWorkspaceState();
+          showConfirmation(`Moved '${draggedGroup.label}' to top level.`);
+          return;
+        }
+
+        if (isDropOnTab) {
+          // Drop on a tab: nest inside that tab's parent group
+          const targetTabId = target!.id as string;
+          const nestTarget = this.findSourceGroupForTab(targetTabId);
+          if (!nestTarget || nestTarget.isPinned) {
+            return;
+          }
+          if (draggedGroup.id === nestTarget.id) {
+            return;
+          }
+          // Prevent nesting a group inside itself or its descendants
+          if (this.findInTree(draggedGroup, nestTarget.id)) {
+            return;
+          }
+          this.removeGroupFromTree(draggedGroup.id);
+          draggedGroup.parentId = nestTarget.id;
+          nestTarget.children.push(draggedGroup);
+          this.refresh();
+          await this.updateWorkspaceState();
+          showConfirmation(
+            `Moved '${draggedGroup.label}' into '${nestTarget.label}'.`
+          );
+          return;
+        }
+
+        // Drop on a group: reorder (place next to target at the same level)
+        const targetGroup = target as Group;
 
         if (
-          !draggedGroup ||
-          !targetGroup ||
           draggedGroup.id === targetGroup.id ||
-          draggedGroup.isPinned ||
           targetGroup.isPinned
         ) {
           return;
@@ -364,36 +361,35 @@ export class TabstronautDataProvider
           return;
         }
 
-        // If both are root-level siblings, reorder them
-        if (!draggedGroup.parentId && !targetGroup.parentId) {
-          const groups = Array.from(this.groupsMap.values());
-          const draggedIndex = groups.findIndex((g) => g.id === draggedGroup.id);
-          const targetIndex = groups.findIndex((g) => g.id === targetGroup.id);
+        // Remove from current location
+        this.removeGroupFromTree(draggedGroup.id);
 
-          if (draggedIndex === -1 || targetIndex === -1) {
-            return;
-          }
+        // Insert at the same level as the target group, next to it
+        const targetParentId = targetGroup.parentId;
+        const siblings = targetParentId
+          ? this.findGroupById(targetParentId)?.children
+          : Array.from(this.groupsMap.values());
 
-          groups.splice(draggedIndex, 1);
-          const insertPos = groups.findIndex((g) => g.id === targetGroup.id);
-          const adjustedIndex =
-            draggedIndex < targetIndex ? insertPos + 1 : insertPos;
-          groups.splice(adjustedIndex, 0, draggedGroup);
-
-          this.groupsMap = new Map(groups.map((g) => [g.id, g]));
-          this.refresh();
-          await this.updateWorkspaceState();
-          showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
-        } else {
-          // Move group: remove from current location
-          this.removeGroupFromTree(draggedGroup.id);
-          // Add as child of target
-          draggedGroup.parentId = targetGroup.id;
-          targetGroup.children.push(draggedGroup);
-          this.refresh();
-          await this.updateWorkspaceState();
-          showConfirmation(`Moved '${draggedGroup.label}' into '${targetGroup.label}'.`);
+        if (!siblings) {
+          return;
         }
+
+        const targetIndex = siblings.findIndex(
+          (g) => g.id === targetGroup.id
+        );
+        if (targetIndex === -1) {
+          return;
+        }
+
+        draggedGroup.parentId = targetParentId;
+        siblings.splice(targetIndex + 1, 0, draggedGroup);
+
+        if (!targetParentId) {
+          this.groupsMap = new Map(siblings.map((g) => [g.id, g]));
+        }
+        this.refresh();
+        await this.updateWorkspaceState();
+        showConfirmation(`Reordered Tab Group '${draggedGroup.label}'.`);
       }
 
       if (id.startsWith("tab:") && target instanceof Group) {
@@ -422,25 +418,7 @@ export class TabstronautDataProvider
           continue;
         }
 
-        const wasLastTab = sourceGroup.items.length === 1;
-        const wasEmptyAfter = wasLastTab && sourceGroup.children.length === 0;
-        let backupGroup: Group | undefined;
-        if (wasEmptyAfter) {
-          backupGroup = this.cloneGroupForBackup(sourceGroup);
-        }
-
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
-
-        if (wasEmptyAfter && !sourceGroup.isPinned) {
-          if (this.onGroupAutoDeleted && backupGroup) {
-            this.onGroupAutoDeleted(backupGroup);
-          }
-          const parentId = sourceGroup.parentId;
-          this.removeGroupFromTree(sourceGroup.id);
-          if (parentId) {
-            this.cascadeDeleteEmpty(parentId);
-          }
-        }
 
         if (!(target instanceof Group && target.isPinned)) {
           const newItem = target.createTabItem(tabPath);
@@ -477,25 +455,7 @@ export class TabstronautDataProvider
         const newName = `Group ${initialCount + 1}`;
         const newColor = COLORS[initialCount % COLORS.length];
 
-        const wasLastTab = sourceGroup.items.length === 1;
-        const wasEmptyAfter = wasLastTab && sourceGroup.children.length === 0;
-        let backupGroup: Group | undefined;
-        if (wasEmptyAfter) {
-          backupGroup = this.cloneGroupForBackup(sourceGroup);
-        }
-
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
-
-        if (wasEmptyAfter && !sourceGroup.isPinned) {
-          if (this.onGroupAutoDeleted && backupGroup) {
-            this.onGroupAutoDeleted(backupGroup);
-          }
-          const parentId = sourceGroup.parentId;
-          this.removeGroupFromTree(sourceGroup.id);
-          if (parentId) {
-            this.cascadeDeleteEmpty(parentId);
-          }
-        }
 
         const newGroupId = await this.addGroup(newName, newColor);
         if (!newGroupId) {
@@ -549,25 +509,7 @@ export class TabstronautDataProvider
           }
         }
 
-        const wasLastTab = sourceGroup.items.length === 1;
-        const wasEmptyAfter = wasLastTab && sourceGroup.children.length === 0;
-        let backupGroup: Group | undefined;
-        if (wasEmptyAfter) {
-          backupGroup = this.cloneGroupForBackup(sourceGroup);
-        }
-
         sourceGroup.items = sourceGroup.items.filter((i) => i.id !== tabId);
-
-        if (wasEmptyAfter && !sourceGroup.isPinned) {
-          if (this.onGroupAutoDeleted && backupGroup) {
-            this.onGroupAutoDeleted(backupGroup);
-          }
-          const parentId = sourceGroup.parentId;
-          this.removeGroupFromTree(sourceGroup.id);
-          if (parentId) {
-            this.cascadeDeleteEmpty(parentId);
-          }
-        }
 
         if (targetGroup === sourceGroup) {
           const adjustedIndex = targetIndex;
@@ -940,11 +882,7 @@ export class TabstronautDataProvider
     if (!group) {
       return;
     }
-    const parentId = group.parentId;
     this.removeGroupFromTree(groupId);
-    if (parentId) {
-      this.cascadeDeleteEmpty(parentId);
-    }
     await this.updateWorkspaceState();
     this.refreshUngroupedTabs();
     this._onDidChangeTreeData.fire();
@@ -960,39 +898,6 @@ export class TabstronautDataProvider
       return;
     }
 
-    const shouldConfirm =
-      !options?.skipConfirmation &&
-      vscode.workspace
-        .getConfiguration("tabstronaut")
-        .get("confirmRemoveAndClose", true);
-
-    const isLastTab =
-      group.items.length === 1 &&
-      group.items[0].resourceUri?.fsPath === filePath;
-
-    const wouldBeEmpty = isLastTab && group.children.length === 0;
-
-    if (wouldBeEmpty && shouldConfirm) {
-      const shouldDelete: string | undefined = await vscode.window.showQuickPick(
-        ["Yes", "No"],
-        {
-          placeHolder:
-            "This is the last Tab in the Tab Group. Removing this Tab will also remove the Tab Group. Proceed?",
-        }
-      );
-
-      if (!shouldDelete || shouldDelete === "No") {
-        return;
-      }
-    }
-
-    if (wouldBeEmpty && this.onGroupAutoDeleted) {
-      // Walk up to find the topmost ancestor that will also be cascade-deleted
-      const topmostDeleted = this.findTopmostCascadeTarget(group);
-      const backupGroup = this.cloneGroupForBackup(topmostDeleted);
-      this.onGroupAutoDeleted(backupGroup);
-    }
-
     group.items = group.items.filter(
       (item) => item.resourceUri?.fsPath !== filePath
     );
@@ -1001,17 +906,8 @@ export class TabstronautDataProvider
       .getConfiguration("tabstronaut")
       .get("moveTabGroupOnTabChange", true);
 
-    if (group.items.length > 0 || group.children.length > 0) {
-      if (shouldMoveGroup && !group.parentId) {
-        this.moveGroupToTopAndUpdateTimestamp(groupId);
-      }
-    } else {
-      // Group is empty (no items, no children) — cascade delete
-      const parentId = group.parentId;
-      this.removeGroupFromTree(groupId);
-      if (parentId) {
-        this.cascadeDeleteEmpty(parentId);
-      }
+    if (shouldMoveGroup && !group.parentId && (group.items.length > 0 || group.children.length > 0)) {
+      this.moveGroupToTopAndUpdateTimestamp(groupId);
     }
 
     await this.updateWorkspaceState();

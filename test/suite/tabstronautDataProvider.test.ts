@@ -84,21 +84,18 @@ describe('TabstronautDataProvider basic operations', () => {
     strictEqual(group?.colorName, 'terminal.ansiBlue');
   });
 
-  it('removeFromGroup deletes empty group without confirmation', async () => {
-    const config = vscode.workspace.getConfiguration('tabstronaut');
-    const original = config.get('confirmRemoveAndClose');
-    await config.update('confirmRemoveAndClose', false, true);
+  it('removeFromGroup keeps empty group', async () => {
     const memento = new MockMemento({});
     const provider = new TabstronautDataProvider(memento);
     const id = await provider.addGroup('Test');
     await provider.addToGroup(id!, '/tmp/file1');
     await provider.removeFromGroup(id!, '/tmp/file1');
     provider.clearRefreshInterval();
-    strictEqual(provider.getGroups().length, 0);
-    await config.update('confirmRemoveAndClose', original, true);
+    strictEqual(provider.getGroups().length, 1, 'Group should persist when empty');
+    strictEqual(provider.getGroups()[0].items.length, 0);
   });
 
-  it('handleDrop deletes source group when last tab moved', async () => {
+  it('handleDrop keeps source group when last tab moved', async () => {
     const memento = new MockMemento({});
     const provider = new TabstronautDataProvider(memento);
 
@@ -115,7 +112,8 @@ describe('TabstronautDataProvider basic operations', () => {
     await provider.handleDrop(dstGroup, dragData, new vscode.CancellationTokenSource().token);
 
     provider.clearRefreshInterval();
-    strictEqual(provider.getGroups().some((g) => g.id === g1), false);
+    strictEqual(provider.getGroups().some((g) => g.id === g1), true, 'Source group should persist');
+    strictEqual(srcGroup.items.length, 0);
     strictEqual(dstGroup.items.length, 1);
   });
 
@@ -145,7 +143,8 @@ describe('TabstronautDataProvider basic operations', () => {
     );
 
     provider.clearRefreshInterval();
-    strictEqual(provider.getGroups().some((g) => g.id === g1), false);
+    strictEqual(provider.getGroups().some((g) => g.id === g1), true, 'Source group should persist');
+    strictEqual(srcGroup.items.length, 0);
     strictEqual(dstGroup.items.length, 1);
     strictEqual(dstGroup.items[0].resourceUri?.fsPath, file);
   });

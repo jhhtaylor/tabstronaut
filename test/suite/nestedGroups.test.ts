@@ -142,21 +142,8 @@ describe('Nested Groups - addToGroup on nested group', () => {
   });
 });
 
-describe('Nested Groups - cascade delete', () => {
-  let originalConfirm: any;
-
-  before(async () => {
-    const config = vscode.workspace.getConfiguration('tabstronaut');
-    originalConfirm = config.get('confirmRemoveAndClose');
-    await config.update('confirmRemoveAndClose', false, true);
-  });
-
-  after(async () => {
-    const config = vscode.workspace.getConfiguration('tabstronaut');
-    await config.update('confirmRemoveAndClose', originalConfirm, true);
-  });
-
-  it('deletes empty group when last tab removed', async () => {
+describe('Nested Groups - groups persist when empty', () => {
+  it('keeps group when last tab is removed', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const g1 = await provider.addGroup('Parent');
     const g2 = await provider.addSubGroup(g1!, 'Child');
@@ -164,10 +151,11 @@ describe('Nested Groups - cascade delete', () => {
     await provider.removeFromGroup(g2!, '/tmp/file1');
     provider.clearRefreshInterval();
 
-    strictEqual(provider.findGroupById(g2!), undefined, 'Child should be deleted');
+    ok(provider.findGroupById(g2!), 'Child should still exist');
+    strictEqual(provider.findGroupById(g2!)!.items.length, 0);
   });
 
-  it('cascade deletes empty ancestors', async () => {
+  it('keeps entire ancestor chain when deepest tab is removed', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const g1 = await provider.addGroup('L1');
     const g2 = await provider.addSubGroup(g1!, 'L2');
@@ -177,46 +165,27 @@ describe('Nested Groups - cascade delete', () => {
     await provider.removeFromGroup(g3!, '/tmp/file1');
     provider.clearRefreshInterval();
 
-    strictEqual(provider.findGroupById(g3!), undefined, 'L3 should be deleted');
-    strictEqual(provider.findGroupById(g2!), undefined, 'L2 should be cascade-deleted');
-    strictEqual(provider.findGroupById(g1!), undefined, 'L1 should be cascade-deleted');
-    strictEqual(provider.getGroups().length, 0);
-  });
-
-  it('does not cascade delete ancestors that still have content', async () => {
-    const provider = new TabstronautDataProvider(new MockMemento({}));
-    const g1 = await provider.addGroup('L1');
-    await provider.addToGroup(g1!, '/tmp/parent-file');
-    const g2 = await provider.addSubGroup(g1!, 'L2');
-    await provider.addToGroup(g2!, '/tmp/child-file');
-
-    await provider.removeFromGroup(g2!, '/tmp/child-file');
-    provider.clearRefreshInterval();
-
-    strictEqual(provider.findGroupById(g2!), undefined, 'L2 should be deleted');
     ok(provider.findGroupById(g1!), 'L1 should still exist');
-    strictEqual(provider.findGroupById(g1!)!.items.length, 1);
+    ok(provider.findGroupById(g2!), 'L2 should still exist');
+    ok(provider.findGroupById(g3!), 'L3 should still exist');
+    strictEqual(provider.findGroupById(g3!)!.items.length, 0);
   });
 
-  it('does not cascade delete ancestors that have other children', async () => {
+  it('allows empty sub-groups to be created', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
-    const g1 = await provider.addGroup('L1');
-    const g2a = await provider.addSubGroup(g1!, 'L2a');
-    const g2b = await provider.addSubGroup(g1!, 'L2b');
-    await provider.addToGroup(g2a!, '/tmp/file-a');
-    await provider.addToGroup(g2b!, '/tmp/file-b');
-
-    await provider.removeFromGroup(g2a!, '/tmp/file-a');
+    const g1 = await provider.addGroup('Parent');
+    await provider.addToGroup(g1!, '/tmp/file1');
+    const g2 = await provider.addSubGroup(g1!, 'EmptyChild');
     provider.clearRefreshInterval();
 
-    strictEqual(provider.findGroupById(g2a!), undefined, 'L2a should be deleted');
-    ok(provider.findGroupById(g1!), 'L1 should still exist (has L2b)');
-    ok(provider.findGroupById(g2b!), 'L2b should still exist');
+    ok(provider.findGroupById(g2!), 'Empty sub-group should exist');
+    strictEqual(provider.findGroupById(g2!)!.items.length, 0);
+    strictEqual(provider.findGroupById(g1!)!.children.length, 1);
   });
 });
 
 describe('Nested Groups - deleteGroup', () => {
-  it('deletes a nested group and cascade-deletes empty ancestors', async () => {
+  it('deletes a nested group but keeps parent', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const g1 = await provider.addGroup('L1');
     const g2 = await provider.addSubGroup(g1!, 'L2');
@@ -225,8 +194,9 @@ describe('Nested Groups - deleteGroup', () => {
     await provider.deleteGroup(g2!);
     provider.clearRefreshInterval();
 
-    strictEqual(provider.findGroupById(g2!), undefined);
-    strictEqual(provider.findGroupById(g1!), undefined, 'Empty L1 should be cascade-deleted');
+    strictEqual(provider.findGroupById(g2!), undefined, 'L2 should be deleted');
+    ok(provider.findGroupById(g1!), 'L1 should still exist');
+    strictEqual(provider.findGroupById(g1!)!.children.length, 0);
   });
 
   it('deletes a root group with nested children', async () => {
@@ -241,65 +211,6 @@ describe('Nested Groups - deleteGroup', () => {
     strictEqual(provider.findGroupById(g1!), undefined);
     strictEqual(provider.findGroupById(g2!), undefined);
     strictEqual(provider.getGroups().length, 0);
-  });
-});
-
-describe('Nested Groups - undo cascade delete', () => {
-  let originalConfirm: any;
-
-  before(async () => {
-    const config = vscode.workspace.getConfiguration('tabstronaut');
-    originalConfirm = config.get('confirmRemoveAndClose');
-    await config.update('confirmRemoveAndClose', false, true);
-  });
-
-  after(async () => {
-    const config = vscode.workspace.getConfiguration('tabstronaut');
-    await config.update('confirmRemoveAndClose', originalConfirm, true);
-  });
-
-  it('onGroupAutoDeleted receives the topmost cascade-deleted ancestor', async () => {
-    const provider = new TabstronautDataProvider(new MockMemento({}));
-    const g1 = await provider.addGroup('L1');
-    const g2 = await provider.addSubGroup(g1!, 'L2');
-    const g3 = await provider.addSubGroup(g2!, 'L3');
-    await provider.addToGroup(g3!, '/tmp/file1');
-
-    let deletedGroup: Group | undefined;
-    provider.onGroupAutoDeleted = (group: Group) => {
-      deletedGroup = group;
-    };
-
-    await provider.removeFromGroup(g3!, '/tmp/file1');
-    provider.clearRefreshInterval();
-
-    ok(deletedGroup, 'onGroupAutoDeleted should have been called');
-    strictEqual(deletedGroup!.label, 'L1', 'Should receive topmost ancestor');
-    strictEqual(deletedGroup!.children.length, 1, 'Should have L2 as child');
-    strictEqual(deletedGroup!.children[0].label, 'L2');
-    strictEqual(deletedGroup!.children[0].children.length, 1, 'L2 should have L3');
-    strictEqual(deletedGroup!.children[0].children[0].label, 'L3');
-    strictEqual(deletedGroup!.children[0].children[0].items.length, 1);
-  });
-
-  it('onGroupAutoDeleted receives only the leaf when ancestors have content', async () => {
-    const provider = new TabstronautDataProvider(new MockMemento({}));
-    const g1 = await provider.addGroup('L1');
-    await provider.addToGroup(g1!, '/tmp/parent-file');
-    const g2 = await provider.addSubGroup(g1!, 'L2');
-    await provider.addToGroup(g2!, '/tmp/child-file');
-
-    let deletedGroup: Group | undefined;
-    provider.onGroupAutoDeleted = (group: Group) => {
-      deletedGroup = group;
-    };
-
-    await provider.removeFromGroup(g2!, '/tmp/child-file');
-    provider.clearRefreshInterval();
-
-    ok(deletedGroup, 'onGroupAutoDeleted should have been called');
-    strictEqual(deletedGroup!.label, 'L2', 'Should receive only the leaf group');
-    strictEqual(deletedGroup!.parentId, g1, 'Should preserve parentId for undo');
   });
 });
 
@@ -414,8 +325,8 @@ describe('Nested Groups - containsFileRecursive', () => {
   });
 });
 
-describe('Nested Groups - drag and drop nesting', () => {
-  it('moves a group into another via drag and drop', async () => {
+describe('Nested Groups - drag and drop', () => {
+  it('nests a group inside another when dropped on a tab', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const g1 = await provider.addGroup('G1');
     const g2 = await provider.addGroup('G2');
@@ -423,24 +334,255 @@ describe('Nested Groups - drag and drop nesting', () => {
     await provider.addToGroup(g2!, '/tmp/file2');
     provider.clearRefreshInterval();
 
-    const srcGroup = provider.findGroupById(g1!)!;
-    const dstGroup = provider.findGroupById(g2!)!;
-
-    // Simulate dragging G1 into G2 — since G1 is root and G2 is root,
-    // and they are siblings, drag uses reorder logic by default.
-    // To test nesting, we need one of them to be non-root or force the else branch.
-    // Let's create a child and drag it to another root group.
     const child = await provider.addSubGroup(g1!, 'Child');
     await provider.addToGroup(child!, '/tmp/child-file');
 
     const childGroup = provider.findGroupById(child!)!;
+    const dstGroup = provider.findGroupById(g2!)!;
+
+    // Drop group onto a tab inside G2 to nest it
+    const targetTab = dstGroup.items[0];
     const dragData = new vscode.DataTransfer();
     await provider.handleDrag([childGroup], dragData, new vscode.CancellationTokenSource().token);
-    await provider.handleDrop(dstGroup, dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(targetTab, dragData, new vscode.CancellationTokenSource().token);
 
     // Child should now be under G2
     const updatedG2 = provider.findGroupById(g2!)!;
     strictEqual(updatedG2.children.length, 1);
     strictEqual(updatedG2.children[0].label, 'Child');
+  });
+
+  it('reorders groups when dropped on another group', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('G1');
+    const g2 = await provider.addGroup('G2');
+    const g3 = await provider.addGroup('G3');
+    await provider.addToGroup(g1!, '/tmp/file1');
+    await provider.addToGroup(g2!, '/tmp/file2');
+    await provider.addToGroup(g3!, '/tmp/file3');
+    provider.clearRefreshInterval();
+
+    // Drag G1 onto G3 — should reorder, not nest
+    const srcGroup = provider.findGroupById(g1!)!;
+    const dstGroup = provider.findGroupById(g3!)!;
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag([srcGroup], dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(dstGroup, dragData, new vscode.CancellationTokenSource().token);
+
+    // G1 should still be root level, not nested inside G3
+    const rootGroups = provider.getRootGroups();
+    strictEqual(rootGroups.length, 3);
+    strictEqual(dstGroup.children.length, 0);
+
+    // G1 should now be after G3
+    const labels = rootGroups.map((g) => g.label);
+    strictEqual(labels.indexOf('G3') < labels.indexOf('G1'), true);
+  });
+
+  it('promotes nested group to root when dropped on empty space', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('Parent');
+    await provider.addToGroup(g1!, '/tmp/file1');
+    const child = await provider.addSubGroup(g1!, 'Child');
+    await provider.addToGroup(child!, '/tmp/child-file');
+    provider.clearRefreshInterval();
+
+    const childGroup = provider.findGroupById(child!)!;
+    strictEqual(childGroup.parentId, g1);
+
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag([childGroup], dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(undefined, dragData, new vscode.CancellationTokenSource().token);
+
+    // Child should now be root level
+    const rootGroups = provider.getRootGroups();
+    strictEqual(rootGroups.length, 2);
+    const promotedChild = provider.findGroupById(child!)!;
+    strictEqual(promotedChild.parentId, undefined, 'Should be root level');
+    strictEqual(provider.findGroupById(g1!)!.children.length, 0, 'Parent should have no children');
+  });
+
+  it('reorders nested siblings when dropped on each other', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('Parent');
+    await provider.addToGroup(g1!, '/tmp/file1');
+    const c1 = await provider.addSubGroup(g1!, 'Child1');
+    const c2 = await provider.addSubGroup(g1!, 'Child2');
+    await provider.addToGroup(c1!, '/tmp/c1-file');
+    await provider.addToGroup(c2!, '/tmp/c2-file');
+    provider.clearRefreshInterval();
+
+    const parent = provider.findGroupById(g1!)!;
+    strictEqual(parent.children[0].label, 'Child1');
+    strictEqual(parent.children[1].label, 'Child2');
+
+    // Drag Child1 onto Child2 — should reorder, not nest
+    const child1Group = provider.findGroupById(c1!)!;
+    const child2Group = provider.findGroupById(c2!)!;
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag([child1Group], dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(child2Group, dragData, new vscode.CancellationTokenSource().token);
+
+    strictEqual(parent.children.length, 2, 'Should still have 2 children');
+    strictEqual(parent.children[0].label, 'Child2');
+    strictEqual(parent.children[1].label, 'Child1');
+  });
+
+  it('moves root group into nested position when dropped on a tab', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('G1');
+    const g2 = await provider.addGroup('G2');
+    await provider.addToGroup(g1!, '/tmp/file1');
+    await provider.addToGroup(g2!, '/tmp/file2');
+    provider.clearRefreshInterval();
+
+    // Drag G1 onto a tab in G2 — should nest G1 inside G2
+    const srcGroup = provider.findGroupById(g1!)!;
+    const dstGroup = provider.findGroupById(g2!)!;
+    const targetTab = dstGroup.items[0];
+    const dragData = new vscode.DataTransfer();
+    await provider.handleDrag([srcGroup], dragData, new vscode.CancellationTokenSource().token);
+    await provider.handleDrop(targetTab, dragData, new vscode.CancellationTokenSource().token);
+
+    strictEqual(provider.getRootGroups().length, 1, 'Only G2 should be root');
+    strictEqual(dstGroup.children.length, 1);
+    strictEqual(dstGroup.children[0].label, 'G1');
+    strictEqual(dstGroup.children[0].parentId, g2);
+  });
+});
+
+describe('Nested Groups - undo delete restores tabs and children', () => {
+  it('restores a deleted group with all its tabs', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('MyGroup');
+    await provider.addToGroup(g1!, '/tmp/file1');
+    await provider.addToGroup(g1!, '/tmp/file2');
+    await provider.addToGroup(g1!, '/tmp/file3');
+    provider.clearRefreshInterval();
+
+    const group = provider.findGroupById(g1!)!;
+    strictEqual(group.items.length, 3);
+
+    // Capture backup before deletion (mimics extension.ts removeTabGroup logic)
+    const backup = {
+      ...group,
+      items: [...group.items],
+      children: [...group.children],
+    };
+
+    await provider.deleteGroup(g1!);
+    strictEqual(provider.getGroups().length, 0);
+
+    // Restore — mimics undoDelete logic
+    const restored = await provider.addGroup(backup.label as string, backup.colorName);
+    for (const tab of backup.items) {
+      if (tab.resourceUri) {
+        await provider.addToGroup(restored!, tab.resourceUri.fsPath, false);
+      }
+    }
+
+    const restoredGroup = provider.findGroupById(restored!)!;
+    strictEqual(restoredGroup.items.length, 3);
+    const paths = restoredGroup.items.map((i) => i.resourceUri?.fsPath);
+    ok(paths.includes('/tmp/file1'));
+    ok(paths.includes('/tmp/file2'));
+    ok(paths.includes('/tmp/file3'));
+  });
+
+  it('restores a deleted group with nested children and their tabs', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('Parent');
+    await provider.addToGroup(g1!, '/tmp/parent-file');
+    const c1 = await provider.addSubGroup(g1!, 'Child');
+    await provider.addToGroup(c1!, '/tmp/child-file1');
+    await provider.addToGroup(c1!, '/tmp/child-file2');
+    const gc1 = await provider.addSubGroup(c1!, 'Grandchild');
+    await provider.addToGroup(gc1!, '/tmp/grandchild-file');
+    provider.clearRefreshInterval();
+
+    const group = provider.findGroupById(g1!)!;
+    // Capture deep backup
+    const backupItems = [...group.items];
+    const backupChildren = group.children.map((c) => ({
+      label: c.label as string,
+      colorName: c.colorName,
+      items: [...c.items],
+      children: c.children.map((gc) => ({
+        label: gc.label as string,
+        colorName: gc.colorName,
+        items: [...gc.items],
+        children: [] as any[],
+      })),
+    }));
+
+    await provider.deleteGroup(g1!);
+    strictEqual(provider.getGroups().length, 0);
+
+    // Restore recursively — mimics undoDelete restoreTabsToGroup logic
+    const restored = await provider.addGroup(group.label as string, group.colorName);
+    for (const tab of backupItems) {
+      if (tab.resourceUri) {
+        await provider.addToGroup(restored!, tab.resourceUri.fsPath, false);
+      }
+    }
+    for (const child of backupChildren) {
+      const childId = await provider.addSubGroup(restored!, child.label, child.colorName);
+      for (const tab of child.items) {
+        if (tab.resourceUri) {
+          await provider.addToGroup(childId!, tab.resourceUri.fsPath, false);
+        }
+      }
+      for (const gc of child.children) {
+        const gcId = await provider.addSubGroup(childId!, gc.label, gc.colorName);
+        for (const tab of gc.items) {
+          if (tab.resourceUri) {
+            await provider.addToGroup(gcId!, tab.resourceUri.fsPath, false);
+          }
+        }
+      }
+    }
+
+    const restoredGroup = provider.findGroupById(restored!)!;
+    strictEqual(restoredGroup.items.length, 1, 'Parent should have 1 tab');
+    strictEqual(restoredGroup.children.length, 1, 'Parent should have 1 child');
+
+    const restoredChild = restoredGroup.children[0];
+    strictEqual(restoredChild.label, 'Child');
+    strictEqual(restoredChild.items.length, 2, 'Child should have 2 tabs');
+
+    strictEqual(restoredChild.children.length, 1, 'Child should have 1 grandchild');
+    const restoredGrandchild = restoredChild.children[0];
+    strictEqual(restoredGrandchild.label, 'Grandchild');
+    strictEqual(restoredGrandchild.items.length, 1, 'Grandchild should have 1 tab');
+  });
+});
+
+describe('Nested Groups - deleteGroup does not cascade to parent', () => {
+  it('keeps parent when nested child is deleted', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('Parent');
+    const g2 = await provider.addSubGroup(g1!, 'Child');
+    await provider.addToGroup(g2!, '/tmp/file1');
+    provider.clearRefreshInterval();
+
+    await provider.deleteGroup(g2!);
+
+    ok(provider.findGroupById(g1!), 'Parent should still exist');
+    strictEqual(provider.findGroupById(g1!)!.children.length, 0);
+    strictEqual(provider.findGroupById(g2!), undefined, 'Child should be deleted');
+  });
+
+  it('keeps empty parent when its only child is deleted', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1 = await provider.addGroup('EmptyParent');
+    const g2 = await provider.addSubGroup(g1!, 'Child');
+    await provider.addToGroup(g2!, '/tmp/file1');
+    provider.clearRefreshInterval();
+
+    await provider.deleteGroup(g2!);
+
+    ok(provider.findGroupById(g1!), 'Empty parent should still exist');
+    strictEqual(provider.findGroupById(g1!)!.children.length, 0);
+    strictEqual(provider.findGroupById(g1!)!.items.length, 0);
   });
 });

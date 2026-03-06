@@ -90,9 +90,11 @@ describe('TabstronautDataProvider handleDrop new group on empty space', () => {
     provider.clearRefreshInterval();
 
     const groups = provider.getGroups();
-    strictEqual(groups.length, 1);
-    strictEqual(groups[0].label, 'Group 2');
-    strictEqual(groups[0].items.length, 1);
-    strictEqual(groups[0].items[0].resourceUri?.fsPath, '/tmp/file1');
+    strictEqual(groups.length, 2, 'Original group should persist, new group created');
+    const newGroup = groups.find((g) => g.label === 'Group 2')!;
+    strictEqual(newGroup.items.length, 1);
+    strictEqual(newGroup.items[0].resourceUri?.fsPath, '/tmp/file1');
+    const oldGroup = groups.find((g) => g.label === 'G1')!;
+    strictEqual(oldGroup.items.length, 0, 'Original group should be empty');
   });
 });
