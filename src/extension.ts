@@ -11,6 +11,7 @@ import {
   addAllOpenTabsToGroup,
   addFilesToGroupCommand,
   sortTabGroupCommand,
+  sortAllGroupsCommand,
   filterTabGroupsCommand,
   handleAddSubGroup,
 } from "./groupOperations";
@@ -605,6 +606,12 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.sortAllGroups", () =>
+      sortAllGroupsCommand(treeDataProvider)
+    )
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand("tabstronaut.filterTabGroups", () =>
       filterTabGroupsCommand(treeDataProvider)
     )
@@ -1015,7 +1022,7 @@ export function activate(context: vscode.ExtensionContext) {
         false
       );
 
-      showConfirmation("Restored closed tabs.");
+      showConfirmation("Closed tabs restored.");
     })
   );
   return { testUtils };

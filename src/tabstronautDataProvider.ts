@@ -523,7 +523,7 @@ export class TabstronautDataProvider
         await this.updateWorkspaceState();
 
         if (targetGroup === sourceGroup) {
-          showConfirmation(`Reordered '${draggedTab.label}'.`);
+          showConfirmation(`Reordered tab '${draggedTab.label}'.`);
         } else if (!targetGroup.isPinned) {
           showConfirmation(
             `Moved '${draggedTab.label}' to Tab Group '${targetGroup.label}'.`
@@ -1160,6 +1160,20 @@ export class TabstronautDataProvider
     this._onDidChangeTreeData.fire(group);
   }
 
+
+  async sortRootGroups(mode: 'name-asc' | 'name-desc' | 'time-asc' | 'time-desc'): Promise<void> {
+    const entries = Array.from(this.groupsMap.entries());
+    entries.sort(([, a], [, b]) => {
+      switch (mode) {
+        case 'name-asc':  return (a.label as string).localeCompare(b.label as string);
+        case 'name-desc': return (b.label as string).localeCompare(a.label as string);
+        case 'time-asc':  return a.creationTime.getTime() - b.creationTime.getTime();
+        case 'time-desc': return b.creationTime.getTime() - a.creationTime.getTime();
+      }
+    });
+    this.groupsMap = new Map(entries);
+    await this.updateWorkspaceState();
+  }
 
   private rebuildStateFromStorage(): void {
     this.groupsMap.clear();

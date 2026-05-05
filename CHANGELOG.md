@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.4.6]
+
+- Added "Sort All Tab Groups..." toolbar button and command — sort all groups by Name A→Z, Name Z→A, Date (Oldest First), or Date (Newest First).
+
 ## [1.4.5]
 
 - Improved drag-and-drop for Tab Groups — drag onto a group to reorder, drag onto a tab to nest, drag to empty space to promote to top level.

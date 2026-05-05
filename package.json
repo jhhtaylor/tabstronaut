@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.4.5",
+  "version": "1.4.6",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -89,7 +89,7 @@
       {
         "command": "tabstronaut.sortTabGroup",
         "category": "Tabstronaut",
-        "title": "Sort Tab Group...",
+        "title": "Sort Tabs in Group...",
         "icon": "$(sort-precedence)"
       },
       {
@@ -190,6 +190,12 @@
         "category": "Tabstronaut",
         "title": "Add Sub-Group...",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "tabstronaut.sortAllGroups",
+        "category": "Tabstronaut",
+        "title": "Sort Tab Groups...",
+        "icon": "$(sort-precedence)"
       }
     ],
     "viewsContainers": {
@@ -253,14 +259,19 @@
           "group": "navigation@2"
         },
         {
-          "command": "tabstronaut.confirmCloseAllEditors",
+          "command": "tabstronaut.sortAllGroups",
           "when": "view == tabstronaut",
           "group": "navigation@3"
         },
         {
-          "command": "tabstronaut.showMoreOptions",
+          "command": "tabstronaut.confirmCloseAllEditors",
           "when": "view == tabstronaut",
           "group": "navigation@4"
+        },
+        {
+          "command": "tabstronaut.showMoreOptions",
+          "when": "view == tabstronaut",
+          "group": "navigation@5"
         }
       ],
       "explorer/context": [
@@ -427,6 +438,10 @@
         {
           "command": "tabstronaut.addSubGroup",
           "when": "false"
+        },
+        {
+          "command": "tabstronaut.sortAllGroups",
+          "when": "false"
         }
       ]
     },
@@ -578,7 +593,7 @@
     "@types/vscode": "^1.99.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.33.1",
-    "@vscode/test-electron": "^2.4.1",
+    "@vscode/test-electron": "^2.5.2",
     "concurrently": "^9.2.1",
     "eslint": "^9.30.1",
     "glob": "^11.1.0",

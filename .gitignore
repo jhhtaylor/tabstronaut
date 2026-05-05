@@ -134,3 +134,6 @@ dist
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Claude Code project settings (machine-specific tool permissions)
+.claude/

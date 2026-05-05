@@ -542,7 +542,7 @@ export async function handleAddSubGroup(
     return;
   }
 
-  showConfirmation(`Created sub-group '${result.name}' inside '${parentGroup.label}'.`);
+  showConfirmation(`Created Sub-Group '${result.name}' inside '${parentGroup.label}'.`);
 }
 
 export async function sortTabGroupCommand(
@@ -554,8 +554,8 @@ export async function sortTabGroupCommand(
   }
 
   const picked = await vscode.window.showQuickPick(
-    ['Sort Alphabetically', 'Sort by Folder', 'Sort by File Type'],
-    { placeHolder: 'Sort Tab Group' }
+    ['Name A → Z', 'By Folder', 'By File Type'],
+    { placeHolder: 'Sort Tabs in Group' }
   );
 
   if (!picked) {
@@ -563,12 +563,45 @@ export async function sortTabGroupCommand(
   }
 
   let mode: 'folder' | 'fileType' | 'alphabetical' = 'folder';
-  if (picked === 'Sort by File Type') {
+  if (picked === 'By File Type') {
     mode = 'fileType';
-  } else if (picked === 'Sort Alphabetically') {
+  } else if (picked === 'Name A → Z') {
     mode = 'alphabetical';
   }
   await treeDataProvider.sortGroup(item.id, mode);
+}
+
+export async function sortAllGroupsCommand(
+  treeDataProvider: TabstronautDataProvider
+): Promise<void> {
+  const picked = await vscode.window.showQuickPick(
+    ['Name A → Z', 'Name Z → A', 'Last Active (Oldest First)', 'Last Active (Newest First)'],
+    { placeHolder: 'Sort Tab Groups' }
+  );
+
+  if (!picked) {
+    return;
+  }
+
+  let mode: 'name-asc' | 'name-desc' | 'time-asc' | 'time-desc' = 'name-asc';
+  if (picked === 'Name Z → A') {
+    mode = 'name-desc';
+  } else if (picked === 'Last Active (Oldest First)') {
+    mode = 'time-asc';
+  } else if (picked === 'Last Active (Newest First)') {
+    mode = 'time-desc';
+  }
+
+  await treeDataProvider.sortRootGroups(mode);
+
+  const moveOnChange = vscode.workspace
+    .getConfiguration('tabstronaut')
+    .get<boolean>('moveTabGroupOnTabChange', true);
+  if (moveOnChange) {
+    vscode.window.showInformationMessage(
+      'Tab Groups sorted. Tip: disable "Move Tab Group on Tab Change" in settings to preserve this order.'
+    );
+  }
 }
 
 export async function filterTabGroupsCommand(
