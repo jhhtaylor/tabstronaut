@@ -20,6 +20,7 @@ export class SuggestionItem extends vscode.TreeItem {
       `Suggested: ${suggestion.name}`,
       vscode.TreeItemCollapsibleState.None
     );
+    this.id = `suggestion-${suggestionIndex}`;
     this.contextValue = "suggestion";
     this.iconPath =
       suggestion.source === "ai"
@@ -29,7 +30,7 @@ export class SuggestionItem extends vscode.TreeItem {
     const sourceLabel =
       suggestion.source === "ai"
         ? "AI-powered suggestion"
-        : "Heuristic suggestion (install GitHub Copilot to enable AI naming)";
+        : "Pattern-based suggestion";
     this.tooltip = new vscode.MarkdownString(
       `**${sourceLabel}**\n\n` +
         suggestion.files.map((f) => `- \`${path.basename(f)}\``).join("\n")

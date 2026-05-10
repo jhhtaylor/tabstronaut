@@ -11,7 +11,13 @@ export interface TabStorage {
 }
 
 const STORAGE_KEY = "tabUsageData";
+const DISMISSED_KEY = "dismissedSuggestions";
 const MAX_TRACKED_FILES = 500;
+const DISMISSAL_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+interface DismissalRecord {
+  [fileKey: string]: number; // Unix timestamp of dismissal
+}
 
 export class TabUsageTracker {
   private lastSnapshotHash: string | undefined;
@@ -81,8 +87,28 @@ export class TabUsageTracker {
     }
   }
 
+  async recordDismissal(fileKey: string): Promise<void> {
+    const record = this.storage.get<DismissalRecord>(DISMISSED_KEY, {});
+    record[fileKey] = Date.now();
+    // Prune expired entries while we have the record open
+    const cutoff = Date.now() - DISMISSAL_COOLDOWN_MS;
+    for (const key of Object.keys(record)) {
+      if (record[key] < cutoff) {
+        delete record[key];
+      }
+    }
+    await this.storage.update(DISMISSED_KEY, record);
+  }
+
+  isDismissed(fileKey: string): boolean {
+    const record = this.storage.get<DismissalRecord>(DISMISSED_KEY, {});
+    const ts = record[fileKey];
+    return ts !== undefined && Date.now() - ts < DISMISSAL_COOLDOWN_MS;
+  }
+
   async clear(): Promise<void> {
     this.lastSnapshotHash = undefined;
     await this.storage.update(STORAGE_KEY, { coOccurrence: {}, openCount: {} });
+    await this.storage.update(DISMISSED_KEY, {});
   }
 }

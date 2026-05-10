@@ -7,8 +7,11 @@ All notable changes to the Tabstronaut extension will be documented in this file
 🎉 **10,000 installs — thank you!** This release is dedicated to everyone who has used, shared, and supported Tabstronaut. You made this milestone happen.
 
 - Added **AI-powered tab group suggestions** — Tabstronaut now silently tracks which files you open together and suggests a tab group when a pattern is detected. Suggestions appear at the bottom of the Tab Groups panel.
-- Group names are generated automatically. If you have a VS Code AI provider installed (such as GitHub Copilot), the name is enhanced by AI — otherwise a local heuristic is used.
-- Added two new settings: **Enable Tab Group Suggestions** (master switch) and **Enable AI Group Naming** (controls whether AI is used for naming).
+- Group names are generated automatically. If you have a VS Code AI provider installed (such as GitHub Copilot), the name is AI-enhanced — otherwise a pattern-based name is used.
+- Dismissed suggestions will not re-appear for 7 days.
+- Added two new settings under Tabstronaut in VS Code Settings:
+  - **Enable Tab Group Suggestions** — master switch. When **off**, this is a complete opt-out: no file usage data is collected, recorded, or stored in any form. When **on**, all analysis stays entirely on your local device and nothing is sent anywhere (unless AI naming is also enabled).
+  - **Enable AI Group Naming** — when off, suggestions still appear but names are generated locally with no data leaving your device.
 - Added **Tabstronaut: Clear Tab Usage Data** command to wipe all locally stored usage history at any time.
 - Updated Privacy section in the README with full details of what is and is not collected.
 

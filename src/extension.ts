@@ -193,6 +193,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       const heuristic = suggestGroups(tabUsageTracker.getData(), {
         maxSuggestions: 1,
+        excludeFiles: new Set(treeDataProvider.getAllGroupedFiles()),
       });
 
       if (heuristic.length === 0) {
@@ -205,15 +206,25 @@ export function activate(context: vscode.ExtensionContext) {
       if (heuristicKey === lastHeuristicKey) {
         return;
       }
+      if (tabUsageTracker.isDismissed(heuristicKey)) {
+        treeDataProvider.setSuggestions([]);
+        lastHeuristicKey = undefined;
+        return;
+      }
       lastHeuristicKey = heuristicKey;
 
       // Show heuristic result immediately so there is no blank gap
       treeDataProvider.setSuggestions(heuristic);
 
-      // Then quietly try to upgrade the name via AI (if enabled)
-      if (cfg2.get<boolean>("enableAiGroupNaming", true)) {
+      // Then quietly try to upgrade the name via AI (if enabled).
+      // Capture the key before the await so we can detect if the user
+      // dismissed or applied the suggestion while the AI was in flight.
+      if (cfg2.get<boolean>("enableAIGroupNaming", true)) {
+        const keyBeforeAi = heuristicKey;
         const enhanced = await aiEnhanceSuggestion(heuristic[0]);
-        treeDataProvider.setSuggestions([enhanced]);
+        if (lastHeuristicKey === keyBeforeAi) {
+          treeDataProvider.setSuggestions([enhanced]);
+        }
       }
     }, 2000);
   };
@@ -874,7 +885,7 @@ export function activate(context: vscode.ExtensionContext) {
         scheduleSnapshot();
       }
     }
-    if (e.affectsConfiguration("tabstronaut.enableAiGroupNaming")) {
+    if (e.affectsConfiguration("tabstronaut.enableAIGroupNaming")) {
       // Force re-evaluation so the AI is applied or dropped immediately
       lastHeuristicKey = undefined;
       scheduleSnapshot();
@@ -1118,6 +1129,7 @@ export function activate(context: vscode.ExtensionContext) {
           await treeDataProvider.addToGroup(groupId, file, false);
         }
         treeDataProvider.dismissSuggestion(suggestionIndex);
+        lastHeuristicKey = undefined; // prevent in-flight AI result from re-showing this suggestion
         showConfirmation(`Created Tab Group '${suggestion.name}'.`);
       }
     )
@@ -1126,8 +1138,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.dismissSuggestion",
-      (item: SuggestionItem) => {
+      async (item: SuggestionItem) => {
         treeDataProvider.dismissSuggestion(item.suggestionIndex);
+        lastHeuristicKey = undefined; // prevent in-flight AI result from re-showing this suggestion
+        await tabUsageTracker.recordDismissal(
+          [...item.suggestion.files].sort().join("|")
+        );
       }
     )
   );

@@ -610,12 +610,12 @@
         "tabstronaut.enableTabGroupSuggestions": {
           "type": "boolean",
           "default": true,
-          "description": "Analyse which files you open together and suggest tab groups. All analysis happens locally on your device — nothing is sent anywhere."
+          "markdownDescription": "Analyse which files you open together and suggest tab groups.\n\n**Enabled:** File paths are recorded locally on your device to detect patterns. Nothing is sent anywhere.\n\n**Disabled:** This is a full opt-out — no file usage data is collected, recorded, or stored. The upside is complete privacy; the downside is that no suggestions will ever appear and any existing usage data stops being used."
         },
-        "tabstronaut.enableAiGroupNaming": {
+        "tabstronaut.enableAIGroupNaming": {
           "type": "boolean",
           "default": true,
-          "description": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate better group names for suggestions. Only file names are sent — never full paths or file contents. Has no effect when Tab Group Suggestions are disabled."
+          "markdownDescription": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate a better name for suggested groups. Only file **names** are sent — never full paths or file contents.\n\nHas no effect when **Enable Tab Group Suggestions** is disabled."
         }
       }
     }

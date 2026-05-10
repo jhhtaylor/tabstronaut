@@ -143,6 +143,29 @@ describe("suggestGroups – naming", () => {
   });
 });
 
+describe("suggestGroups – source field", () => {
+  it("all results have source set to 'heuristic'", () => {
+    const data = makeData([
+      ["/a/foo.ts", "/a/bar.ts", 5],
+      ["/b/x.ts", "/b/y.ts", 5],
+    ]);
+    const suggestions = suggestGroups(data, { maxSuggestions: 3 });
+    for (const s of suggestions) {
+      strictEqual(s.source, "heuristic");
+    }
+  });
+
+  it("source is 'heuristic' even when cluster expands beyond the seed pair", () => {
+    const data = makeData([
+      ["/a/foo.ts", "/a/bar.ts", 10],
+      ["/a/foo.ts", "/a/baz.ts", 5],
+      ["/a/bar.ts", "/a/baz.ts", 5],
+    ]);
+    const suggestions = suggestGroups(data);
+    strictEqual(suggestions[0].source, "heuristic");
+  });
+});
+
 describe("suggestGroups – edge cases", () => {
   it("handles a pair score exactly equal to MIN_PAIR_SCORE (boundary)", () => {
     const data = makeData([["/a/foo.ts", "/a/bar.ts", 3]]);
