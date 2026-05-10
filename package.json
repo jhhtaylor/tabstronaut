@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.4.6",
+  "version": "1.5.0",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -606,6 +606,16 @@
           "type": "string",
           "default": "",
           "description": "Default directory for importing and exporting Tab Groups. Supports absolute paths (e.g., '/tmp' or 'C:\\Temp') or relative paths from workspace root (e.g., 'tab-groups'). Leave empty to use workspace root (or home directory if no workspace is open)."
+        },
+        "tabstronaut.enableTabGroupSuggestions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Analyse which files you open together and suggest tab groups. All analysis happens locally on your device — nothing is sent anywhere."
+        },
+        "tabstronaut.enableAiGroupNaming": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate better group names for suggestions. Only file names are sent — never full paths or file contents. Has no effect when Tab Group Suggestions are disabled."
         }
       }
     }

@@ -51,14 +51,31 @@ Your changes will be saved automatically.
 
 ## Privacy
 
-Tabstronaut includes a tab group suggestion feature that learns which files you tend to open together. Here is exactly what it does and does not do:
+Tabstronaut includes a tab group suggestion feature that learns which files you tend to open together. Here is exactly what it does and does not do.
+
+**What is always true regardless of AI:**
 
 - **What is tracked:** The file paths of tabs you have open in VS Code, and how often those files appear open at the same time.
-- **Where it is stored:** Entirely on your local machine, inside VS Code's built-in workspace storage (`workspaceState`). It never leaves your device.
-- **What it is used for:** Generating local tab group suggestions. Nothing else.
-- **What is never collected:** File contents are never read. No data is sent to any server, third party, or external service of any kind.
+- **Where it is stored:** Entirely on your local machine, inside VS Code's built-in workspace storage (`workspaceState`).
+- **File contents are never read** under any circumstances.
 
 You can clear all tracked data at any time by running **Tabstronaut: Clear Tab Usage Data** from the command palette.
+
+**AI-powered naming (optional):**
+
+If you have a VS Code language model provider installed (such as GitHub Copilot), Tabstronaut will use it to generate a better group name. In that case:
+
+- **What is sent:** Only the bare **file names** of the suggested files (e.g. `Button.tsx, Input.tsx`) — never full paths, never file contents.
+- **Where it goes:** To whichever language model provider you have enabled in VS Code. For GitHub Copilot this means Microsoft's servers, subject to your existing Copilot agreement.
+
+The suggestion item shows a **sparkle icon** when AI naming is active, and a **lightbulb icon** when using the local heuristic only.
+
+**Settings:**
+
+Both features can be controlled independently in VS Code Settings (search for "Tabstronaut"):
+
+- **Enable Tab Group Suggestions** — master switch. Turn this off to disable all usage tracking and suggestions entirely.
+- **Enable AI Group Naming** — turn this off to keep suggestions but use only the local heuristic for naming. No data will leave your device.
 
 ## Known Issues
 

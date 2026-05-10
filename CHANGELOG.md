@@ -2,6 +2,16 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.5.0]
+
+🎉 **10,000 installs — thank you!** This release is dedicated to everyone who has used, shared, and supported Tabstronaut. You made this milestone happen.
+
+- Added **AI-powered tab group suggestions** — Tabstronaut now silently tracks which files you open together and suggests a tab group when a pattern is detected. Suggestions appear at the bottom of the Tab Groups panel.
+- Group names are generated automatically. If you have a VS Code AI provider installed (such as GitHub Copilot), the name is enhanced by AI — otherwise a local heuristic is used.
+- Added two new settings: **Enable Tab Group Suggestions** (master switch) and **Enable AI Group Naming** (controls whether AI is used for naming).
+- Added **Tabstronaut: Clear Tab Usage Data** command to wipe all locally stored usage history at any time.
+- Updated Privacy section in the README with full details of what is and is not collected.
+
 ## [1.4.6]
 
 - Added "Sort All Tab Groups..." toolbar button and command — sort all groups by Name A→Z, Name Z→A, Date (Oldest First), or Date (Newest First).

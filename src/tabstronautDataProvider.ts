@@ -21,10 +21,18 @@ export class SuggestionItem extends vscode.TreeItem {
       vscode.TreeItemCollapsibleState.None
     );
     this.contextValue = "suggestion";
-    this.iconPath = new vscode.ThemeIcon("sparkle");
+    this.iconPath =
+      suggestion.source === "ai"
+        ? new vscode.ThemeIcon("sparkle")
+        : new vscode.ThemeIcon("lightbulb");
     this.description = suggestion.files.map((f) => path.basename(f)).join(", ");
+    const sourceLabel =
+      suggestion.source === "ai"
+        ? "AI-powered suggestion"
+        : "Heuristic suggestion (install GitHub Copilot to enable AI naming)";
     this.tooltip = new vscode.MarkdownString(
-      suggestion.files.map((f) => `- \`${path.basename(f)}\``).join("\n")
+      `**${sourceLabel}**\n\n` +
+        suggestion.files.map((f) => `- \`${path.basename(f)}\``).join("\n")
     );
   }
 }

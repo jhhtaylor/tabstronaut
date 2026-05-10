@@ -17,6 +17,7 @@ import {
 } from "./groupOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
+import { aiEnhanceSuggestion } from "./aiGroupSuggester";
 
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
@@ -171,17 +172,49 @@ export function activate(context: vscode.ExtensionContext) {
 
   const tabUsageTracker = new TabUsageTracker(context.workspaceState);
   let snapshotDebounce: NodeJS.Timeout | undefined;
+  let lastHeuristicKey: string | undefined;
+
   const scheduleSnapshot = () => {
+    const cfg = vscode.workspace.getConfiguration("tabstronaut");
+    if (!cfg.get<boolean>("enableTabGroupSuggestions", true)) {
+      return;
+    }
     if (snapshotDebounce) {
       clearTimeout(snapshotDebounce);
     }
     snapshotDebounce = setTimeout(async () => {
+      const cfg2 = vscode.workspace.getConfiguration("tabstronaut");
+      if (!cfg2.get<boolean>("enableTabGroupSuggestions", true)) {
+        return;
+      }
+
       const files = getOpenEditorFilePaths();
       await tabUsageTracker.recordSnapshot(files);
-      const suggestions = suggestGroups(tabUsageTracker.getData(), {
+
+      const heuristic = suggestGroups(tabUsageTracker.getData(), {
         maxSuggestions: 1,
       });
-      treeDataProvider.setSuggestions(suggestions);
+
+      if (heuristic.length === 0) {
+        treeDataProvider.setSuggestions([]);
+        lastHeuristicKey = undefined;
+        return;
+      }
+
+      const heuristicKey = [...heuristic[0].files].sort().join("|");
+      if (heuristicKey === lastHeuristicKey) {
+        return;
+      }
+      lastHeuristicKey = heuristicKey;
+
+      // Show heuristic result immediately so there is no blank gap
+      treeDataProvider.setSuggestions(heuristic);
+
+      // Then quietly try to upgrade the name via AI (if enabled)
+      if (cfg2.get<boolean>("enableAiGroupNaming", true)) {
+        const enhanced = await aiEnhanceSuggestion(heuristic[0]);
+        treeDataProvider.setSuggestions([enhanced]);
+      }
     }, 2000);
   };
 
@@ -829,6 +862,22 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
       await enforceExclusiveSettings("autoRemoveClosedTabs");
+    }
+    if (e.affectsConfiguration("tabstronaut.enableTabGroupSuggestions")) {
+      const enabled = vscode.workspace
+        .getConfiguration("tabstronaut")
+        .get<boolean>("enableTabGroupSuggestions", true);
+      if (!enabled) {
+        treeDataProvider.setSuggestions([]);
+        lastHeuristicKey = undefined;
+      } else {
+        scheduleSnapshot();
+      }
+    }
+    if (e.affectsConfiguration("tabstronaut.enableAiGroupNaming")) {
+      // Force re-evaluation so the AI is applied or dropped immediately
+      lastHeuristicKey = undefined;
+      scheduleSnapshot();
     }
   });
 

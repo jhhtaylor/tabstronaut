@@ -6,6 +6,7 @@ export interface SuggestedGroup {
   files: string[];
   /** co-occurrence score of the seed pair that started this cluster */
   strength: number;
+  source: "ai" | "heuristic";
 }
 
 /** Minimum times two files must have been open together to form a seed pair */
@@ -118,7 +119,12 @@ export function suggestGroups(
       usedFiles.add(f);
     }
 
-    suggestions.push({ name: deriveGroupName(files), files, strength: score });
+    suggestions.push({
+      name: deriveGroupName(files),
+      files,
+      strength: score,
+      source: "heuristic",
+    });
   }
 
   return suggestions;
