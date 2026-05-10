@@ -9,6 +9,25 @@ import {
   COLORS,
   labelForTopFolder,
 } from "./utils";
+import { SuggestedGroup } from "./groupSuggester";
+
+export class SuggestionItem extends vscode.TreeItem {
+  constructor(
+    public readonly suggestion: SuggestedGroup,
+    public readonly suggestionIndex: number
+  ) {
+    super(
+      `Suggested: ${suggestion.name}`,
+      vscode.TreeItemCollapsibleState.None
+    );
+    this.contextValue = "suggestion";
+    this.iconPath = new vscode.ThemeIcon("sparkle");
+    this.description = suggestion.files.map((f) => path.basename(f)).join(", ");
+    this.tooltip = new vscode.MarkdownString(
+      suggestion.files.map((f) => `- \`${path.basename(f)}\``).join("\n")
+    );
+  }
+}
 
 interface GroupStorageData {
   label: string;
@@ -41,6 +60,7 @@ export class TabstronautDataProvider
   private refreshIntervalId?: NodeJS.Timeout;
   private ungroupedGroup: Group;
   private groupFilter?: string;
+  private suggestions: SuggestedGroup[] = [];
 
   constructor(private workspaceState: vscode.Memento) {
     const groupData = this.workspaceState.get<{
@@ -636,6 +656,7 @@ export class TabstronautDataProvider
       );
     }
     const result: (Group | vscode.TreeItem)[] = [];
+
     if (groups.length === 0) {
       result.push(
         this.groupFilter ? this.createNoMatchItem() : this.createInstructionItem()
@@ -643,6 +664,11 @@ export class TabstronautDataProvider
     } else {
       result.push(...groups);
     }
+
+    if (!this.groupFilter && this.suggestions.length > 0) {
+      this.suggestions.forEach((s, i) => result.push(new SuggestionItem(s, i)));
+    }
+
     return Promise.resolve(result);
   }
 
@@ -1183,6 +1209,35 @@ export class TabstronautDataProvider
     for (const id in groupData) {
       const group = this.deserializeGroup(id, groupData[id]);
       this.groupsMap.set(id, group);
+    }
+  }
+
+  public setSuggestions(suggestions: SuggestedGroup[]): void {
+    this.suggestions = suggestions;
+    this._onDidChangeTreeData.fire();
+  }
+
+  public dismissSuggestion(index: number): void {
+    this.suggestions.splice(index, 1);
+    this._onDidChangeTreeData.fire();
+  }
+
+  public getAllGroupedFiles(): string[] {
+    const files: string[] = [];
+    for (const group of this.groupsMap.values()) {
+      this.collectGroupFiles(group, files);
+    }
+    return files;
+  }
+
+  private collectGroupFiles(group: Group, files: string[]): void {
+    for (const item of group.items) {
+      if (item.resourceUri) {
+        files.push(item.resourceUri.fsPath);
+      }
+    }
+    for (const child of group.children) {
+      this.collectGroupFiles(child, files);
     }
   }
 }

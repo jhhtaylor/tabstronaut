@@ -196,6 +196,23 @@
         "category": "Tabstronaut",
         "title": "Sort Tab Groups...",
         "icon": "$(sort-precedence)"
+      },
+      {
+        "command": "tabstronaut.clearTabUsageData",
+        "category": "Tabstronaut",
+        "title": "Clear Tab Usage Data"
+      },
+      {
+        "command": "tabstronaut.applySuggestion",
+        "category": "Tabstronaut",
+        "title": "Create Suggested Tab Group",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tabstronaut.dismissSuggestion",
+        "category": "Tabstronaut",
+        "title": "Dismiss Suggestion",
+        "icon": "$(close)"
       }
     ],
     "viewsContainers": {
@@ -337,6 +354,16 @@
           "command": "tabstronaut.removeSpecificTab",
           "when": "view == tabstronaut && viewItem == tab",
           "group": "inline@1"
+        },
+        {
+          "command": "tabstronaut.applySuggestion",
+          "when": "view == tabstronaut && viewItem == suggestion",
+          "group": "inline@0"
+        },
+        {
+          "command": "tabstronaut.dismissSuggestion",
+          "when": "view == tabstronaut && viewItem == suggestion",
+          "group": "inline@1"
         }
       ],
       "commandPalette": [
@@ -441,6 +468,14 @@
         },
         {
           "command": "tabstronaut.sortAllGroups",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.applySuggestion",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.dismissSuggestion",
           "when": "false"
         }
       ]

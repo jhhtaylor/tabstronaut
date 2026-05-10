@@ -49,6 +49,17 @@ OR
 
 Your changes will be saved automatically.
 
+## Privacy
+
+Tabstronaut includes a tab group suggestion feature that learns which files you tend to open together. Here is exactly what it does and does not do:
+
+- **What is tracked:** The file paths of tabs you have open in VS Code, and how often those files appear open at the same time.
+- **Where it is stored:** Entirely on your local machine, inside VS Code's built-in workspace storage (`workspaceState`). It never leaves your device.
+- **What it is used for:** Generating local tab group suggestions. Nothing else.
+- **What is never collected:** File contents are never read. No data is sent to any server, third party, or external service of any kind.
+
+You can clear all tracked data at any time by running **Tabstronaut: Clear Tab Usage Data** from the command palette.
+
 ## Known Issues
 
 If you encounter any other problem, please open an [Issue](https://github.com/jhhtaylor/tabstronaut/issues) on the GitHub repository.

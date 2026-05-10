@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { TabstronautDataProvider } from "./tabstronautDataProvider";
+import { TabstronautDataProvider, SuggestionItem } from "./tabstronautDataProvider";
 import { UngroupedProvider } from "./ungroupedProvider";
 import { Group } from "./models/Group";
 import { showConfirmation } from "./utils";
@@ -15,6 +15,8 @@ import {
   filterTabGroupsCommand,
   handleAddSubGroup,
 } from "./groupOperations";
+import { TabUsageTracker } from "./tabUsageTracker";
+import { suggestGroups } from "./groupSuggester";
 
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
@@ -167,8 +169,25 @@ export function activate(context: vscode.ExtensionContext) {
 
   void enforceExclusiveSettings("autoCloseOnRestore");
 
+  const tabUsageTracker = new TabUsageTracker(context.workspaceState);
+  let snapshotDebounce: NodeJS.Timeout | undefined;
+  const scheduleSnapshot = () => {
+    if (snapshotDebounce) {
+      clearTimeout(snapshotDebounce);
+    }
+    snapshotDebounce = setTimeout(async () => {
+      const files = getOpenEditorFilePaths();
+      await tabUsageTracker.recordSnapshot(files);
+      const suggestions = suggestGroups(tabUsageTracker.getData(), {
+        maxSuggestions: 1,
+      });
+      treeDataProvider.setSuggestions(suggestions);
+    }, 2000);
+  };
+
   const handleTabChangeEvent = async (event: vscode.TabChangeEvent) => {
     treeDataProvider.refreshUngroupedTabs();
+    scheduleSnapshot();
 
     const autoRemoveClosedTabs = vscode.workspace
       .getConfiguration("tabstronaut")
@@ -244,6 +263,7 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   syncCollapsedGroups();
+  scheduleSnapshot();
 
   context.subscriptions.push(
     treeDataProvider.onDidChangeTreeData(() => {
@@ -1025,6 +1045,44 @@ export function activate(context: vscode.ExtensionContext) {
       showConfirmation("Closed tabs restored.");
     })
   );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.clearTabUsageData",
+      async () => {
+        await tabUsageTracker.clear();
+        treeDataProvider.setSuggestions([]);
+        vscode.window.showInformationMessage("Tab usage data cleared.");
+      }
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.applySuggestion",
+      async (item: SuggestionItem) => {
+        const { suggestion, suggestionIndex } = item;
+        const groupId = await treeDataProvider.addGroup(suggestion.name);
+        if (!groupId) {
+          return;
+        }
+        for (const file of suggestion.files) {
+          await treeDataProvider.addToGroup(groupId, file, false);
+        }
+        treeDataProvider.dismissSuggestion(suggestionIndex);
+        showConfirmation(`Created Tab Group '${suggestion.name}'.`);
+      }
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.dismissSuggestion",
+      (item: SuggestionItem) => {
+        treeDataProvider.dismissSuggestion(item.suggestionIndex);
+      }
+    )
+  );
+
   return { testUtils };
 }
 
