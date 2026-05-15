@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.5.1]
+
+- Fixed a bug where the GitHub Copilot permission dialog would reappear repeatedly after being cancelled. It now asks once per session. Toggling the **Enable AI Group Naming** setting off and back on gives you a fresh prompt if you change your mind.
+
 ## [1.5.0]
 
 🎉 **10,000 installs — thank you!** This release is dedicated to everyone who has used, shared, and supported Tabstronaut. You made this milestone happen.

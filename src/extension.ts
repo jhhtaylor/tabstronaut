@@ -17,7 +17,7 @@ import {
 } from "./groupOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
-import { aiEnhanceSuggestion } from "./aiGroupSuggester";
+import { aiEnhanceSuggestion, resetAiAvailability } from "./aiGroupSuggester";
 
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
@@ -886,7 +886,9 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
     if (e.affectsConfiguration("tabstronaut.enableAIGroupNaming")) {
-      // Force re-evaluation so the AI is applied or dropped immediately
+      // Reset the session flag so re-enabling gives the user a fresh chance
+      // to grant the Copilot permission without reloading VS Code
+      resetAiAvailability();
       lastHeuristicKey = undefined;
       scheduleSnapshot();
     }

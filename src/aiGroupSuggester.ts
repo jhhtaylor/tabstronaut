@@ -6,12 +6,26 @@ const AI_TIMEOUT_MS = 8000;
 const MAX_NAME_LENGTH = 40;
 
 /**
+ * Set to true the moment we discover AI is unavailable or the user declines
+ * the Copilot permission dialog. Prevents the permission popup from appearing
+ * repeatedly within a session.
+ */
+let aiUnavailableThisSession = false;
+
+/** Call this when the enableAIGroupNaming setting is toggled back on so the
+ *  user can grant permission without needing to reload VS Code. */
+export function resetAiAvailability(): void {
+  aiUnavailableThisSession = false;
+}
+
+/**
  * Attempts to improve a heuristic suggestion's name using the VS Code Language
  * Model API (e.g. GitHub Copilot). Only file basenames — never full paths or
  * file contents — are sent to the model.
  *
  * Returns the original suggestion unchanged if:
  *   - No LM provider is installed or available
+ *   - The user has declined the permission dialog this session
  *   - The request fails or times out
  *   - The model returns an unusable response
  *
@@ -20,17 +34,23 @@ const MAX_NAME_LENGTH = 40;
 export async function aiEnhanceSuggestion(
   suggestion: SuggestedGroup
 ): Promise<SuggestedGroup> {
+  if (aiUnavailableThisSession) {
+    return suggestion;
+  }
+
   try {
     // Guard: vscode.lm may not exist in very old VS Code builds
     if (
       !vscode.lm ||
       typeof vscode.lm.selectChatModels !== "function"
     ) {
+      aiUnavailableThisSession = true;
       return suggestion;
     }
 
     const models = await vscode.lm.selectChatModels();
     if (!models || models.length === 0) {
+      aiUnavailableThisSession = true;
       return suggestion;
     }
 
@@ -80,6 +100,7 @@ export async function aiEnhanceSuggestion(
 
     return { ...suggestion, name, source: "ai" };
   } catch {
+    aiUnavailableThisSession = true;
     return suggestion;
   }
 }
