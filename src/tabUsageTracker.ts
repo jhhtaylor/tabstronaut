@@ -87,6 +87,37 @@ export class TabUsageTracker {
     }
   }
 
+  async handleFileRename(oldPath: string, newPath: string): Promise<void> {
+    const data = this.getData();
+    let changed = false;
+
+    if (oldPath in data.openCount) {
+      data.openCount[newPath] = data.openCount[oldPath];
+      delete data.openCount[oldPath];
+      changed = true;
+    }
+
+    if (oldPath in data.coOccurrence) {
+      data.coOccurrence[newPath] = data.coOccurrence[oldPath];
+      delete data.coOccurrence[oldPath];
+      changed = true;
+    }
+
+    for (const key of Object.keys(data.coOccurrence)) {
+      if (oldPath in data.coOccurrence[key]) {
+        data.coOccurrence[key][newPath] = data.coOccurrence[key][oldPath];
+        delete data.coOccurrence[key][oldPath];
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      // Invalidate the snapshot hash so the renamed path is recorded correctly
+      this.lastSnapshotHash = undefined;
+      await this.storage.update(STORAGE_KEY, data);
+    }
+  }
+
   async recordDismissal(fileKey: string): Promise<void> {
     const record = this.storage.get<DismissalRecord>(DISMISSED_KEY, {});
     record[fileKey] = Date.now();

@@ -232,6 +232,59 @@ describe("TabUsageTracker.dismissal", () => {
   });
 });
 
+describe("TabUsageTracker.handleFileRename", () => {
+  it("updates openCount to use the new path", async () => {
+    const storage = new MockStorage();
+    const tracker = new TabUsageTracker(storage);
+    await tracker.recordSnapshot(["/a/foo.ts", "/a/bar.ts"]);
+    await tracker.handleFileRename("/a/foo.ts", "/a/renamed.ts");
+    const data = tracker.getData();
+    ok(!("/a/foo.ts" in data.openCount), "old path should be gone");
+    ok("/a/renamed.ts" in data.openCount, "new path should exist");
+  });
+
+  it("updates co-occurrence forward entries to use the new path", async () => {
+    const storage = new MockStorage();
+    const tracker = new TabUsageTracker(storage);
+    await tracker.recordSnapshot(["/a/foo.ts", "/a/bar.ts"]);
+    await tracker.handleFileRename("/a/foo.ts", "/a/renamed.ts");
+    const data = tracker.getData();
+    ok(!("/a/foo.ts" in data.coOccurrence), "old forward entry should be gone");
+    ok(data.coOccurrence["/a/renamed.ts"]?.["/a/bar.ts"] === 1);
+  });
+
+  it("updates co-occurrence reverse entries to use the new path", async () => {
+    const storage = new MockStorage();
+    const tracker = new TabUsageTracker(storage);
+    await tracker.recordSnapshot(["/a/foo.ts", "/a/bar.ts"]);
+    await tracker.handleFileRename("/a/foo.ts", "/a/renamed.ts");
+    const data = tracker.getData();
+    ok(!("/a/foo.ts" in data.coOccurrence["/a/bar.ts"]));
+    strictEqual(data.coOccurrence["/a/bar.ts"]?.["/a/renamed.ts"], 1);
+  });
+
+  it("is a no-op for a path not in the tracker", async () => {
+    const storage = new MockStorage();
+    const tracker = new TabUsageTracker(storage);
+    await tracker.recordSnapshot(["/a/foo.ts", "/a/bar.ts"]);
+    await tracker.handleFileRename("/a/unknown.ts", "/a/other.ts");
+    const data = tracker.getData();
+    strictEqual(Object.keys(data.openCount).length, 2);
+  });
+
+  it("invalidates the snapshot hash so the next snapshot is recorded fresh", async () => {
+    const storage = new MockStorage();
+    const tracker = new TabUsageTracker(storage);
+    await tracker.recordSnapshot(["/a/foo.ts", "/a/bar.ts"]);
+    // Same snapshot would normally be deduped
+    await tracker.handleFileRename("/a/foo.ts", "/a/renamed.ts");
+    // After rename the hash is cleared, so this records
+    await tracker.recordSnapshot(["/a/renamed.ts", "/a/bar.ts"]);
+    const data = tracker.getData();
+    strictEqual(data.coOccurrence["/a/renamed.ts"]["/a/bar.ts"], 2);
+  });
+});
+
 describe("TabUsageTracker pruning", () => {
   it("returns correct data for normal usage well below cap", async () => {
     const storage = new MockStorage();

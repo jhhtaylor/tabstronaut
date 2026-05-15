@@ -897,6 +897,10 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.workspace.onDidRenameFiles((event) => {
     for (const file of event.files) {
       treeDataProvider.handleFileRename(file.oldUri.fsPath, file.newUri.fsPath);
+      void tabUsageTracker.handleFileRename(
+        file.oldUri.fsPath,
+        file.newUri.fsPath
+      );
     }
   });
 
@@ -1127,9 +1131,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (!groupId) {
           return;
         }
-        for (const file of suggestion.files) {
-          await treeDataProvider.addToGroup(groupId, file, false);
-        }
+        await treeDataProvider.addFilesToGroupBatch(groupId, suggestion.files);
         treeDataProvider.dismissSuggestion(suggestionIndex);
         lastHeuristicKey = undefined; // prevent in-flight AI result from re-showing this suggestion
         showConfirmation(`Created Tab Group '${suggestion.name}'.`);

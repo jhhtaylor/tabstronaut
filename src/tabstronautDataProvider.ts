@@ -1221,6 +1221,25 @@ export class TabstronautDataProvider
     }
   }
 
+  async addFilesToGroupBatch(groupId: string, filePaths: string[]): Promise<void> {
+    const group = this.findGroupById(groupId);
+    if (!group) {
+      return;
+    }
+    for (const filePath of filePaths) {
+      const normalized = generateNormalizedPath(filePath);
+      const alreadyIn = group.items.some(
+        (item) =>
+          generateNormalizedPath(item.resourceUri?.fsPath || "") === normalized
+      );
+      if (!alreadyIn) {
+        group.items.push(group.createTabItem(filePath));
+      }
+    }
+    await this.updateWorkspaceState();
+    this.refreshUngroupedTabs();
+  }
+
   public setSuggestions(suggestions: SuggestedGroup[]): void {
     this.suggestions = suggestions;
     this._onDidChangeTreeData.fire();
