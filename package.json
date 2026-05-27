@@ -107,7 +107,7 @@
       {
         "command": "tabstronaut.filterTabGroupsActive",
         "category": "Tabstronaut",
-        "title": "✓ Filter Tab Groups by Name...",
+        "title": "\u2713 Filter Tab Groups by Name...",
         "icon": "$(filter-filled)"
       },
       {
@@ -502,63 +502,72 @@
         "key": "ctrl+alt+1",
         "args": [
           1
-        ]
+        ],
+        "mac": "cmd+alt+1"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+2",
         "args": [
           2
-        ]
+        ],
+        "mac": "cmd+alt+2"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+3",
         "args": [
           3
-        ]
+        ],
+        "mac": "cmd+alt+3"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+4",
         "args": [
           4
-        ]
+        ],
+        "mac": "cmd+alt+4"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+5",
         "args": [
           5
-        ]
+        ],
+        "mac": "cmd+alt+5"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+6",
         "args": [
           6
-        ]
+        ],
+        "mac": "cmd+alt+6"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+7",
         "args": [
           7
-        ]
+        ],
+        "mac": "cmd+alt+7"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+8",
         "args": [
           8
-        ]
+        ],
+        "mac": "cmd+alt+8"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",
         "key": "ctrl+alt+9",
         "args": [
           9
-        ]
+        ],
+        "mac": "cmd+alt+9"
       }
     ],
     "configuration": {
@@ -621,12 +630,12 @@
         "tabstronaut.enableTabGroupSuggestions": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Analyse which files you open together and suggest tab groups.\n\n**Enabled:** File paths are recorded locally on your device to detect patterns. Nothing is sent anywhere.\n\n**Disabled:** This is a full opt-out — no file usage data is collected, recorded, or stored. The upside is complete privacy; the downside is that no suggestions will ever appear and any existing usage data stops being used."
+          "markdownDescription": "Analyse which files you open together and suggest tab groups.\n\n**Enabled:** File paths are recorded locally on your device to detect patterns. Nothing is sent anywhere.\n\n**Disabled:** This is a full opt-out \u2014 no file usage data is collected, recorded, or stored. The upside is complete privacy; the downside is that no suggestions will ever appear and any existing usage data stops being used."
         },
         "tabstronaut.enableAIGroupNaming": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate a better name for suggested groups. Only file **names** are sent — never full paths or file contents.\n\nHas no effect when **Enable Tab Group Suggestions** is disabled."
+          "markdownDescription": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate a better name for suggested groups. Only file **names** are sent \u2014 never full paths or file contents.\n\nHas no effect when **Enable Tab Group Suggestions** is disabled."
         }
       }
     }
