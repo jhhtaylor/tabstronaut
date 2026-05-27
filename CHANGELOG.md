@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.5.2]
+
+- Added **Open Tab Group...** command (`Ctrl+Alt+O` / `Cmd+Alt+O`) — opens a quick-pick menu listing all your Tab Groups by name so you can restore any group without needing to remember its number. Nested groups are shown with a `>` hierarchy indicator. (Thanks @homezonebenny - #206)
+
 ## [1.5.1]
 
 - Fixed a bug where the GitHub Copilot permission dialog would reappear repeatedly after being cancelled. It now asks once per session. Toggling the **Enable AI Group Naming** setting off and back on gives you a fresh prompt if you change your mind.

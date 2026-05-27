@@ -14,6 +14,7 @@ import {
   sortAllGroupsCommand,
   filterTabGroupsCommand,
   handleAddSubGroup,
+  openGroupQuickPick,
 } from "./groupOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
@@ -654,6 +655,66 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.openGroupQuickPick",
+      async () => {
+        const selection = await openGroupQuickPick(treeDataProvider);
+        if (!selection) {
+          return;
+        }
+
+        const { group, recursive } = selection;
+
+        const autoClose = vscode.workspace
+          .getConfiguration("tabstronaut")
+          .get<boolean>("autoCloseOnRestore", false);
+        if (autoClose) {
+          recentlyClosedEditors = getOpenEditorFilePaths();
+          vscode.commands.executeCommand(
+            "setContext",
+            "tabstronaut:canUndoClose",
+            true
+          );
+
+          if (undoCloseTimeout) {
+            clearTimeout(undoCloseTimeout);
+          }
+
+          undoCloseTimeout = setTimeout(() => {
+            recentlyClosedEditors = null;
+            vscode.commands.executeCommand(
+              "setContext",
+              "tabstronaut:canUndoClose",
+              false
+            );
+          }, 5000);
+
+          await vscode.commands.executeCommand(
+            "workbench.action.closeAllEditors"
+          );
+        }
+
+        if (recursive) {
+          await restoreGroupTabsRecursive(group);
+        } else {
+          for (const tabItem of group.items) {
+            const filePath = tabItem.resourceUri?.fsPath;
+            if (filePath) {
+              try {
+                await openFileSmart(filePath);
+              } catch {
+                vscode.window.showErrorMessage(
+                  `Cannot open '${path.basename(filePath)}'. Please check if the file exists and try again.`
+                );
+              }
+            }
+          }
+        }
+      }
+    )
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand(

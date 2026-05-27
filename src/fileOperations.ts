@@ -31,7 +31,7 @@ export async function handleOpenTab(item: any, fromButton: boolean) {
         await vscode.window.showTextDocument(doc, { preview });
       } catch {
         // If it's a binary file, use vscode.open instead
-        await vscode.commands.executeCommand("vscode.open", uri);
+        await vscode.commands.executeCommand("vscode.open", uri, { preview });
       }
     }
   } catch {
@@ -59,7 +59,7 @@ export async function openFileSmart(filePath: string): Promise<void> {
         await vscode.window.showTextDocument(document, { preview: false });
       } catch {
         // If it's a binary file, use vscode.open instead
-        await vscode.commands.executeCommand("vscode.open", uri);
+        await vscode.commands.executeCommand("vscode.open", uri, { preview: false });
       }
     }
   } catch {
@@ -95,7 +95,7 @@ async function revealExistingTab(uri: vscode.Uri): Promise<boolean> {
             });
           } catch {
             // If it's a binary file, use vscode.open instead
-            await vscode.commands.executeCommand("vscode.open", uri);
+            await vscode.commands.executeCommand("vscode.open", uri, { preview: false });
           }
         }
         return true;

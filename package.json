@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.5.1",
+  "version": "1.5.2",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -50,6 +50,12 @@
         "category": "Tabstronaut",
         "title": "Add to Tab Group...",
         "icon": "$(plus)"
+      },
+      {
+        "command": "tabstronaut.openGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Open Tab Group...",
+        "icon": "$(folder-opened)"
       },
       {
         "command": "tabstronaut.openTabGroupContextMenuFromEditorTabRightClick",
@@ -485,6 +491,11 @@
         "command": "tabstronaut.openTabGroupContextMenu",
         "key": "ctrl+alt+a",
         "mac": "cmd+alt+a"
+      },
+      {
+        "command": "tabstronaut.openGroupQuickPick",
+        "key": "ctrl+alt+o",
+        "mac": "cmd+alt+o"
       },
       {
         "command": "tabstronaut.restoreTabsByGroupNumber",

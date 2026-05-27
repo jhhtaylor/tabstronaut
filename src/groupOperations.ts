@@ -604,6 +604,86 @@ export async function sortAllGroupsCommand(
   }
 }
 
+export type GroupQuickPickItem = vscode.QuickPickItem & {
+  group: Group;
+  buttons?: vscode.QuickInputButton[];
+};
+
+export type OpenGroupSelection = {
+  group: Group;
+  /** true = open this group's tabs and all nested sub-group tabs recursively */
+  recursive: boolean;
+};
+
+const openRecursiveButton: vscode.QuickInputButton = {
+  iconPath: new vscode.ThemeIcon('list-tree'),
+  tooltip: 'Open with all sub-groups',
+};
+
+export async function openGroupQuickPick(
+  treeDataProvider: TabstronautDataProvider
+): Promise<OpenGroupSelection | undefined> {
+  const rootGroups = treeDataProvider.getRootGroups();
+
+  if (rootGroups.length === 0) {
+    vscode.window.showWarningMessage(
+      'No Tab Groups found. Create a group first using Ctrl+Alt+A.'
+    );
+    return undefined;
+  }
+
+  const buildItems = (groups: Group[], prefix = ''): GroupQuickPickItem[] => {
+    const items: GroupQuickPickItem[] = [];
+    for (const group of groups) {
+      const name =
+        typeof group.label === 'string' ? group.label : group.label?.label ?? '';
+      const label = prefix ? `${prefix} > ${name}` : name;
+      const tabCount = group.items.length;
+      items.push({
+        label,
+        description: `${tabCount} tab${tabCount !== 1 ? 's' : ''}`,
+        group,
+        buttons: group.children.length > 0 ? [openRecursiveButton] : [],
+      });
+      if (group.children.length > 0) {
+        items.push(...buildItems(group.children, label));
+      }
+    }
+    return items;
+  };
+
+  const quickPick = vscode.window.createQuickPick<GroupQuickPickItem>();
+  quickPick.items = buildItems(rootGroups);
+  quickPick.placeholder = 'Select a Tab Group to open';
+
+  return await new Promise<OpenGroupSelection | undefined>((resolve) => {
+    let settled = false;
+    const finish = (result: OpenGroupSelection | undefined) => {
+      if (settled) { return; }
+      settled = true;
+      resolve(result);
+    };
+
+    quickPick.onDidAccept(() => {
+      const selected = quickPick.selectedItems[0];
+      quickPick.hide();
+      finish(selected ? { group: selected.group, recursive: false } : undefined);
+    });
+
+    quickPick.onDidHide(() => {
+      finish(undefined);
+      quickPick.dispose();
+    });
+
+    quickPick.onDidTriggerItemButton((e) => {
+      quickPick.hide();
+      finish({ group: (e.item as GroupQuickPickItem).group, recursive: true });
+    });
+
+    quickPick.show();
+  });
+}
+
 export async function filterTabGroupsCommand(
   treeDataProvider: TabstronautDataProvider
 ): Promise<void> {

@@ -1,0 +1,23 @@
+{
+  "08378e52-5207-4a15-883c-fd9c159a8304": {
+    "label": "Group 1",
+    "items": [
+      "/tmp/filler_transcript.json",
+      "/tmp/piano_test.mid"
+    ],
+    "children": {
+      "568da3da-474c-4e9a-9f55-2cbb6d564a30": {
+        "label": "Group 2",
+        "items": [
+          "/tmp/ss1.png",
+          "/tmp/ss2.png"
+        ],
+        "children": {},
+        "creationTime": "2026-05-27T12:29:30.124Z",
+        "colorName": "terminal.ansiYellow"
+      }
+    },
+    "creationTime": "2026-05-27T12:25:00.260Z",
+    "colorName": "terminal.ansiRed"
+  }
+}
