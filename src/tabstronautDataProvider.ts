@@ -1029,16 +1029,18 @@ export class TabstronautDataProvider
   }
 
   getGroupByOrder(order: number): Group {
-    const allGroups: Group[] = this.getGroups();
+    // Use only root-level groups so that Ctrl+Alt+1–9 always addresses the
+    // Nth top-level group, regardless of how many sub-groups exist.
+    const rootGroups: Group[] = this.getRootGroups();
 
     const isDescending = vscode.workspace
       .getConfiguration("tabstronaut")
       .get<boolean>("keybindingOrder", true);
 
     if (isDescending) {
-      return allGroups[order - 1];
+      return rootGroups[order - 1];
     } else {
-      return allGroups[allGroups.length - order];
+      return rootGroups[rootGroups.length - order];
     }
   }
 

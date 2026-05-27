@@ -250,3 +250,47 @@ describe('TabstronautDataProvider group filter', () => {
     strictEqual(children[0].contextValue, 'instruction');
   });
 });
+
+describe('TabstronautDataProvider.getGroupByOrder', () => {
+  it('returns the first root group for order 1 when there are no sub-groups', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+    await provider.addGroup('Beta');
+    provider.clearRefreshInterval();
+
+    const group = provider.getGroupByOrder(1);
+    strictEqual(group?.label, 'Alpha', 'order 1 should be the first root group');
+  });
+
+  it('returns the second root group for order 2 when there are no sub-groups', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+    await provider.addGroup('Beta');
+    provider.clearRefreshInterval();
+
+    const group = provider.getGroupByOrder(2);
+    strictEqual(group?.label, 'Beta', 'order 2 should be the second root group');
+  });
+
+  it('skips sub-groups — Ctrl+Alt+2 addresses the second ROOT group even with a nested child', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const alphaId = await provider.addGroup('Alpha');
+    await provider.addGroup('Beta');
+    // Add a child to Alpha — with the old flat-list behaviour this would be
+    // returned for order 2, shifting Beta to order 3.
+    await provider.addSubGroup(alphaId!, 'Alpha-Child', 'terminal.ansiBlue');
+    provider.clearRefreshInterval();
+
+    const group = provider.getGroupByOrder(2);
+    strictEqual(group?.label, 'Beta', 'order 2 should still be Beta, not Alpha-Child');
+  });
+
+  it('returns undefined for an out-of-range order', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Only');
+    provider.clearRefreshInterval();
+
+    const group = provider.getGroupByOrder(5);
+    strictEqual(group, undefined, 'order 5 with 1 group should return undefined');
+  });
+});

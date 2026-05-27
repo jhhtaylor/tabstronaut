@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.5.3]
+
+- Fixed `Ctrl+Alt+1`–`9` keybindings to always target **root-level** Tab Groups. Previously, the numbering used a depth-first flat list of all groups (including sub-groups), so having a nested group could shift the numbers unpredictably. Shortcuts now count only top-level groups — `Ctrl+Alt+1` is always the first group, `Ctrl+Alt+2` the second, and so on. Opening a group via its number still opens all its tabs and those of every sub-group recursively.
+
 ## [1.5.2]
 
 - Added **Open Tab Group...** command (`Ctrl+Alt+O` / `Cmd+Alt+O`) — opens a quick-pick menu listing all your Tab Groups by name so you can restore any group without needing to remember its number. Nested groups are shown with a `>` hierarchy indicator. (Thanks @homezonebenny - #206)
