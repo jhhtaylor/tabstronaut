@@ -2,7 +2,7 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
-## [1.7.0]
+## [1.5.5]
 
 Three more keyboard shortcuts to round out the keyboard-first workflow.
 
@@ -10,13 +10,14 @@ Three more keyboard shortcuts to round out the keyboard-first workflow.
 - **`Ctrl+Alt+N` / `Cmd+Alt+N`** — **Create New Tab Group** — creates a new empty group instantly. When the *Prompt for Group Details* setting is off (the default) the group is created silently with the next auto-generated name; when on, the name and color pickers appear. Note: on Windows/Linux this shortcut overlaps with the Code Runner extension's "Run Code" binding — you can rebind either in VS Code Keyboard Shortcuts if needed.
 - **`Ctrl+Alt+E` / `Cmd+Alt+E`** — **Rename Tab Group…** — pick any group (including nested sub-groups shown with `>` hierarchy) and enter a new name and color. Closes the last gap that previously required reaching for the mouse.
 
-## [1.6.0]
+## [1.5.4]
 
 Three new hotkey-driven commands for a fully keyboard-first workflow. (Thanks @homezonebenny - #206)
 
 - **`Ctrl+Alt+S` / `Cmd+Alt+S`** — **Add Current Tab to Group…** — opens a quick-pick listing only the groups the active file is *not* already in, so the list stays short and relevant. A "Create new group…" option appears at the top if you want to start a fresh group on the spot.
-- **`Ctrl+Alt+R` / `Cmd+Alt+R`** — **Remove Current Tab from Group…** — shows only the groups the active file *is* in. Select one to remove it from that group. If the file isn't in any group a warning message appears instead of an empty list. (`Ctrl+Alt+D` / `Cmd+Alt+D` was the original assignment but `⌘⌥D` is reserved by macOS to show/hide the Dock.)
+- **`Ctrl+Alt+R` / `Cmd+Alt+R`** — **Remove Current Tab from Group…** — shows only the groups the active file *is* in. Select one to remove it from that group. If the file isn't in any group a warning message appears instead of an empty list. (`Ctrl+Alt+D` was avoided on Mac as `⌘⌥D` is reserved by macOS to show/hide the Dock.)
 - **`Ctrl+Alt+Shift+D` / `Cmd+Alt+Shift+D`** — **Delete Tab Group…** — pick any group (including nested sub-groups shown with a `>` hierarchy indicator) to delete it. The existing confirmation prompt and 5-second undo button are both preserved.
+- Fixed a bug where deleting a root group and then pressing Undo would restore it at the end of the list instead of its original position.
 
 ## [1.5.3]
 
