@@ -25,17 +25,22 @@ Love this extension? You can support its development with a small donation - com
 
 Check out [@tabstronaut_dev](https://x.com/tabstronaut_dev) for Tabstronaut tips and how-to videos.
 
-### Quick Access to Tabstronaut's Context Menu
+### Keyboard Shortcuts
 
-You can quickly access the Tabstronaut's context menu without having to right-click. Simply press **`Ctrl+Alt+A`** on Windows/Linux or **`Cmd+Alt+A`** on macOS. You can also open this menu from the title bar of the Tabstronaut view, the right-click menu or the 'More Actions...' menu.
+Every Tabstronaut action has a keyboard shortcut so you never need to touch the mouse.
 
-### Instantly Restore Tab Groups with Keybindings
+| Action | Windows / Linux | macOS |
+|--------|----------------|-------|
+| **Add current tab to a group** *(filtered — only shows groups the file isn't in yet)* | `Ctrl+Alt+S` | `Cmd+Alt+S` |
+| **Add current tab to a group** *(shows all groups)* | `Ctrl+Alt+A` | `Cmd+Alt+A` |
+| **Open / restore a group** | `Ctrl+Alt+O` | `Cmd+Alt+O` |
+| **Remove current tab from a group** | `Ctrl+Alt+R` | `Cmd+Alt+R` |
+| **Delete a group** | `Ctrl+Alt+Shift+D` | `Cmd+Alt+Shift+D` |
+| **Restore group 1–9 by number** | `Ctrl+Alt+1` – `Ctrl+Alt+9` | `Cmd+Alt+1` – `Cmd+Alt+9` |
 
-Tabstronaut now supports keybindings to restore tab groups. Here's how to make the most out of them:
+The **S**, **O**, **R**, and **Shift+D** shortcuts open a quick-pick menu — start typing to filter the list. The number shortcuts restore a top-level group immediately without any menu.
 
-- **Restore the First Tab Group**: **`Ctrl+Alt+1`** (or **`Cmd+Alt+1`** on macOS)
-- **Restore the Second Tab Group**: **`Ctrl+Alt+2`** (or **`Cmd+Alt+2`** on macOS)
-- ... and so on, up to the ninth group with **`Ctrl+Alt+9`** (or **`Cmd+Alt+9`** on macOS).
+> **Tip:** All of these can also be reached from the Tabstronaut sidebar, the right-click menu in the editor tab bar, or the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 
 ## Extension Settings
 
