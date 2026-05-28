@@ -737,7 +737,8 @@ function buildGroupHierarchyItems(
 }
 
 /**
- * Ctrl+Alt+S — add the current tab to a group.
+ * Add the current tab to a group (no direct keybinding — behaviour merged
+ * into Ctrl+Alt+A via selectTabGroup filtering as of v1.5.6).
  * Shows only groups where the file is NOT already present, plus a
  * "Create new group…" option at the top.
  */
@@ -937,7 +938,7 @@ export async function renameGroupQuickPick(
 }
 
 /**
- * Ctrl+Alt+Shift+D — pick a group to delete.
+ * Ctrl+Alt+Shift+R — pick a group to delete.
  * Returns the group so the caller can run the existing removeTabGroup command
  * (which handles the confirmation prompt and undo support).
  */

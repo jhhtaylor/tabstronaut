@@ -722,7 +722,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // ── Ctrl+Alt+S: add current tab to a group ──────────────────────────────────
+  // ── addCurrentTabToGroupQuickPick (no keybinding — merged into Ctrl+Alt+A) ───
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.addCurrentTabToGroupQuickPick",
@@ -778,7 +778,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // ── Ctrl+Alt+Shift+D: delete a whole group ───────────────────────────────────
+  // ── Ctrl+Alt+Shift+R: delete a whole group ───────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.deleteGroupQuickPick",

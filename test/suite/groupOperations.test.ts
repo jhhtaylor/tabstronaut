@@ -1,5 +1,5 @@
 /// <reference types="mocha" />
-import { strictEqual } from 'assert';
+import { strictEqual, ok } from 'assert';
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from '../../src/tabstronautDataProvider';
 import { Group } from '../../src/models/Group';
@@ -10,6 +10,7 @@ import {
   handleAddToExistingGroup,
   addAllOpenTabsToGroup,
   filterTabGroupsCommand,
+  selectTabGroup,
 } from '../../src/groupOperations';
 
 class MockMemento implements vscode.Memento {
@@ -246,6 +247,124 @@ describe('groupOperations.filterTabGroupsCommand', () => {
     await filterTabGroupsCommand(provider);
     provider.clearRefreshInterval();
     strictEqual(provider.getGroupFilter(), undefined);
+  });
+});
+
+// ── selectTabGroup filtering ──────────────────────────────────────────────────
+
+function makeQPMock() {
+  let hideCb: (() => void) | undefined;
+  const qp: any = {
+    items: [] as any[],
+    placeholder: '',
+    selectedItems: [] as any[],
+    onDidAccept: (_cb: () => void) => {},
+    onDidHide: (cb: () => void) => { hideCb = cb; },
+    onDidTriggerItemButton: (_cb: any) => {},
+    show: () => {},
+    hide: () => { hideCb?.(); },
+    dispose: () => {},
+  };
+  return { qp, cancel() { hideCb?.(); } };
+}
+
+describe('selectTabGroup — filterFilePath', () => {
+  let origCreateQP: any;
+
+  beforeEach(() => { origCreateQP = vscode.window.createQuickPick; });
+  afterEach(() => {
+    Object.defineProperty(vscode.window, 'createQuickPick', {
+      value: origCreateQP, configurable: true,
+    });
+  });
+
+  it('shows all groups when no filterFilePath is given', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+    await provider.addGroup('Beta');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', {
+      value: () => mock.qp, configurable: true,
+    });
+
+    const p = selectTabGroup(provider);
+    mock.cancel();
+    await p;
+    provider.clearRefreshInterval();
+
+    const labels = (mock.qp.items as any[]).filter((i: any) => i.id).map((i: any) => i.label);
+    ok(labels.includes('Alpha'), 'Alpha should appear');
+    ok(labels.includes('Beta'), 'Beta should appear');
+  });
+
+  it('hides groups that already contain the file', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const alphaId = await provider.addGroup('Alpha');
+    await provider.addGroup('Beta');
+    await provider.addToGroup(alphaId!, '/tmp/file.ts');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', {
+      value: () => mock.qp, configurable: true,
+    });
+
+    const p = selectTabGroup(provider, false, '/tmp/file.ts');
+    mock.cancel();
+    await p;
+    provider.clearRefreshInterval();
+
+    const labels = (mock.qp.items as any[]).filter((i: any) => i.id).map((i: any) => i.label);
+    ok(!labels.includes('Alpha'), 'Alpha should be hidden (file already present)');
+    ok(labels.includes('Beta'), 'Beta should remain visible');
+  });
+
+  it('still shows "New Tab Group" when all groups are filtered out', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('Only');
+    await provider.addToGroup(id!, '/tmp/file.ts');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', {
+      value: () => mock.qp, configurable: true,
+    });
+
+    const p = selectTabGroup(provider, false, '/tmp/file.ts');
+    mock.cancel();
+    await p;
+    provider.clearRefreshInterval();
+
+    const newGroupItem = (mock.qp.items as any[]).find(
+      (i: any) => i.label === 'New Tab Group from current tab...'
+    );
+    ok(newGroupItem, '"New Tab Group from current tab..." should always be present');
+
+    const groupItems = (mock.qp.items as any[]).filter((i: any) => i.id);
+    strictEqual(groupItems.length, 0, 'no existing group items should remain');
+  });
+
+  it('filters at the group level but still shows sibling sub-groups', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const parentId = await provider.addGroup('Parent');
+    const childAId = await provider.addSubGroup(parentId!, 'ChildA', 'terminal.ansiBlue');
+    await provider.addSubGroup(parentId!, 'ChildB', 'terminal.ansiGreen');
+    // Add file to ChildA only
+    await provider.addToGroup(childAId!, '/tmp/file.ts');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', {
+      value: () => mock.qp, configurable: true,
+    });
+
+    const p = selectTabGroup(provider, false, '/tmp/file.ts');
+    mock.cancel();
+    await p;
+    provider.clearRefreshInterval();
+
+    const labels = (mock.qp.items as any[]).filter((i: any) => i.id).map((i: any) => i.label);
+    ok(labels.includes('Parent'), 'Parent group should be visible');
+    ok(!labels.some((l: string) => l.endsWith('ChildA')), 'ChildA should be hidden');
+    ok(labels.some((l: string) => l.endsWith('ChildB')), 'ChildB should remain visible');
   });
 });
 
