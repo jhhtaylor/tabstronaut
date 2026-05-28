@@ -294,3 +294,36 @@ describe('TabstronautDataProvider.getGroupByOrder', () => {
     strictEqual(group, undefined, 'order 5 with 1 group should return undefined');
   });
 });
+
+describe('TabstronautDataProvider.getGroupIndex — used for undo position', () => {
+  it('returns the correct index BEFORE deletion so undo can restore to original slot', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+    await provider.addGroup('Beta');
+    await provider.addGroup('Gamma');
+
+    // Capture index BEFORE deleting (the fix we applied in removeTabGroup)
+    const gammaGroup = provider.getRootGroups().find((g) => g.label === 'Gamma')!;
+    const indexBefore = provider.getGroupIndex(gammaGroup.id);
+
+    await provider.deleteGroup(gammaGroup.id);
+
+    const indexAfter = provider.getGroupIndex(gammaGroup.id);
+
+    provider.clearRefreshInterval();
+
+    strictEqual(indexBefore, 2, 'Gamma should be at index 2 before deletion');
+    strictEqual(indexAfter, -1, 'deleted group should return -1 after deletion');
+  });
+
+  it('returns -1 for a nested (sub-group) id — undo uses deletedParentId instead', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const parentId = await provider.addGroup('Parent');
+    const childId = await provider.addSubGroup(parentId!, 'Child', 'terminal.ansiBlue');
+
+    const indexBeforeDeletion = provider.getGroupIndex(childId!);
+    provider.clearRefreshInterval();
+
+    strictEqual(indexBeforeDeletion, -1, 'sub-group id is never in root groupsMap');
+  });
+});

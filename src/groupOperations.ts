@@ -772,7 +772,7 @@ export async function addCurrentTabToGroupQuickPick(
 }
 
 /**
- * Ctrl+Alt+D — remove the current tab from one of the groups it belongs to.
+ * Ctrl+Alt+R — remove the current tab from one of the groups it belongs to.
  * Shows only groups where the file IS present.
  */
 export async function removeCurrentTabFromGroupQuickPick(

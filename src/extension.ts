@@ -747,7 +747,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // ── Ctrl+Alt+D: remove current tab from a group ──────────────────────────────
+  // ── Ctrl+Alt+R: remove current tab from a group ──────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.removeCurrentTabFromGroupQuickPick",
@@ -853,6 +853,12 @@ export function activate(context: vscode.ExtensionContext) {
           .getConfiguration("tabstronaut")
           .get<boolean>("autoRemoveClosedTabs", false);
 
+        // Capture position BEFORE deletion — getGroupIndex returns -1 after the
+        // group is removed from groupsMap, which previously caused undo to always
+        // restore root groups at the end of the list instead of their original slot.
+        const index = treeDataProvider.getGroupIndex(group.id);
+        const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
+
         // Delete the group
         treeDataProvider.deleteGroup(group.id);
         treeDataProvider.refresh();
@@ -862,9 +868,6 @@ export function activate(context: vscode.ExtensionContext) {
         if (autoRemoveClosedTabs) {
           return;
         }
-
-        const index = treeDataProvider.getGroupIndex(group.id);
-        const prevId = treeDataProvider.getGroupIdByIndex(index - 1);
         recentlyDeletedGroup = {
           ...group,
           index,
