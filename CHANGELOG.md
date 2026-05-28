@@ -16,7 +16,7 @@ Three new hotkey-driven commands for a fully keyboard-first workflow. (Thanks @h
 
 - **`Ctrl+Alt+S` / `Cmd+Alt+S`** — **Add Current Tab to Group…** — opens a quick-pick listing only the groups the active file is *not* already in, so the list stays short and relevant. A "Create new group…" option appears at the top if you want to start a fresh group on the spot.
 - **`Ctrl+Alt+R` / `Cmd+Alt+R`** — **Remove Current Tab from Group…** — shows only the groups the active file *is* in. Select one to remove it from that group. If the file isn't in any group a warning message appears instead of an empty list. (`Ctrl+Alt+D` was avoided on Mac as `⌘⌥D` is reserved by macOS to show/hide the Dock.)
-- **`Ctrl+Alt+Shift+D` / `Cmd+Alt+Shift+D`** — **Delete Tab Group…** — pick any group (including nested sub-groups shown with a `>` hierarchy indicator) to delete it. The existing confirmation prompt and 5-second undo button are both preserved.
+- **`Ctrl+Alt+Shift+R` / `Cmd+Alt+Shift+R`** — **Delete Tab Group…** — pick any group (including nested sub-groups shown with a `>` hierarchy indicator) to delete it. The existing confirmation prompt and 5-second undo button are both preserved.
 - Fixed a bug where deleting a root group and then pressing Undo would restore it at the end of the list instead of its original position.
 
 ## [1.5.3]

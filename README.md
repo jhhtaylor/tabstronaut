@@ -38,7 +38,7 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Open / restore a group** | `Ctrl+Alt+O` | `Cmd+Alt+O` |
 | **Rename a group** | `Ctrl+Alt+E` | `Cmd+Alt+E` |
 | **Remove current tab from a group** | `Ctrl+Alt+R` | `Cmd+Alt+R` |
-| **Delete a group** | `Ctrl+Alt+Shift+D` | `Cmd+Alt+Shift+D` |
+| **Delete a group** | `Ctrl+Alt+Shift+R` | `Cmd+Alt+Shift+R` |
 | **Restore group 1–9 by number** | `Ctrl+Alt+1` – `Ctrl+Alt+9` | `Cmd+Alt+1` – `Cmd+Alt+9` |
 
 The letter shortcuts (**N**, **S**, **G**, **O**, **E**, **R**, **Shift+D**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu.

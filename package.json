@@ -633,8 +633,8 @@
       },
       {
         "command": "tabstronaut.deleteGroupQuickPick",
-        "key": "ctrl+alt+shift+d",
-        "mac": "cmd+alt+shift+d"
+        "key": "ctrl+alt+shift+r",
+        "mac": "cmd+alt+shift+r"
       },
       {
         "command": "tabstronaut.addAllTabsToGroupQuickPick",
