@@ -32,8 +32,7 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | Action | Windows / Linux | macOS |
 |--------|----------------|-------|
 | **Create a new empty group** | `Ctrl+Alt+N` | `Cmd+Alt+N` |
-| **Add current tab to a group** *(filtered — only shows groups the file isn't in yet)* | `Ctrl+Alt+S` | `Cmd+Alt+S` |
-| **Add current tab to a group** *(shows all groups)* | `Ctrl+Alt+A` | `Cmd+Alt+A` |
+| **Add current tab to a group** *(only shows groups the file isn't already in)* | `Ctrl+Alt+A` | `Cmd+Alt+A` |
 | **Add all open tabs to a group** | `Ctrl+Alt+G` | `Cmd+Alt+G` |
 | **Open / restore a group** | `Ctrl+Alt+O` | `Cmd+Alt+O` |
 | **Rename a group** | `Ctrl+Alt+E` | `Cmd+Alt+E` |
@@ -41,7 +40,7 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Delete a group** | `Ctrl+Alt+Shift+R` | `Cmd+Alt+Shift+R` |
 | **Restore group 1–9 by number** | `Ctrl+Alt+1` – `Ctrl+Alt+9` | `Cmd+Alt+1` – `Cmd+Alt+9` |
 
-The letter shortcuts (**N**, **S**, **G**, **O**, **E**, **R**, **Shift+D**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu.
+The letter shortcuts (**A**, **G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu.
 
 > **Tip:** All of these can also be reached from the Tabstronaut sidebar, the right-click menu in the editor tab bar, or the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 

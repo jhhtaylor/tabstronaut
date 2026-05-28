@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.5.5",
+  "version": "1.5.6",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -620,11 +620,6 @@
           9
         ],
         "mac": "cmd+alt+9"
-      },
-      {
-        "command": "tabstronaut.addCurrentTabToGroupQuickPick",
-        "key": "ctrl+alt+s",
-        "mac": "cmd+alt+s"
       },
       {
         "command": "tabstronaut.removeCurrentTabFromGroupQuickPick",

@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.5.6]
+
+- Merged `Ctrl+Alt+A` / `Cmd+Alt+A` and the previous `Ctrl+Alt+S` shortcut into one. `Ctrl+Alt+A` now shows only the groups the active file is *not* already in — keeping the list short and relevant — while retaining the richer quick-pick UI with per-group icon buttons. The redundant `Ctrl+Alt+S` shortcut has been removed.
+
 ## [1.5.5]
 
 Three more keyboard shortcuts to round out the keyboard-first workflow.

@@ -96,7 +96,8 @@ export type CustomQuickPickItem = vscode.QuickPickItem & {
 
 export async function selectTabGroup(
   treeDataProvider: TabstronautDataProvider,
-  useSelectedFiles = false
+  useSelectedFiles = false,
+  filterFilePath?: string
 ): Promise<CustomQuickPickItem | undefined> {
   const quickPick = vscode.window.createQuickPick<CustomQuickPickItem>();
 
@@ -106,19 +107,22 @@ export async function selectTabGroup(
       const label = prefix
         ? `${prefix} > ${typeof group.label === 'string' ? group.label : ''}`
         : (typeof group.label === 'string' ? group.label : '');
-      items.push({
-        label,
-        id: group.id,
-        buttons: [
-          {
-            iconPath: new vscode.ThemeIcon(
-              'new-folder',
-              new vscode.ThemeColor(group.colorName)
-            ),
-            tooltip: 'Add all tabs to Tab Group',
-          },
-        ],
-      });
+      // When filtering, skip groups that already directly contain this file
+      if (!filterFilePath || !group.containsFile(filterFilePath)) {
+        items.push({
+          label,
+          id: group.id,
+          buttons: [
+            {
+              iconPath: new vscode.ThemeIcon(
+                'new-folder',
+                new vscode.ThemeColor(group.colorName)
+              ),
+              tooltip: 'Add all tabs to Tab Group',
+            },
+          ],
+        });
+      }
       if (group.children.length > 0) {
         items.push(...buildGroupItems(group.children, label));
       }
@@ -304,7 +308,7 @@ export async function handleTabGroupAction(
   treeDataProvider: TabstronautDataProvider,
   filePath: string
 ) {
-  const selectedGroup = await selectTabGroup(treeDataProvider);
+  const selectedGroup = await selectTabGroup(treeDataProvider, false, filePath);
 
   if (!selectedGroup) {
     return;
