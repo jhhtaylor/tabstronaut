@@ -805,6 +805,134 @@ export async function removeCurrentTabFromGroupQuickPick(
 }
 
 /**
+ * Ctrl+Alt+G — add every currently open file tab to an existing or new group.
+ */
+export async function addAllTabsToGroupQuickPick(
+  treeDataProvider: TabstronautDataProvider
+): Promise<void> {
+  const rootGroups = treeDataProvider.getRootGroups();
+
+  const items: GroupPickItem[] = [
+    { label: '$(add) Create new group...', description: '', groupId: CREATE_NEW_GROUP_ID },
+  ];
+
+  if (rootGroups.length > 0) {
+    items.push({ label: '', kind: vscode.QuickPickItemKind.Separator, description: '', groupId: '' });
+    items.push(...buildGroupHierarchyItems(rootGroups, () => true));
+  }
+
+  const selected = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Add all open tabs to a Tab Group',
+  });
+
+  if (!selected || !selected.groupId) {
+    return;
+  }
+
+  if (selected.groupId === CREATE_NEW_GROUP_ID) {
+    const result = await getGroupName(treeDataProvider);
+    if (!result.name) {
+      return;
+    }
+    const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+    let groupColor = defaultColor;
+    if (!result.useDefaults) {
+      const colorOption = (await selectColorOption(defaultColor)) as ColorOption | undefined;
+      if (!colorOption) {
+        return;
+      }
+      groupColor = colorOption.colorValue;
+    }
+    const groupId = await treeDataProvider.addGroup(result.name, groupColor);
+    if (!groupId) {
+      return;
+    }
+    const newGroup = treeDataProvider.findGroupById(groupId);
+    if (newGroup) {
+      await addAllOpenTabsToGroup(treeDataProvider, newGroup);
+    }
+    return;
+  }
+
+  const group = treeDataProvider.findGroupById(selected.groupId);
+  if (group) {
+    await addAllOpenTabsToGroup(treeDataProvider, group);
+  }
+}
+
+/**
+ * Ctrl+Alt+N — create a new empty Tab Group.
+ * When promptForGroupDetails is off (the default) the group is created
+ * silently with the next auto-generated name; when on, name and color
+ * pickers are shown.
+ */
+export async function createNewGroupCommand(
+  treeDataProvider: TabstronautDataProvider
+): Promise<void> {
+  const result = await getGroupName(treeDataProvider);
+  if (!result.name) {
+    return;
+  }
+
+  const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+  let groupColor = defaultColor;
+  if (!result.useDefaults) {
+    const colorOption = (await selectColorOption(defaultColor)) as ColorOption | undefined;
+    if (!colorOption) {
+      return;
+    }
+    groupColor = colorOption.colorValue;
+  }
+
+  const groupId = await treeDataProvider.addGroup(result.name, groupColor);
+  if (groupId) {
+    showConfirmation(`Created Tab Group '${result.name}'.`);
+  }
+}
+
+/**
+ * Ctrl+Alt+E — rename a Tab Group via a quick-pick.
+ */
+export async function renameGroupQuickPick(
+  treeDataProvider: TabstronautDataProvider
+): Promise<void> {
+  const rootGroups = treeDataProvider.getRootGroups();
+
+  if (rootGroups.length === 0) {
+    vscode.window.showWarningMessage('No Tab Groups to rename.');
+    return;
+  }
+
+  const items = buildGroupHierarchyItems(rootGroups, () => true);
+
+  const selected = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Select a Tab Group to rename',
+  });
+
+  if (!selected) {
+    return;
+  }
+
+  const group = treeDataProvider.findGroupById(selected.groupId);
+  if (!group) {
+    return;
+  }
+
+  const newName = await getNewGroupName(group);
+  if (newName === undefined) {
+    return;
+  }
+
+  const colorOption = (await selectColorOption(group.colorName)) as ColorOption | undefined;
+  if (!colorOption) {
+    return;
+  }
+
+  await treeDataProvider.renameGroup(group.id, newName, colorOption.colorValue);
+  showConfirmation(`Renamed Tab Group to '${newName}'.`);
+}
+
+/**
  * Ctrl+Alt+Shift+D — pick a group to delete.
  * Returns the group so the caller can run the existing removeTabGroup command
  * (which handles the confirmation prompt and undo support).

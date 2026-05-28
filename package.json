@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.6.1",
+  "version": "1.7.0",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -237,6 +237,24 @@
         "category": "Tabstronaut",
         "title": "Delete Tab Group...",
         "icon": "$(trash)"
+      },
+      {
+        "command": "tabstronaut.addAllTabsToGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Add All Open Tabs to Group...",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tabstronaut.createNewGroup",
+        "category": "Tabstronaut",
+        "title": "Create New Tab Group",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tabstronaut.renameGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Rename Tab Group...",
+        "icon": "$(edit)"
       }
     ],
     "viewsContainers": {
@@ -505,6 +523,18 @@
         {
           "command": "tabstronaut.deleteGroupQuickPick",
           "when": "false"
+        },
+        {
+          "command": "tabstronaut.addAllTabsToGroupQuickPick",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.createNewGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.renameGroupQuickPick",
+          "when": "false"
         }
       ]
     },
@@ -605,6 +635,21 @@
         "command": "tabstronaut.deleteGroupQuickPick",
         "key": "ctrl+alt+shift+d",
         "mac": "cmd+alt+shift+d"
+      },
+      {
+        "command": "tabstronaut.addAllTabsToGroupQuickPick",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g"
+      },
+      {
+        "command": "tabstronaut.createNewGroup",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n"
+      },
+      {
+        "command": "tabstronaut.renameGroupQuickPick",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e"
       }
     ],
     "configuration": {

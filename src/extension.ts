@@ -18,6 +18,9 @@ import {
   addCurrentTabToGroupQuickPick,
   removeCurrentTabFromGroupQuickPick,
   pickGroupToDelete,
+  addAllTabsToGroupQuickPick,
+  createNewGroupCommand,
+  renameGroupQuickPick,
 } from "./groupOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
@@ -790,6 +793,30 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
       }
+    )
+  );
+
+  // ── Ctrl+Alt+G: add all open tabs to a group ────────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.addAllTabsToGroupQuickPick",
+      () => addAllTabsToGroupQuickPick(treeDataProvider)
+    )
+  );
+
+  // ── Ctrl+Alt+N: create a new empty group ────────────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.createNewGroup",
+      () => createNewGroupCommand(treeDataProvider)
+    )
+  );
+
+  // ── Ctrl+Alt+E: rename a group via quick-pick ───────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.renameGroupQuickPick",
+      () => renameGroupQuickPick(treeDataProvider)
     )
   );
 

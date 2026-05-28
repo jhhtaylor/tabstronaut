@@ -2,6 +2,14 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.7.0]
+
+Three more keyboard shortcuts to round out the keyboard-first workflow.
+
+- **`Ctrl+Alt+G` / `Cmd+Alt+G`** — **Add All Open Tabs to Group…** — snapshot every currently open file tab into an existing or new group in one keystroke. Ideal for context-switching: save where you are before restoring a different group.
+- **`Ctrl+Alt+N` / `Cmd+Alt+N`** — **Create New Tab Group** — creates a new empty group instantly. When the *Prompt for Group Details* setting is off (the default) the group is created silently with the next auto-generated name; when on, the name and color pickers appear. Note: on Windows/Linux this shortcut overlaps with the Code Runner extension's "Run Code" binding — you can rebind either in VS Code Keyboard Shortcuts if needed.
+- **`Ctrl+Alt+E` / `Cmd+Alt+E`** — **Rename Tab Group…** — pick any group (including nested sub-groups shown with `>` hierarchy) and enter a new name and color. Closes the last gap that previously required reaching for the mouse.
+
 ## [1.6.0]
 
 Three new hotkey-driven commands for a fully keyboard-first workflow. (Thanks @homezonebenny - #206)
