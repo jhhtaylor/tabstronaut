@@ -2,6 +2,14 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.0]
+
+Three new hotkey-driven commands for a fully keyboard-first workflow. (Thanks @homezonebenny - #206)
+
+- **`Ctrl+Alt+S` / `Cmd+Alt+S`** — **Add Current Tab to Group…** — opens a quick-pick listing only the groups the active file is *not* already in, so the list stays short and relevant. A "Create new group…" option appears at the top if you want to start a fresh group on the spot.
+- **`Ctrl+Alt+D` / `Cmd+Alt+D`** — **Remove Current Tab from Group…** — shows only the groups the active file *is* in. Select one to remove it from that group. If the file isn't in any group a warning message appears instead of an empty list.
+- **`Ctrl+Alt+Shift+D` / `Cmd+Alt+Shift+D`** — **Delete Tab Group…** — pick any group (including nested sub-groups shown with a `>` hierarchy indicator) to delete it. The existing confirmation prompt and 5-second undo button are both preserved.
+
 ## [1.5.3]
 
 - Fixed `Ctrl+Alt+1`–`9` keybindings to always target **root-level** Tab Groups. Previously, the numbering used a depth-first flat list of all groups (including sub-groups), so having a nested group could shift the numbers unpredictably. Shortcuts now count only top-level groups — `Ctrl+Alt+1` is always the first group, `Ctrl+Alt+2` the second, and so on. Opening a group via its number still opens all its tabs and those of every sub-group recursively.

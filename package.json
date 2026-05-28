@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.5.3",
+  "version": "1.6.0",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -219,6 +219,24 @@
         "category": "Tabstronaut",
         "title": "Dismiss Suggestion",
         "icon": "$(close)"
+      },
+      {
+        "command": "tabstronaut.addCurrentTabToGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Add Current Tab to Group...",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tabstronaut.removeCurrentTabFromGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Remove Current Tab from Group...",
+        "icon": "$(remove)"
+      },
+      {
+        "command": "tabstronaut.deleteGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Delete Tab Group...",
+        "icon": "$(trash)"
       }
     ],
     "viewsContainers": {
@@ -483,6 +501,10 @@
         {
           "command": "tabstronaut.dismissSuggestion",
           "when": "false"
+        },
+        {
+          "command": "tabstronaut.deleteGroupQuickPick",
+          "when": "false"
         }
       ]
     },
@@ -568,6 +590,21 @@
           9
         ],
         "mac": "cmd+alt+9"
+      },
+      {
+        "command": "tabstronaut.addCurrentTabToGroupQuickPick",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s"
+      },
+      {
+        "command": "tabstronaut.removeCurrentTabFromGroupQuickPick",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d"
+      },
+      {
+        "command": "tabstronaut.deleteGroupQuickPick",
+        "key": "ctrl+alt+shift+d",
+        "mac": "cmd+alt+shift+d"
       }
     ],
     "configuration": {

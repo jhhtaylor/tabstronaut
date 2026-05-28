@@ -15,6 +15,9 @@ import {
   filterTabGroupsCommand,
   handleAddSubGroup,
   openGroupQuickPick,
+  addCurrentTabToGroupQuickPick,
+  removeCurrentTabFromGroupQuickPick,
+  pickGroupToDelete,
 } from "./groupOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
@@ -711,6 +714,80 @@ export function activate(context: vscode.ExtensionContext) {
               }
             }
           }
+        }
+      }
+    )
+  );
+
+  // ── Ctrl+Alt+S: add current tab to a group ──────────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.addCurrentTabToGroupQuickPick",
+      async () => {
+        const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
+        if (
+          !activeTab?.input ||
+          typeof activeTab.input !== "object" ||
+          !("uri" in activeTab.input)
+        ) {
+          vscode.window.showWarningMessage(
+            "Add to Tab Group is only available when an editor tab is active."
+          );
+          return;
+        }
+        const input = activeTab.input as any;
+        if (!(input.uri instanceof vscode.Uri)) {
+          vscode.window.showWarningMessage(
+            "No valid file URI found for the selected tab."
+          );
+          return;
+        }
+        await addCurrentTabToGroupQuickPick(treeDataProvider, input.uri.fsPath);
+      }
+    )
+  );
+
+  // ── Ctrl+Alt+D: remove current tab from a group ──────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.removeCurrentTabFromGroupQuickPick",
+      async () => {
+        const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
+        if (
+          !activeTab?.input ||
+          typeof activeTab.input !== "object" ||
+          !("uri" in activeTab.input)
+        ) {
+          vscode.window.showWarningMessage(
+            "Remove from Tab Group is only available when an editor tab is active."
+          );
+          return;
+        }
+        const input = activeTab.input as any;
+        if (!(input.uri instanceof vscode.Uri)) {
+          vscode.window.showWarningMessage(
+            "No valid file URI found for the selected tab."
+          );
+          return;
+        }
+        await removeCurrentTabFromGroupQuickPick(treeDataProvider, input.uri.fsPath);
+      }
+    )
+  );
+
+  // ── Ctrl+Alt+Shift+D: delete a whole group ───────────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.deleteGroupQuickPick",
+      async () => {
+        const group = await pickGroupToDelete(treeDataProvider);
+        if (group) {
+          // Delegate to the existing removeTabGroup command so confirmation
+          // prompt and 5-second undo button are both preserved.
+          await vscode.commands.executeCommand(
+            "tabstronaut.removeTabGroup",
+            group
+          );
         }
       }
     )

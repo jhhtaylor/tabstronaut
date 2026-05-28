@@ -700,3 +700,134 @@ export async function filterTabGroupsCommand(
   const trimmed = filter.trim();
   treeDataProvider.setGroupFilter(trimmed === "" ? undefined : trimmed);
 }
+
+// ── Quick-pick helpers shared by Save / Remove / Delete commands ──────────────
+
+type GroupPickItem = vscode.QuickPickItem & { groupId: string };
+
+const CREATE_NEW_GROUP_ID = '__create_new__';
+
+function buildGroupHierarchyItems(
+  groups: Group[],
+  predicate: (group: Group) => boolean,
+  prefix = ''
+): GroupPickItem[] {
+  const result: GroupPickItem[] = [];
+  for (const group of groups) {
+    const name = typeof group.label === 'string' ? group.label : '';
+    const label = prefix ? `${prefix} > ${name}` : name;
+    if (predicate(group)) {
+      const tabCount = group.items.length;
+      const childCount = group.children.length;
+      const descParts = [`${tabCount} tab${tabCount !== 1 ? 's' : ''}`];
+      if (childCount > 0) {
+        descParts.push(`${childCount} sub-group${childCount !== 1 ? 's' : ''}`);
+      }
+      result.push({ label, description: descParts.join(', '), groupId: group.id });
+    }
+    if (group.children.length > 0) {
+      result.push(...buildGroupHierarchyItems(group.children, predicate, label));
+    }
+  }
+  return result;
+}
+
+/**
+ * Ctrl+Alt+S — add the current tab to a group.
+ * Shows only groups where the file is NOT already present, plus a
+ * "Create new group…" option at the top.
+ */
+export async function addCurrentTabToGroupQuickPick(
+  treeDataProvider: TabstronautDataProvider,
+  filePath: string
+): Promise<void> {
+  const availableGroups = buildGroupHierarchyItems(
+    treeDataProvider.getRootGroups(),
+    (g) => !g.containsFile(filePath)
+  );
+
+  const items: GroupPickItem[] = [
+    { label: '$(add) Create new group...', description: '', groupId: CREATE_NEW_GROUP_ID },
+  ];
+
+  if (availableGroups.length > 0) {
+    items.push({ label: '', kind: vscode.QuickPickItemKind.Separator, description: '', groupId: '' });
+    items.push(...availableGroups);
+  }
+
+  const selected = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Add current tab to a Tab Group',
+  });
+
+  if (!selected) {
+    return;
+  }
+
+  if (selected.groupId === CREATE_NEW_GROUP_ID) {
+    await handleNewGroupCreation(treeDataProvider, 'New Tab Group from current tab...', filePath);
+    return;
+  }
+
+  await handleAddToExistingGroup(treeDataProvider, selected.groupId, filePath);
+}
+
+/**
+ * Ctrl+Alt+D — remove the current tab from one of the groups it belongs to.
+ * Shows only groups where the file IS present.
+ */
+export async function removeCurrentTabFromGroupQuickPick(
+  treeDataProvider: TabstronautDataProvider,
+  filePath: string
+): Promise<void> {
+  const containingGroups = buildGroupHierarchyItems(
+    treeDataProvider.getRootGroups(),
+    (g) => g.containsFile(filePath)
+  );
+
+  if (containingGroups.length === 0) {
+    vscode.window.showWarningMessage('Current file is not in any Tab Group.');
+    return;
+  }
+
+  const selected = await vscode.window.showQuickPick(containingGroups, {
+    placeHolder: 'Remove current tab from a Tab Group',
+  });
+
+  if (!selected) {
+    return;
+  }
+
+  const group = treeDataProvider.findGroupById(selected.groupId);
+  await treeDataProvider.removeFromGroup(selected.groupId, filePath, { skipConfirmation: true });
+  if (group) {
+    showConfirmation(`Removed from Tab Group '${group.label}'.`);
+  }
+}
+
+/**
+ * Ctrl+Alt+Shift+D — pick a group to delete.
+ * Returns the group so the caller can run the existing removeTabGroup command
+ * (which handles the confirmation prompt and undo support).
+ */
+export async function pickGroupToDelete(
+  treeDataProvider: TabstronautDataProvider
+): Promise<Group | undefined> {
+  const rootGroups = treeDataProvider.getRootGroups();
+
+  if (rootGroups.length === 0) {
+    vscode.window.showWarningMessage('No Tab Groups to delete.');
+    return undefined;
+  }
+
+  const items = buildGroupHierarchyItems(rootGroups, () => true);
+
+  const selected = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Select a Tab Group to delete',
+  });
+
+  if (!selected) {
+    return undefined;
+  }
+
+  return treeDataProvider.findGroupById(selected.groupId);
+}
