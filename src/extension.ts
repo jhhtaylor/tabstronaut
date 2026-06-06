@@ -21,6 +21,7 @@ import {
   addAllTabsToGroupQuickPick,
   createNewGroupCommand,
   renameGroupQuickPick,
+  confirmIfRequired,
 } from "./groupOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
@@ -579,15 +580,20 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.restoreAllTabsInGroup",
       async (item: any) => {
-        if (item.contextValue !== "group") {
+        const resolved = item ?? treeView.selection[0];
+        if (!resolved || resolved.contextValue !== "group") {
           return;
         }
-        const group: Group = item;
+        const group: Group = resolved;
 
         const autoClose = vscode.workspace
           .getConfiguration("tabstronaut")
           .get<boolean>("autoCloseOnRestore", false);
         if (autoClose) {
+          if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
+            return;
+          }
+
           recentlyClosedEditors = getOpenEditorFilePaths();
           vscode.commands.executeCommand(
             "setContext",
@@ -631,6 +637,10 @@ export function activate(context: vscode.ExtensionContext) {
           .getConfiguration("tabstronaut")
           .get<boolean>("autoCloseOnRestore", false);
         if (autoClose) {
+          if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
+            return;
+          }
+
           recentlyClosedEditors = getOpenEditorFilePaths();
           vscode.commands.executeCommand(
             "setContext",
@@ -677,6 +687,10 @@ export function activate(context: vscode.ExtensionContext) {
           .getConfiguration("tabstronaut")
           .get<boolean>("autoCloseOnRestore", false);
         if (autoClose) {
+          if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
+            return;
+          }
+
           recentlyClosedEditors = getOpenEditorFilePaths();
           vscode.commands.executeCommand(
             "setContext",
@@ -823,7 +837,13 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.editTabGroup",
-      (item: any) => renameTabGroupCommand(treeDataProvider, item)
+      (item: any) => {
+        const resolved = item ?? treeView.selection[0];
+        if (resolved?.contextValue === "group") {
+          return renameTabGroupCommand(treeDataProvider, resolved);
+        }
+        return renameGroupQuickPick(treeDataProvider);
+      }
     )
   );
 
@@ -856,10 +876,11 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.removeTabGroup",
       async (item: any) => {
-        if (item.contextValue !== "group") {
+        const resolved = item ?? treeView.selection[0];
+        if (!resolved || resolved.contextValue !== "group") {
           return;
         }
-        const group: Group = item;
+        const group: Group = resolved;
 
         const shouldConfirm = vscode.workspace
           .getConfiguration("tabstronaut")
@@ -1146,10 +1167,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addAllOpenTabsToGroup",
       async (item: any) => {
-        if (item.contextValue !== "group") {
+        if (!item || item.contextValue !== "group") {
           return;
         }
         const group: Group = item;
+
+        if (!await confirmIfRequired(`Add all open editors to Tab Group '${group.label}'?`)) {
+          return;
+        }
+
         await addAllOpenTabsToGroup(treeDataProvider, group);
       }
     )

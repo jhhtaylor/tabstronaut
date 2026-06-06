@@ -35,6 +35,11 @@ export class SuggestionItem extends vscode.TreeItem {
       `**${sourceLabel}**\n\n` +
         suggestion.files.map((f) => `- \`${path.basename(f)}\``).join("\n")
     );
+    this.command = {
+      command: "tabstronaut.applySuggestion",
+      title: "Apply Suggestion",
+      arguments: [this],
+    };
   }
 }
 

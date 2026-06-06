@@ -36,11 +36,14 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Add all open tabs to a group** | `Ctrl+Alt+G` | `Cmd+Alt+G` |
 | **Open / restore a group** | `Ctrl+Alt+O` | `Cmd+Alt+O` |
 | **Rename a group** | `Ctrl+Alt+E` | `Cmd+Alt+E` |
+| **Rename focused group** *(sidebar must have focus)* | `F2` | `F2` |
+| **Delete focused group** *(sidebar must have focus)* | `Delete` | `⌫ Delete` |
+| **Restore focused group** *(sidebar must have focus)* | `Ctrl+Alt+Enter` | `Cmd+Alt+Enter` |
 | **Remove current tab from a group** | `Ctrl+Alt+R` | `Cmd+Alt+R` |
 | **Delete a group** | `Ctrl+Alt+Shift+R` | `Cmd+Alt+Shift+R` |
 | **Restore group 1–9 by number** | `Ctrl+Alt+1` – `Ctrl+Alt+9` | `Cmd+Alt+1` – `Cmd+Alt+9` |
 
-The letter shortcuts (**A**, **G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu.
+The letter shortcuts (**A**, **G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu. **F2**, **Delete** (⌫ on Mac), and **Ctrl+Alt+Enter** work when a group is selected in the Tabstronaut sidebar — navigate with arrow keys, then press F2 to rename, Delete/⌫ to delete, or Ctrl+Alt+Enter to restore in place.
 
 > **Tip:** All of these can also be reached from the Tabstronaut sidebar, the right-click menu in the editor tab bar, or the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 

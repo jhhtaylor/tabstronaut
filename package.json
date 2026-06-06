@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.5.6",
+  "version": "1.5.7",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -645,6 +645,23 @@
         "command": "tabstronaut.renameGroupQuickPick",
         "key": "ctrl+alt+e",
         "mac": "cmd+alt+e"
+      },
+      {
+        "command": "tabstronaut.editTabGroup",
+        "key": "f2",
+        "when": "focusedView == 'tabstronaut' && !inputFocus"
+      },
+      {
+        "command": "tabstronaut.removeTabGroup",
+        "key": "delete",
+        "mac": "backspace",
+        "when": "focusedView == 'tabstronaut' && !inputFocus"
+      },
+      {
+        "command": "tabstronaut.restoreAllTabsInGroup",
+        "key": "ctrl+alt+enter",
+        "mac": "cmd+alt+enter",
+        "when": "focusedView == 'tabstronaut' && !inputFocus"
       }
     ],
     "configuration": {
@@ -663,7 +680,7 @@
         "tabstronaut.confirmRemoveAndClose": {
           "type": "boolean",
           "default": true,
-          "description": "Ask for confirmation before removing Tab Groups or closing all editor tabs."
+          "description": "Ask for confirmation before removing Tab Groups, adding all open editors to a group, closing all editor tabs, or restoring a group when Auto Close on Restore is enabled."
         },
         "tabstronaut.moveTabGroupOnTabChange": {
           "type": "boolean",

@@ -382,14 +382,12 @@ export async function renameTabGroupCommand(
 
   const selectedColorOption = (await selectColorOption(
     group.colorName
-  )) as ColorOption;
-  if (selectedColorOption) {
-    treeDataProvider.renameGroup(
-      group.id,
-      newName,
-      selectedColorOption.colorValue
-    );
-  }
+  )) as ColorOption | undefined;
+  treeDataProvider.renameGroup(
+    group.id,
+    newName,
+    selectedColorOption ? selectedColorOption.colorValue : group.colorName
+  );
 }
 
 export async function getNewGroupName(
@@ -929,11 +927,8 @@ export async function renameGroupQuickPick(
   }
 
   const colorOption = (await selectColorOption(group.colorName)) as ColorOption | undefined;
-  if (!colorOption) {
-    return;
-  }
 
-  await treeDataProvider.renameGroup(group.id, newName, colorOption.colorValue);
+  await treeDataProvider.renameGroup(group.id, newName, colorOption ? colorOption.colorValue : group.colorName);
   showConfirmation(`Renamed Tab Group to '${newName}'.`);
 }
 
@@ -963,4 +958,15 @@ export async function pickGroupToDelete(
   }
 
   return treeDataProvider.findGroupById(selected.groupId);
+}
+
+export async function confirmIfRequired(placeHolder: string): Promise<boolean> {
+  const shouldConfirm = vscode.workspace
+    .getConfiguration('tabstronaut')
+    .get('confirmRemoveAndClose', true);
+  if (!shouldConfirm) {
+    return true;
+  }
+  const answer = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder });
+  return answer === 'Yes';
 }

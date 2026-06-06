@@ -2,6 +2,16 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.5.7]
+
+- **`F2` to rename a focused group** — press F2 while a group is selected in the Tabstronaut sidebar to rename it immediately. Navigate groups with the arrow keys and press F2; no mouse or menu required. The existing `Ctrl+Alt+E` / `Cmd+Alt+E` quick-pick shortcut continues to work from anywhere.
+- **`Delete` to delete a focused group** — press Delete while a group is selected in the sidebar to delete it. The existing confirmation prompt and 5-second undo button are both preserved. The existing `Ctrl+Alt+Shift+R` / `Cmd+Alt+Shift+R` quick-pick shortcut continues to work from anywhere.
+- **`Ctrl+Alt+Enter` / `Cmd+Alt+Enter` to restore a focused group** — press while a group is selected in the sidebar to restore it immediately, without opening a quick-pick menu. The existing `Ctrl+Alt+O` / `Cmd+Alt+O` shortcut continues to work from anywhere.
+- Added confirmation prompt before **Add All Open Tabs to Group** (the inline button on each group row) to prevent accidental bulk additions. Respects the *Show Confirmation* setting.
+- Added confirmation prompt before **Restore Tab Group** closes all open editors when the *Auto Close on Restore* setting is enabled. Previously the close happened silently; now a Yes/No prompt appears first. Respects the *Show Confirmation* setting.
+- Clicking a suggestion row now applies it (creates the group), same as pressing the inline + button.
+- Tweaked suggestion logic so that files already in a tab group can still appear in new suggestions. Previously any file already grouped was excluded entirely; now it can join a suggested cluster if it co-occurs strongly enough with the seed pair.
+
 ## [1.5.6]
 
 - Merged `Ctrl+Alt+A` / `Cmd+Alt+A` and the previous `Ctrl+Alt+S` shortcut into one. `Ctrl+Alt+A` now shows only the groups the active file is *not* already in — keeping the list short and relevant — while retaining the richer quick-pick UI with per-group icon buttons. The redundant `Ctrl+Alt+S` shortcut has been removed.

@@ -72,15 +72,14 @@ export function suggestGroups(
     const cluster = new Set([a, b]);
     const threshold = score * AFFINITY_RATIO;
 
-    // Seed the candidate pool from the neighbors of both seed files
+    // Seed the candidate pool from the neighbors of both seed files.
+    // Already-grouped files (excludeFiles) are allowed here — they can join a
+    // cluster even if they didn't seed it, so that files co-occurring with the
+    // seed pair are included regardless of whether they're already in a group.
     const candidates = new Set<string>();
     for (const seedFile of [a, b]) {
       for (const neighbor of Object.keys(coOccurrence[seedFile] || {})) {
-        if (
-          !cluster.has(neighbor) &&
-          !excludeFiles.has(neighbor) &&
-          !usedFiles.has(neighbor)
-        ) {
+        if (!cluster.has(neighbor) && !usedFiles.has(neighbor)) {
           candidates.add(neighbor);
         }
       }
@@ -101,11 +100,7 @@ export function suggestGroups(
           cluster.add(candidate);
           candidates.delete(candidate);
           for (const neighbor of Object.keys(coOccurrence[candidate] || {})) {
-            if (
-              !cluster.has(neighbor) &&
-              !excludeFiles.has(neighbor) &&
-              !usedFiles.has(neighbor)
-            ) {
+            if (!cluster.has(neighbor) && !usedFiles.has(neighbor)) {
               candidates.add(neighbor);
             }
           }
