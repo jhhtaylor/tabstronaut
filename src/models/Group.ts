@@ -10,8 +10,8 @@ export class Group extends vscode.TreeItem {
     creationTime: Date;
     colorName: string;
     isPinned: boolean;
-    /** True if this group's children represent a captured editor-column layout (a "session"). */
-    isSession?: boolean;
+    /** True if this group's children represent a captured editor-column layout (a "Tab Snapshot"). */
+    isSnapshot?: boolean;
 
     constructor(
         label: string,
@@ -30,11 +30,11 @@ export class Group extends vscode.TreeItem {
         this.isPinned = isPinned;
     }
 
-    /** Updates the tree icon and context value to reflect whether this group is a session (square) or a regular group (circle). */
+    /** Updates the tree icon and context value to reflect whether this group is a Tab Snapshot (square) or a regular group (circle). */
     updateIcon(): void {
-        const shape = this.isSession ? 'primitive-square' : 'circle-filled';
+        const shape = this.isSnapshot ? 'primitive-square' : 'circle-filled';
         this.iconPath = new vscode.ThemeIcon(shape, new vscode.ThemeColor(this.colorName));
-        this.contextValue = this.isSession ? 'sessionGroup' : 'group';
+        this.contextValue = this.isSnapshot ? 'snapshotGroup' : 'group';
     }
 
     createTabItem(filePath: string, pinned = false): TabItem {

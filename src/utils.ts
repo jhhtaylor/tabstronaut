@@ -148,22 +148,22 @@ export function generateColorHash(id: string): number {
 }
 
 /**
- * True for both regular group items ('group') and session group items
- * ('sessionGroup'). Use this instead of comparing contextValue to 'group'
- * directly so commands keep working on session groups.
+ * True for both regular group items ('group') and Tab Snapshot group items
+ * ('snapshotGroup'). Use this instead of comparing contextValue to 'group'
+ * directly so commands keep working on Tab Snapshot groups.
  */
 export function isGroupContextValue(contextValue: unknown): boolean {
-  return contextValue === 'group' || contextValue === 'sessionGroup';
+  return contextValue === 'group' || contextValue === 'snapshotGroup';
 }
 
 /**
- * True for a session itself (root group with isSession) or one of its
- * captured columns (contextValue 'sessionColumn'). Both are managed
- * exclusively through the session's own refresh/restore/rename/delete
+ * True for a Tab Snapshot itself (root group with isSnapshot) or one of its
+ * captured columns (contextValue 'snapshotColumn'). Both are managed
+ * exclusively through the Tab Snapshot's own refresh/restore/rename/delete
  * controls, so generic group pickers and drag-and-drop should skip them.
  */
-export function isSessionManaged(group: { isSession?: boolean; contextValue?: string }): boolean {
-  return !!group.isSession || group.contextValue === 'sessionColumn';
+export function isSnapshotManaged(group: { isSnapshot?: boolean; contextValue?: string }): boolean {
+  return !!group.isSnapshot || group.contextValue === 'snapshotColumn';
 }
 
 /**

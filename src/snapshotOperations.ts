@@ -10,12 +10,12 @@ import { closeAllEditors, generateUuidv4, getTabFilePath, COLORS, showConfirmati
  * per VS Code editor column, populated with that column's open files and
  * their pinned state. If only a single column is open, the files are added
  * directly to the group instead (no extra nesting), and the group is left
- * as a regular (non-session) group.
+ * as a regular (non-snapshot) group.
  *
- * Re-running this on an existing session group replaces its previous
+ * Re-running this on an existing Tab Snapshot group replaces its previous
  * snapshot.
  */
-export async function captureSessionIntoGroup(
+export async function captureSnapshotIntoGroup(
   treeDataProvider: TabstronautDataProvider,
   group: Group
 ): Promise<boolean> {
@@ -32,7 +32,7 @@ export async function captureSessionIntoGroup(
   if (editorGroups.length === 1) {
     group.children = [];
     group.items = [];
-    group.isSession = false;
+    group.isSnapshot = false;
     group.tooltip = undefined;
     group.updateIcon();
     for (const tab of editorGroups[0].tabs) {
@@ -44,8 +44,8 @@ export async function captureSessionIntoGroup(
     }
   } else {
     group.items = [];
-    group.isSession = true;
-    group.tooltip = `${group.label} (Session)`;
+    group.isSnapshot = true;
+    group.tooltip = `${group.label} (Tab Snapshot)`;
     group.updateIcon();
 
     while (group.children.length > editorGroups.length) {
@@ -61,7 +61,7 @@ export async function captureSessionIntoGroup(
       } else {
         column.label = `Column ${i + 1}`;
       }
-      column.contextValue = 'sessionColumn';
+      column.contextValue = 'snapshotColumn';
       column.iconPath = new vscode.ThemeIcon('primitive-square', new vscode.ThemeColor(column.colorName));
 
       column.items = [];
@@ -80,12 +80,12 @@ export async function captureSessionIntoGroup(
 }
 
 /**
- * "Create New Session" view-title button: saves the current multi-column
- * editor layout as a brand new session group. Requires at least 2 editor
+ * "Create New Tab Snapshot" view-title button: saves the current multi-column
+ * editor layout as a brand new Tab Snapshot group. Requires at least 2 editor
  * columns with file tabs open; otherwise prompts the user to split their
  * editor first.
  */
-export async function createSessionCommand(
+export async function createSnapshotCommand(
   treeDataProvider: TabstronautDataProvider
 ): Promise<void> {
   const editorGroups = vscode.window.tabGroups.all.filter((g) =>
@@ -94,7 +94,7 @@ export async function createSessionCommand(
 
   if (editorGroups.length < 2) {
     vscode.window.showInformationMessage(
-      'Split your editor into 2 or more groups, then use "Create New Session" to save that layout.'
+      'Split your editor into 2 or more groups, then use "Create New Tab Snapshot" to save that layout.'
     );
     return;
   }
@@ -120,22 +120,22 @@ export async function createSessionCommand(
   }
 
   const group = treeDataProvider.findGroupById(groupId);
-  if (group && await captureSessionIntoGroup(treeDataProvider, group)) {
-    showConfirmation(`Session '${result.name}' created.`);
+  if (group && await captureSnapshotIntoGroup(treeDataProvider, group)) {
+    showConfirmation(`Tab Snapshot '${result.name}' created.`);
   }
 }
 
 /**
- * Restores a session group: closes the current editor layout, recreates one
+ * Restores a Tab Snapshot group: closes the current editor layout, recreates one
  * column per saved column group, and reopens each column's tabs (including
  * pinned state) into the matching column.
  */
-export async function restoreSessionGroup(
+export async function restoreSnapshotGroup(
   treeDataProvider: TabstronautDataProvider,
   group: Group
 ): Promise<void> {
   if (group.children.length === 0) {
-    vscode.window.showInformationMessage(`Session '${group.label}' has no saved columns to restore.`);
+    vscode.window.showInformationMessage(`Tab Snapshot '${group.label}' has no saved columns to restore.`);
     return;
   }
 

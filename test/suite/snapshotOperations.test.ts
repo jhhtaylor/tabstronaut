@@ -2,7 +2,7 @@
 import { strictEqual, ok } from 'assert';
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from '../../src/tabstronautDataProvider';
-import { captureSessionIntoGroup, restoreSessionGroup, createSessionCommand } from '../../src/sessionOperations';
+import { captureSnapshotIntoGroup, restoreSnapshotGroup, createSnapshotCommand } from '../../src/snapshotOperations';
 
 class MockMemento implements vscode.Memento {
   private store: Record<string, any>;
@@ -25,9 +25,9 @@ function makeFileTab(filePath: string, pinned = false): vscode.Tab {
   return { input: { uri: vscode.Uri.file(filePath) }, isPinned: pinned } as any;
 }
 
-// ── captureSessionIntoGroup ──────────────────────────────────────────────────
+// ── captureSnapshotIntoGroup ──────────────────────────────────────────────────
 
-describe('captureSessionIntoGroup', () => {
+describe('captureSnapshotIntoGroup', () => {
   let origTabGroups: any;
   let origInfo: any;
 
@@ -54,14 +54,14 @@ describe('captureSessionIntoGroup', () => {
       configurable: true,
     });
 
-    const result = await captureSessionIntoGroup(provider, group);
+    const result = await captureSnapshotIntoGroup(provider, group);
     provider.clearRefreshInterval();
 
     strictEqual(result, false);
     ok(infoMsg.includes('No open file tabs'), infoMsg);
   });
 
-  it('captures a single editor column as a flat (non-session) group', async () => {
+  it('captures a single editor column as a flat (non-snapshot) group', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1');
     const group = provider.findGroupById(groupId!)!;
@@ -71,18 +71,18 @@ describe('captureSessionIntoGroup', () => {
       configurable: true,
     });
 
-    const result = await captureSessionIntoGroup(provider, group);
+    const result = await captureSnapshotIntoGroup(provider, group);
     provider.clearRefreshInterval();
 
     strictEqual(result, true);
-    strictEqual(group.isSession, false);
+    strictEqual(group.isSnapshot, false);
     strictEqual(group.children.length, 0);
     strictEqual(group.items.length, 2);
     strictEqual(group.items[1].pinned, true);
     strictEqual(group.contextValue, 'group');
   });
 
-  it('captures multiple editor columns as a session with square column icons', async () => {
+  it('captures multiple editor columns as a Tab Snapshot with square column icons', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1');
     const group = provider.findGroupById(groupId!)!;
@@ -97,16 +97,16 @@ describe('captureSessionIntoGroup', () => {
       configurable: true,
     });
 
-    const result = await captureSessionIntoGroup(provider, group);
+    const result = await captureSnapshotIntoGroup(provider, group);
     provider.clearRefreshInterval();
 
     strictEqual(result, true);
-    strictEqual(group.isSession, true);
-    strictEqual(group.contextValue, 'sessionGroup');
-    strictEqual(group.tooltip, 'G1 (Session)');
+    strictEqual(group.isSnapshot, true);
+    strictEqual(group.contextValue, 'snapshotGroup');
+    strictEqual(group.tooltip, 'G1 (Tab Snapshot)');
     strictEqual(group.children.length, 2);
     strictEqual(group.children[0].label, 'Column 1');
-    strictEqual(group.children[0].contextValue, 'sessionColumn');
+    strictEqual(group.children[0].contextValue, 'snapshotColumn');
     strictEqual((group.children[0].iconPath as vscode.ThemeIcon).id, 'primitive-square');
     strictEqual(group.children[1].items.length, 2);
   });
@@ -126,7 +126,7 @@ describe('captureSessionIntoGroup', () => {
       },
       configurable: true,
     });
-    await captureSessionIntoGroup(provider, group);
+    await captureSnapshotIntoGroup(provider, group);
     strictEqual(group.children.length, 3);
 
     Object.defineProperty(vscode.window, 'tabGroups', {
@@ -138,16 +138,16 @@ describe('captureSessionIntoGroup', () => {
       },
       configurable: true,
     });
-    await captureSessionIntoGroup(provider, group);
+    await captureSnapshotIntoGroup(provider, group);
     provider.clearRefreshInterval();
 
     strictEqual(group.children.length, 2);
   });
 });
 
-// ── restoreSessionGroup ──────────────────────────────────────────────────────
+// ── restoreSnapshotGroup ──────────────────────────────────────────────────────
 
-describe('restoreSessionGroup', () => {
+describe('restoreSnapshotGroup', () => {
   let origInfo: any;
   let origTabGroups: any;
 
@@ -161,7 +161,7 @@ describe('restoreSessionGroup', () => {
     Object.defineProperty(vscode.window, 'tabGroups', { value: origTabGroups, configurable: true });
   });
 
-  it('shows info and does not close editors when the session has no saved columns', async () => {
+  it('shows info and does not close editors when the snapshot has no saved columns', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1');
     const group = provider.findGroupById(groupId!)!;
@@ -178,7 +178,7 @@ describe('restoreSessionGroup', () => {
       configurable: true,
     });
 
-    await restoreSessionGroup(provider, group);
+    await restoreSnapshotGroup(provider, group);
     provider.clearRefreshInterval();
 
     ok(infoMsg.includes('no saved columns'), infoMsg);
@@ -186,9 +186,9 @@ describe('restoreSessionGroup', () => {
   });
 });
 
-// ── createSessionCommand ─────────────────────────────────────────────────────
+// ── createSnapshotCommand ─────────────────────────────────────────────────────
 
-describe('createSessionCommand', () => {
+describe('createSnapshotCommand', () => {
   let origTabGroups: any;
   let origInfo: any;
   let origConfigPrompt: any;
@@ -221,7 +221,7 @@ describe('createSessionCommand', () => {
       configurable: true,
     });
 
-    await createSessionCommand(provider);
+    await createSnapshotCommand(provider);
     const rootGroups = provider.getRootGroups();
     provider.clearRefreshInterval();
 
@@ -229,7 +229,7 @@ describe('createSessionCommand', () => {
     ok(infoMsg.toLowerCase().includes('split your editor'), infoMsg);
   });
 
-  it('creates a new session group capturing the current multi-column layout', async () => {
+  it('creates a new Tab Snapshot group capturing the current multi-column layout', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
 
     Object.defineProperty(vscode.window, 'tabGroups', {
@@ -242,12 +242,12 @@ describe('createSessionCommand', () => {
       configurable: true,
     });
 
-    await createSessionCommand(provider);
+    await createSnapshotCommand(provider);
     const rootGroups = provider.getRootGroups();
     provider.clearRefreshInterval();
 
     strictEqual(rootGroups.length, 1);
-    strictEqual(rootGroups[0].isSession, true);
+    strictEqual(rootGroups[0].isSnapshot, true);
     strictEqual(rootGroups[0].children.length, 2);
   });
 });

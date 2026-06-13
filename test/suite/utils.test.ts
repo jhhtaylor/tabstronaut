@@ -1,7 +1,7 @@
 /// <reference types="mocha" />
 import { strictEqual } from 'assert';
 import * as vscode from 'vscode';
-import { generateNormalizedPath, getTabFilePath, isGroupContextValue, isSessionManaged } from '../../src/utils';
+import { generateNormalizedPath, getTabFilePath, isGroupContextValue, isSnapshotManaged } from '../../src/utils';
 
 describe('generateNormalizedPath', () => {
   it('converts backslashes to forward slashes and lowercases', () => {
@@ -38,28 +38,28 @@ describe('getTabFilePath', () => {
 });
 
 describe('isGroupContextValue', () => {
-  it('returns true for "group" and "sessionGroup"', () => {
+  it('returns true for "group" and "snapshotGroup"', () => {
     strictEqual(isGroupContextValue('group'), true);
-    strictEqual(isGroupContextValue('sessionGroup'), true);
+    strictEqual(isGroupContextValue('snapshotGroup'), true);
   });
 
   it('returns false for other context values', () => {
-    strictEqual(isGroupContextValue('sessionColumn'), false);
+    strictEqual(isGroupContextValue('snapshotColumn'), false);
     strictEqual(isGroupContextValue('tab'), false);
     strictEqual(isGroupContextValue(undefined), false);
   });
 });
 
-describe('isSessionManaged', () => {
-  it('returns true for a session root group', () => {
-    strictEqual(isSessionManaged({ isSession: true, contextValue: 'sessionGroup' }), true);
+describe('isSnapshotManaged', () => {
+  it('returns true for a Tab Snapshot root group', () => {
+    strictEqual(isSnapshotManaged({ isSnapshot: true, contextValue: 'snapshotGroup' }), true);
   });
 
-  it('returns true for a session column', () => {
-    strictEqual(isSessionManaged({ contextValue: 'sessionColumn' }), true);
+  it('returns true for a Tab Snapshot column', () => {
+    strictEqual(isSnapshotManaged({ contextValue: 'snapshotColumn' }), true);
   });
 
   it('returns false for a regular group', () => {
-    strictEqual(isSessionManaged({ isSession: false, contextValue: 'group' }), false);
+    strictEqual(isSnapshotManaged({ isSnapshot: false, contextValue: 'group' }), false);
   });
 });

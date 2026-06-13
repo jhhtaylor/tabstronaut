@@ -23,7 +23,7 @@ import {
   renameGroupQuickPick,
   confirmIfRequired,
 } from "./groupOperations";
-import { captureSessionIntoGroup, restoreSessionGroup, createSessionCommand } from "./sessionOperations";
+import { captureSnapshotIntoGroup, restoreSnapshotGroup, createSnapshotCommand } from "./snapshotOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
 import { aiEnhanceSuggestion, resetAiAvailability } from "./aiGroupSuggester";
@@ -527,14 +527,14 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addAllToNewGroup",
       async (groupId: string) => {
-        const sessionAware = vscode.workspace
+        const snapshotAware = vscode.workspace
           .getConfiguration("tabstronaut")
-          .get<boolean>("sessionAwareGroups", true);
+          .get<boolean>("snapshotAwareGroups", true);
 
-        if (sessionAware) {
+        if (snapshotAware) {
           const group = treeDataProvider.findGroupById(groupId);
           if (group) {
-            await captureSessionIntoGroup(treeDataProvider, group);
+            await captureSnapshotIntoGroup(treeDataProvider, group);
           }
           return;
         }
@@ -590,12 +590,12 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   const restoreGroup = async (group: Group, recursive: boolean) => {
-    const sessionAware = vscode.workspace
+    const snapshotAware = vscode.workspace
       .getConfiguration("tabstronaut")
-      .get<boolean>("sessionAwareGroups", true);
+      .get<boolean>("snapshotAwareGroups", true);
 
-    if (sessionAware && group.isSession) {
-      await restoreSessionGroup(treeDataProvider, group);
+    if (snapshotAware && group.isSnapshot) {
+      await restoreSnapshotGroup(treeDataProvider, group);
       return;
     }
 
@@ -788,11 +788,11 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // ── View title: save the current multi-column editor layout as a new session ──
+  // ── View title: save the current multi-column editor layout as a new Tab Snapshot ──
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "tabstronaut.createSession",
-      () => createSessionCommand(treeDataProvider)
+      "tabstronaut.createSnapshot",
+      () => createSnapshotCommand(treeDataProvider)
     )
   );
 
@@ -957,9 +957,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addCurrentTabToGroup",
       async (group: Group) => {
-        if (group.isSession) {
+        if (group.isSnapshot) {
           vscode.window.showInformationMessage(
-            `'${group.label}' is a session group. Use 'Update Session' on it to refresh its saved layout instead.`
+            `'${group.label}' is a Tab Snapshot group. Use 'Update Tab Snapshot' on it to refresh its saved layout instead.`
           );
           return;
         }
@@ -1161,18 +1161,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "tabstronaut.updateSessionGroup",
+      "tabstronaut.updateSnapshotGroup",
       async (item: any) => {
-        if (!item || item.contextValue !== "sessionGroup") {
+        const resolved = item ?? treeView.selection[0];
+        if (!resolved || resolved.contextValue !== "snapshotGroup") {
           return;
         }
-        const group: Group = item;
+        const group: Group = resolved;
 
-        if (!await confirmIfRequired(`Update session '${group.label}' with the current editor layout?`)) {
+        if (!await confirmIfRequired(`Update Tab Snapshot '${group.label}' with the current editor layout?`)) {
           return;
         }
-        if (await captureSessionIntoGroup(treeDataProvider, group)) {
-          showConfirmation(`Session '${group.label}' updated.`);
+        if (await captureSnapshotIntoGroup(treeDataProvider, group)) {
+          showConfirmation(`Tab Snapshot '${group.label}' updated.`);
         }
       }
     )

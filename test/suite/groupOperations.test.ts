@@ -123,7 +123,7 @@ describe('groupOperations.getGroupName', () => {
     }
   });
 
-  it('counts only root groups (not session columns) when generating the default name', async () => {
+  it('counts only root groups (not snapshot columns) when generating the default name', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const config = vscode.workspace.getConfiguration('tabstronaut');
     const originalSetting = config.get('promptForGroupDetails');
@@ -137,9 +137,9 @@ describe('groupOperations.getGroupName', () => {
     });
 
     try {
-      const sessionId = await provider.addGroup('Session A');
-      await provider.addSubGroup(sessionId!, 'Column 1', 'terminal.ansiBlue');
-      await provider.addSubGroup(sessionId!, 'Column 2', 'terminal.ansiGreen');
+      const snapshotId = await provider.addGroup('Snapshot A');
+      await provider.addSubGroup(snapshotId!, 'Column 1', 'terminal.ansiBlue');
+      await provider.addSubGroup(snapshotId!, 'Column 2', 'terminal.ansiGreen');
 
       const result = await getGroupName(provider);
       strictEqual(result.name, 'Group 2');
@@ -574,7 +574,7 @@ describe('selectTabGroup — current-split buttons', () => {
 
     const rootGroups = provider.getRootGroups();
     strictEqual(rootGroups.length, 1);
-    strictEqual(rootGroups[0].isSession, false);
+    strictEqual(rootGroups[0].isSnapshot, false);
     ok(rootGroups[0].containsFile('/tmp/split.ts'));
     ok(!rootGroups[0].containsFile('/tmp/other.ts'));
   });

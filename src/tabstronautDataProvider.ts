@@ -6,7 +6,7 @@ import {
   generateRelativeTime,
   generateNormalizedPath,
   showConfirmation,
-  isSessionManaged,
+  isSnapshotManaged,
   COLORS,
   labelForTopFolder,
 } from "./utils";
@@ -52,6 +52,8 @@ interface GroupStorageData {
   children?: { [id: string]: GroupStorageData };
   creationTime: string;
   colorName: string;
+  isSnapshot?: boolean;
+  /** @deprecated Pre-1.5.8 field name for {@link isSnapshot}, kept for reading older saved state. */
   isSession?: boolean;
 }
 
@@ -114,9 +116,9 @@ export class TabstronautDataProvider
       data.colorName
     );
     group.parentId = parentId;
-    group.isSession = data.isSession;
-    if (group.isSession) {
-      group.tooltip = `${data.label} (Session)`;
+    group.isSnapshot = data.isSnapshot ?? data.isSession;
+    if (group.isSnapshot) {
+      group.tooltip = `${data.label} (Tab Snapshot)`;
       group.updateIcon();
     }
     data.items.forEach((entry) => {
@@ -130,8 +132,8 @@ export class TabstronautDataProvider
     const childrenData = data.children || {};
     for (const childId in childrenData) {
       const childGroup = this.deserializeGroup(childId, childrenData[childId], id);
-      if (group.isSession) {
-        childGroup.contextValue = 'sessionColumn';
+      if (group.isSnapshot) {
+        childGroup.contextValue = 'snapshotColumn';
         childGroup.iconPath = new vscode.ThemeIcon('primitive-square', new vscode.ThemeColor(childGroup.colorName));
       }
       group.children.push(childGroup);
@@ -164,7 +166,7 @@ export class TabstronautDataProvider
       children,
       creationTime: group.creationTime.toISOString(),
       colorName: group.colorName,
-      ...(group.isSession ? { isSession: true } : {}),
+      ...(group.isSnapshot ? { isSnapshot: true } : {}),
     };
   }
 
@@ -293,7 +295,7 @@ export class TabstronautDataProvider
     const ids = source
       .filter(
         (item) =>
-          !(item instanceof Group && (item.isPinned || item.contextValue === "sessionColumn"))
+          !(item instanceof Group && (item.isPinned || item.contextValue === "snapshotColumn"))
       )
       .map((item) => {
         return item instanceof Group ? `group:${item.id}` : `tab:${item.id}`;
@@ -312,9 +314,9 @@ export class TabstronautDataProvider
   ): Promise<void> {
     const uriItem = dataTransfer.get("text/uri-list");
     if (uriItem && target instanceof Group) {
-      if (isSessionManaged(target)) {
+      if (isSnapshotManaged(target)) {
         vscode.window.showInformationMessage(
-          `'${target.label}' is part of a session. Use 'Update Session' to refresh its saved layout instead.`
+          `'${target.label}' is part of a Tab Snapshot. Use 'Update Tab Snapshot' to refresh its saved layout instead.`
         );
         return;
       }
@@ -392,7 +394,7 @@ export class TabstronautDataProvider
           // Drop on a tab: nest inside that tab's parent group
           const targetTabId = target!.id as string;
           const nestTarget = this.findSourceGroupForTab(targetTabId);
-          if (!nestTarget || nestTarget.isPinned || isSessionManaged(nestTarget)) {
+          if (!nestTarget || nestTarget.isPinned || isSnapshotManaged(nestTarget)) {
             return;
           }
           if (draggedGroup.id === nestTarget.id) {
@@ -419,7 +421,7 @@ export class TabstronautDataProvider
         if (
           draggedGroup.id === targetGroup.id ||
           targetGroup.isPinned ||
-          targetGroup.contextValue === "sessionColumn"
+          targetGroup.contextValue === "snapshotColumn"
         ) {
           return;
         }
@@ -461,9 +463,9 @@ export class TabstronautDataProvider
       }
 
       if (id.startsWith("tab:") && target instanceof Group) {
-        if (isSessionManaged(target)) {
+        if (isSnapshotManaged(target)) {
           vscode.window.showInformationMessage(
-            `'${target.label}' is part of a session. Use 'Update Session' to refresh its saved layout instead.`
+            `'${target.label}' is part of a Tab Snapshot. Use 'Update Tab Snapshot' to refresh its saved layout instead.`
           );
           return;
         }
@@ -474,7 +476,7 @@ export class TabstronautDataProvider
         const tab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
-        if (!tab || !sourceGroup || isSessionManaged(sourceGroup)) {
+        if (!tab || !sourceGroup || isSnapshotManaged(sourceGroup)) {
           return;
         }
 
@@ -521,7 +523,7 @@ export class TabstronautDataProvider
         const tab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
-        if (!tab || !sourceGroup || isSessionManaged(sourceGroup)) {
+        if (!tab || !sourceGroup || isSnapshotManaged(sourceGroup)) {
           return;
         }
 
@@ -554,13 +556,13 @@ export class TabstronautDataProvider
         const draggedTab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
-        if (!draggedTab || !sourceGroup || isSessionManaged(sourceGroup)) {
+        if (!draggedTab || !sourceGroup || isSnapshotManaged(sourceGroup)) {
           return;
         }
 
         const targetTabId = target.id as string;
         const targetGroup = this.findSourceGroupForTab(targetTabId);
-        if (!targetGroup || isSessionManaged(targetGroup)) {
+        if (!targetGroup || isSnapshotManaged(targetGroup)) {
           return;
         }
 

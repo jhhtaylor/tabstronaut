@@ -20,6 +20,36 @@ Love this extension? You can support its development with a small donation - com
   - Drag a group onto another group to reorder, onto a tab to nest it inside that group, or onto empty space to promote it to the top level.
 - Share and revisit your workspaces
   - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes.
+- Tab Snapshots
+  - Save your entire split-editor layout — not just which files are open, but how they're arranged across columns — and restore it exactly as it was, in one click.
+
+## Tab Snapshots
+
+A **Tab Snapshot** is a special kind of Tab Group that remembers your whole editor layout: how many columns you had open, which files were in each column, and which tabs were pinned. Restoring it doesn't just reopen a list of files — it recreates the split layout itself.
+
+### Creating a Tab Snapshot
+
+1. Split your editor into two or more columns, arranged the way you want to save them.
+2. Click **Create New Tab Snapshot** (the camera icon at the top of the Tabstronaut sidebar), or press `Ctrl+Alt+S` / `Cmd+Alt+S`.
+3. Name it (or accept the suggested name) and it's saved.
+
+If you have fewer than 2 columns open, Tabstronaut will ask you to split your editor first — a Tab Snapshot only makes sense for multi-column layouts. If you just want to save the current (single-column) set of tabs as a regular group, use the normal **Add All Open Tabs to Group** flow instead.
+
+### Restoring a Tab Snapshot
+
+Restore a Tab Snapshot the same way you'd restore any Tab Group — click it in the sidebar, or use `Ctrl+Alt+O` / `Cmd+Alt+O`, `Ctrl+Alt+Enter` / `Cmd+Alt+Enter`, or the `Ctrl+Alt+1`–`9` group-number shortcuts. Tabstronaut closes your current editors (including pinned tabs) and recreates the saved columns, reopening each file — pinned again if it was pinned — in its original position.
+
+### Updating a Tab Snapshot
+
+Rearranged your editors and want to save the new layout under the same Tab Snapshot? Select it in the sidebar and either click its **Update Tab Snapshot** button (camera icon) or press `Ctrl+Alt+Shift+S` / `Cmd+Alt+Shift+S`. This replaces the saved columns and files with your current layout.
+
+### How to tell a Tab Snapshot apart from a regular group
+
+Tab Snapshots use a square icon (regular groups use a circle) and show "(Tab Snapshot)" in their tooltip. Their column sub-groups are managed automatically — they're restored, renamed, and removed as part of the Tab Snapshot itself, so they don't appear in the usual "Add to Tab Group" pickers.
+
+### Automatic Tab Snapshots
+
+By default, **Add All Open Tabs to Group** (`Ctrl+Alt+G`) automatically creates a Tab Snapshot if you have 2 or more editor columns open with files in them, capturing your full split layout — otherwise it creates a normal flat group. If you'd rather it always create a simple flat group regardless of how many columns you have open, turn off the **Snapshot Aware Groups** setting (`tabstronaut.snapshotAwareGroups`).
 
 ## Tips
 
@@ -35,6 +65,8 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Add current tab to a group** *(only shows groups the file isn't already in)* | `Ctrl+Alt+A` | `Cmd+Alt+A` |
 | **Add all open tabs to a group** | `Ctrl+Alt+G` | `Cmd+Alt+G` |
 | **Add current split's tabs to a group** | `Ctrl+Alt+Shift+G` | `Cmd+Alt+Shift+G` |
+| **Create a new Tab Snapshot from the current split layout** | `Ctrl+Alt+S` | `Cmd+Alt+S` |
+| **Update the focused Tab Snapshot** *(sidebar must have focus)* | `Ctrl+Alt+Shift+S` | `Cmd+Alt+Shift+S` |
 | **Open / restore a group** | `Ctrl+Alt+O` | `Cmd+Alt+O` |
 | **Rename a group** | `Ctrl+Alt+E` | `Cmd+Alt+E` |
 | **Rename focused group** *(sidebar must have focus)* | `F2` | `F2` |
@@ -44,7 +76,7 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Delete a group** | `Ctrl+Alt+Shift+R` | `Cmd+Alt+Shift+R` |
 | **Restore group 1–9 by number** | `Ctrl+Alt+1` – `Ctrl+Alt+9` | `Cmd+Alt+1` – `Cmd+Alt+9` |
 
-The letter shortcuts (**A**, **G**, **Shift+G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu. **F2**, **Delete** (⌫ on Mac), and **Ctrl+Alt+Enter** work when a group is selected in the Tabstronaut sidebar — navigate with arrow keys, then press F2 to rename, Delete/⌫ to delete, or Ctrl+Alt+Enter to restore in place.
+The letter shortcuts (**A**, **G**, **Shift+G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu. **F2**, **Delete** (⌫ on Mac), **Ctrl+Alt+Enter**, and **Ctrl+Alt+Shift+S** work when a group is selected in the Tabstronaut sidebar — navigate with arrow keys, then press F2 to rename, Delete/⌫ to delete, Ctrl+Alt+Enter to restore in place, or Ctrl+Alt+Shift+S to update a selected Tab Snapshot with your current layout. **Ctrl+Alt+S** requires at least 2 editor columns to be open and saves that layout as a brand new Tab Snapshot, prompting for a name.
 
 > **Tip:** All of these can also be reached from the Tabstronaut sidebar, the right-click menu in the editor tab bar, or the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
-import { COLORS, COLOR_LABELS, getTabFilePath, isGroupContextValue, isSessionManaged, showConfirmation } from './utils';
+import { COLORS, COLOR_LABELS, getTabFilePath, isGroupContextValue, isSnapshotManaged, showConfirmation } from './utils';
 import { gatherFileUris } from './fileOperations';
 
 export type GroupNameResult = {
@@ -104,8 +104,8 @@ export async function selectTabGroup(
   const buildGroupItems = (groups: Group[], prefix = ''): CustomQuickPickItem[] => {
     const items: CustomQuickPickItem[] = [];
     for (const group of groups) {
-      if (isSessionManaged(group)) {
-        // Sessions are managed via their own refresh/restore/rename/delete
+      if (isSnapshotManaged(group)) {
+        // Tab Snapshots are managed via their own refresh/restore/rename/delete
         // controls, not generic group pickers.
         continue;
       }
@@ -667,9 +667,9 @@ export async function openGroupQuickPick(
         group,
         buttons: group.children.length > 0 ? [openRecursiveButton] : [],
       });
-      // Session columns are restored as part of the session itself, not
+      // Tab Snapshot columns are restored as part of the snapshot itself, not
       // individually, so don't list them as separate entries.
-      if (group.children.length > 0 && !group.isSession) {
+      if (group.children.length > 0 && !group.isSnapshot) {
         items.push(...buildItems(group.children, label));
       }
     }
@@ -739,8 +739,8 @@ function buildGroupHierarchyItems(
 ): GroupPickItem[] {
   const result: GroupPickItem[] = [];
   for (const group of groups) {
-    if (isSessionManaged(group)) {
-      // Sessions are managed via their own refresh/restore/rename/delete
+    if (isSnapshotManaged(group)) {
+      // Tab Snapshots are managed via their own refresh/restore/rename/delete
       // controls, not generic group pickers.
       continue;
     }
@@ -1049,7 +1049,7 @@ export async function pickGroupToDelete(
 /**
  * Builds the confirmation message for "add all open tabs to a new group",
  * accounting for whether tabstronaut.addAllToNewGroup captured the current
- * editor layout as a session (multiple columns) or did a flat add.
+ * editor layout as a Tab Snapshot (multiple columns) or did a flat add.
  */
 export function describeAddAllResult(
   treeDataProvider: TabstronautDataProvider,
@@ -1057,8 +1057,8 @@ export function describeAddAllResult(
   groupName: string
 ): string {
   const group = treeDataProvider.findGroupById(groupId);
-  if (group?.isSession) {
-    return `Created '${groupName}' and saved the current editor layout as a session (${group.children.length} columns).`;
+  if (group?.isSnapshot) {
+    return `Created '${groupName}' and saved the current editor layout as a Tab Snapshot (${group.children.length} columns).`;
   }
   return `Created '${groupName}' and added all open tabs.`;
 }

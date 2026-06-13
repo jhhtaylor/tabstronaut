@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.5.7",
+  "version": "1.6.0",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -63,9 +63,9 @@
         "title": "Add to Tab Group..."
       },
       {
-        "command": "tabstronaut.createSession",
+        "command": "tabstronaut.createSnapshot",
         "category": "Tabstronaut",
-        "title": "Create New Session",
+        "title": "Create New Tab Snapshot",
         "icon": "$(device-camera)"
       },
       {
@@ -174,9 +174,9 @@
         "icon": "$(new-folder)"
       },
       {
-        "command": "tabstronaut.updateSessionGroup",
+        "command": "tabstronaut.updateSnapshotGroup",
         "category": "Tabstronaut",
-        "title": "Update Session",
+        "title": "Update Tab Snapshot",
         "icon": "$(device-camera)"
       },
       {
@@ -316,7 +316,7 @@
           "group": "navigation@0"
         },
         {
-          "command": "tabstronaut.createSession",
+          "command": "tabstronaut.createSnapshot",
           "when": "view == tabstronaut",
           "group": "navigation@0.5"
         },
@@ -386,8 +386,8 @@
           "group": "inline@1"
         },
         {
-          "command": "tabstronaut.updateSessionGroup",
-          "when": "view == tabstronaut && viewItem == sessionGroup",
+          "command": "tabstronaut.updateSnapshotGroup",
+          "when": "view == tabstronaut && viewItem == snapshotGroup",
           "group": "inline@1"
         },
         {
@@ -397,7 +397,7 @@
         },
         {
           "command": "tabstronaut.restoreAllTabsInGroup",
-          "when": "view == tabstronaut && (viewItem == group || viewItem == sessionGroup)",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == snapshotGroup)",
           "group": "inline@3"
         },
         {
@@ -407,12 +407,12 @@
         },
         {
           "command": "tabstronaut.editTabGroup",
-          "when": "view == tabstronaut && (viewItem == group || viewItem == sessionGroup)",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == snapshotGroup)",
           "group": "inline@5"
         },
         {
           "command": "tabstronaut.removeTabGroup",
-          "when": "view == tabstronaut && (viewItem == group || viewItem == sessionGroup)",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == snapshotGroup)",
           "group": "inline@6"
         },
         {
@@ -509,7 +509,7 @@
           "when": "false"
         },
         {
-          "command": "tabstronaut.updateSessionGroup",
+          "command": "tabstronaut.updateSnapshotGroup",
           "when": "false"
         },
         {
@@ -703,6 +703,17 @@
         "key": "ctrl+alt+enter",
         "mac": "cmd+alt+enter",
         "when": "focusedView == 'tabstronaut' && !inputFocus"
+      },
+      {
+        "command": "tabstronaut.createSnapshot",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s"
+      },
+      {
+        "command": "tabstronaut.updateSnapshotGroup",
+        "key": "ctrl+alt+shift+s",
+        "mac": "cmd+alt+shift+s",
+        "when": "focusedView == 'tabstronaut' && !inputFocus"
       }
     ],
     "configuration": {
@@ -733,10 +744,10 @@
           "default": false,
           "description": "Close all currently open tabs before restoring a Tab Group for clean context switching. Cannot be used together with Automatically remove closed tabs."
         },
-        "tabstronaut.sessionAwareGroups": {
+        "tabstronaut.snapshotAwareGroups": {
           "type": "boolean",
           "default": true,
-          "description": "When 'Add all to New Tab Group' is run with multiple editor columns open, save each column (including pinned tabs) as its own sub-group and mark the group as a session. Restoring a session group recreates that column layout. Disable to always use the simple flat add/restore behavior."
+          "description": "When 'Add all to New Tab Group' is run with multiple editor columns open, save each column (including pinned tabs) as its own sub-group and mark the group as a Tab Snapshot. Restoring a Tab Snapshot group recreates that column layout. Disable to always use the simple flat add/restore behavior."
         },
         "tabstronaut.showConfirmationMessages": {
           "type": "boolean",
