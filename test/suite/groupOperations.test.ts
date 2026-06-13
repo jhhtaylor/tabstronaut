@@ -370,9 +370,9 @@ describe('selectTabGroup — filterFilePath', () => {
     provider.clearRefreshInterval();
 
     const newGroupItem = (mock.qp.items as any[]).find(
-      (i: any) => i.label === 'New Tab Group from current tab...'
+      (i: any) => i.label === 'New Tab Group from current tab'
     );
-    ok(newGroupItem, '"New Tab Group from current tab..." should always be present');
+    ok(newGroupItem, '"New Tab Group from current tab" should always be present');
 
     const groupItems = (mock.qp.items as any[]).filter((i: any) => i.id);
     strictEqual(groupItems.length, 0, 'no existing group items should remain');
@@ -564,10 +564,10 @@ describe('selectTabGroup — current-split buttons', () => {
     provider.clearRefreshInterval();
 
     const newGroupItem = (mock.qp.items as any[]).find(
-      (i: any) => i.label === 'New Tab Group from current tab...'
+      (i: any) => i.label === 'New Tab Group from current tab'
     );
     const tooltips = (newGroupItem.buttons as any[]).map((b: any) => b.tooltip);
-    ok(tooltips.includes('New Tab Group from all tabs...'));
+    ok(tooltips.includes('New Tab Group from all tabs'));
     ok(tooltips.includes('New Tab Group from current split'));
   });
 
@@ -604,7 +604,7 @@ describe('selectTabGroup — current-split buttons', () => {
 
     const p = selectTabGroup(provider);
     const newGroupItem = (mock.qp.items as any[]).find(
-      (i: any) => i.label === 'New Tab Group from current tab...'
+      (i: any) => i.label === 'New Tab Group from current tab'
     );
     const splitButton = (newGroupItem.buttons as any[]).find(
       (b: any) => b.tooltip === 'New Tab Group from current split'

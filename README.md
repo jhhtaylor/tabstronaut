@@ -49,7 +49,7 @@ If you update a Tab Snapshot while only a single editor column is open, it's con
 
 Tab Snapshots use a square icon (regular groups use a circle) and show "(Tab Snapshot)" in their tooltip. Their column sub-groups are managed automatically — they're restored, renamed, and removed as part of the Tab Snapshot itself, so they don't appear in the usual "Add to Tab Group" pickers.
 
-Tab Snapshots are only ever created or updated explicitly, via **Create New Tab Snapshot** / **Update Tab Snapshot** (or `Ctrl+Alt+S` / `Ctrl+Alt+Shift+S`). **Add All Open Tabs to Group** (`Ctrl+Alt+G`) and **New Tab Group from all tabs...** always create a normal flat group, regardless of how many editor columns are open.
+Tab Snapshots are only ever created or updated explicitly, via **Create New Tab Snapshot** / **Update Tab Snapshot** (or `Ctrl+Alt+S` / `Ctrl+Alt+Shift+S`). **Add All Open Tabs to Group** (`Ctrl+Alt+G`) and **New Tab Group from all tabs** always create a normal flat group, regardless of how many editor columns are open.
 
 ## Tips
 
