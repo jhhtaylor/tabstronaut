@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
-import { confirmIfRequired } from './groupOperations';
-import { closeAllEditors, generateUuidv4 } from './utils';
+import { confirmIfRequired, getGroupNameForAllToNewGroup, selectColorOption, ColorOption } from './groupOperations';
+import { closeAllEditors, generateUuidv4, COLORS, showConfirmation } from './utils';
 
 function getTabFilePath(tab: vscode.Tab): string | undefined {
   const input = tab.input;
@@ -46,6 +46,7 @@ export async function captureSessionIntoGroup(
     group.items = [];
     group.isSession = false;
     group.tooltip = undefined;
+    group.updateIcon();
     for (const tab of editorGroups[0].tabs) {
       const filePath = getTabFilePath(tab);
       if (!filePath) {
@@ -56,7 +57,8 @@ export async function captureSessionIntoGroup(
   } else {
     group.items = [];
     group.isSession = true;
-    group.tooltip = `${group.label} (Session) — restoring this group recreates the saved ${editorGroups.length}-column editor layout.`;
+    group.tooltip = `${group.label} (Session)`;
+    group.updateIcon();
 
     while (group.children.length > editorGroups.length) {
       group.children.pop();
@@ -71,6 +73,8 @@ export async function captureSessionIntoGroup(
       } else {
         column.label = `Column ${i + 1}`;
       }
+      column.contextValue = 'sessionColumn';
+      column.iconPath = new vscode.ThemeIcon('primitive-square', new vscode.ThemeColor(column.colorName));
 
       column.items = [];
       for (const tab of editorGroups[i].tabs) {
@@ -88,6 +92,52 @@ export async function captureSessionIntoGroup(
 }
 
 /**
+ * "Create New Session" view-title button: saves the current multi-column
+ * editor layout as a brand new session group. Requires at least 2 editor
+ * columns with file tabs open; otherwise prompts the user to split their
+ * editor first.
+ */
+export async function createSessionCommand(
+  treeDataProvider: TabstronautDataProvider
+): Promise<void> {
+  const editorGroups = vscode.window.tabGroups.all.filter((g) =>
+    g.tabs.some((tab) => getTabFilePath(tab) !== undefined)
+  );
+
+  if (editorGroups.length < 2) {
+    vscode.window.showInformationMessage(
+      'Split your editor into 2 or more groups, then use "Create New Session" to save that layout.'
+    );
+    return;
+  }
+
+  const result = await getGroupNameForAllToNewGroup(treeDataProvider);
+  if (!result.name) {
+    return;
+  }
+
+  const defaultColor = COLORS[treeDataProvider.getRootGroups().length % COLORS.length];
+  let groupColor = defaultColor;
+  if (!result.useDefaults) {
+    const colorOption = (await selectColorOption(defaultColor)) as ColorOption | undefined;
+    if (!colorOption) {
+      return;
+    }
+    groupColor = colorOption.colorValue;
+  }
+
+  const groupId = await treeDataProvider.addGroup(result.name, groupColor);
+  if (!groupId) {
+    return;
+  }
+
+  const group = treeDataProvider.findGroupById(groupId);
+  if (group && await captureSessionIntoGroup(treeDataProvider, group)) {
+    showConfirmation(`Session '${result.name}' created.`);
+  }
+}
+
+/**
  * Restores a session group: closes the current editor layout, recreates one
  * column per saved column group, and reopens each column's tabs (including
  * pinned state) into the matching column.
@@ -101,7 +151,7 @@ export async function restoreSessionGroup(
     return;
   }
 
-  if (!await confirmIfRequired(`Close all open editors and recreate the saved layout for '${group.label}'?`)) {
+  if (!await confirmIfRequired(`Close all open editors (including pinned tabs) and recreate the saved layout for '${group.label}'?`)) {
     return;
   }
 

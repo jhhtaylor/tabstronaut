@@ -3,7 +3,7 @@ import * as path from "path";
 import { TabstronautDataProvider, SuggestionItem } from "./tabstronautDataProvider";
 import { UngroupedProvider } from "./ungroupedProvider";
 import { Group } from "./models/Group";
-import { closeAllEditors, showConfirmation } from "./utils";
+import { closeAllEditors, isGroupContextValue, showConfirmation } from "./utils";
 import { handleOpenTab, openFileSmart } from "./fileOperations";
 import {
   handleTabGroupAction,
@@ -23,7 +23,7 @@ import {
   renameGroupQuickPick,
   confirmIfRequired,
 } from "./groupOperations";
-import { captureSessionIntoGroup, restoreSessionGroup } from "./sessionOperations";
+import { captureSessionIntoGroup, restoreSessionGroup, createSessionCommand } from "./sessionOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
 import { aiEnhanceSuggestion, resetAiAvailability } from "./aiGroupSuggester";
@@ -426,7 +426,7 @@ export function activate(context: vscode.ExtensionContext) {
           let shouldClose: string | undefined =
             await vscode.window.showQuickPick(["Yes", "No"], {
               placeHolder:
-                "Are you sure you want to close all open editor tabs?",
+                "Are you sure you want to close all open editor tabs (including pinned)?",
             });
 
           if (!shouldClose || shouldClose === "No") {
@@ -603,7 +603,7 @@ export function activate(context: vscode.ExtensionContext) {
       .getConfiguration("tabstronaut")
       .get<boolean>("autoCloseOnRestore", false);
     if (autoClose) {
-      if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
+      if (!await confirmIfRequired(`Close all open editors (including pinned tabs) and restore Tab Group '${group.label}'?`)) {
         return;
       }
 
@@ -653,7 +653,7 @@ export function activate(context: vscode.ExtensionContext) {
       "tabstronaut.restoreAllTabsInGroup",
       async (item: any) => {
         const resolved = item ?? treeView.selection[0];
-        if (!resolved || resolved.contextValue !== "group") {
+        if (!resolved || !isGroupContextValue(resolved.contextValue)) {
           return;
         }
         await restoreGroup(resolved, true);
@@ -666,7 +666,7 @@ export function activate(context: vscode.ExtensionContext) {
       "tabstronaut.restoreTabsByGroupNumber",
       async (groupNumber: number) => {
         const group: Group = treeDataProvider.getGroupByOrder(groupNumber);
-        if (!group || group.contextValue !== "group") {
+        if (!group || !isGroupContextValue(group.contextValue)) {
           return;
         }
         await restoreGroup(group, true);
@@ -780,6 +780,14 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  // ── View title: save the current multi-column editor layout as a new session ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.createSession",
+      () => createSessionCommand(treeDataProvider)
+    )
+  );
+
   // ── Ctrl+Alt+E: rename a group via quick-pick ───────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -793,7 +801,7 @@ export function activate(context: vscode.ExtensionContext) {
       "tabstronaut.editTabGroup",
       (item: any) => {
         const resolved = item ?? treeView.selection[0];
-        if (resolved?.contextValue === "group") {
+        if (isGroupContextValue(resolved?.contextValue)) {
           return renameTabGroupCommand(treeDataProvider, resolved);
         }
         return renameGroupQuickPick(treeDataProvider);
@@ -831,7 +839,7 @@ export function activate(context: vscode.ExtensionContext) {
       "tabstronaut.removeTabGroup",
       async (item: any) => {
         const resolved = item ?? treeView.selection[0];
-        if (!resolved || resolved.contextValue !== "group") {
+        if (!resolved || !isGroupContextValue(resolved.contextValue)) {
           return;
         }
         const group: Group = resolved;
@@ -879,6 +887,7 @@ export function activate(context: vscode.ExtensionContext) {
           addItem: group.addItem.bind(group),
           containsFile: group.containsFile.bind(group),
           containsFileRecursive: group.containsFileRecursive.bind(group),
+          updateIcon: group.updateIcon.bind(group),
         };
 
         vscode.commands.executeCommand(
@@ -940,6 +949,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addCurrentTabToGroup",
       async (group: Group) => {
+        if (group.isSession) {
+          vscode.window.showInformationMessage(
+            `'${group.label}' is a session group. Use 'Update Session' on it to refresh its saved layout instead.`
+          );
+          return;
+        }
+
         const activeTab = vscode.window.tabGroups.activeTabGroup?.activeTab;
 
         if (
@@ -1096,7 +1112,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addSubGroup",
       async (item: any) => {
-        if (item.contextValue !== "group") {
+        if (!isGroupContextValue(item.contextValue)) {
           return;
         }
         const group: Group = item;
@@ -1121,30 +1137,35 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addAllOpenTabsToGroup",
       async (item: any) => {
-        if (!item || item.contextValue !== "group") {
+        if (!item || !isGroupContextValue(item.contextValue)) {
           return;
         }
         const group: Group = item;
-
-        const sessionAware = vscode.workspace
-          .getConfiguration("tabstronaut")
-          .get<boolean>("sessionAwareGroups", true);
-
-        if (sessionAware && group.isSession) {
-          if (!await confirmIfRequired(`Refresh saved session '${group.label}' with the current editor layout?`)) {
-            return;
-          }
-          if (await captureSessionIntoGroup(treeDataProvider, group)) {
-            showConfirmation(`Session '${group.label}' refreshed.`);
-          }
-          return;
-        }
 
         if (!await confirmIfRequired(`Add all open editors to Tab Group '${group.label}'?`)) {
           return;
         }
 
         await addAllOpenTabsToGroup(treeDataProvider, group);
+      }
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.updateSessionGroup",
+      async (item: any) => {
+        if (!item || item.contextValue !== "sessionGroup") {
+          return;
+        }
+        const group: Group = item;
+
+        if (!await confirmIfRequired(`Update session '${group.label}' with the current editor layout?`)) {
+          return;
+        }
+        if (await captureSessionIntoGroup(treeDataProvider, group)) {
+          showConfirmation(`Session '${group.label}' updated.`);
+        }
       }
     )
   );

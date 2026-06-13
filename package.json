@@ -63,6 +63,12 @@
         "title": "Add to Tab Group..."
       },
       {
+        "command": "tabstronaut.createSession",
+        "category": "Tabstronaut",
+        "title": "Create New Session",
+        "icon": "$(device-camera)"
+      },
+      {
         "command": "tabstronaut.collapseAll",
         "category": "Tabstronaut",
         "title": "Collapse all Tab Groups",
@@ -77,7 +83,7 @@
       {
         "command": "tabstronaut.confirmCloseAllEditors",
         "category": "Tabstronaut",
-        "title": "Close all open editor tabs",
+        "title": "Close all open editor tabs (including pinned)",
         "icon": "$(chrome-close)"
       },
       {
@@ -166,6 +172,12 @@
         "category": "Tabstronaut",
         "title": "Add all tabs to Tab Group",
         "icon": "$(new-folder)"
+      },
+      {
+        "command": "tabstronaut.updateSessionGroup",
+        "category": "Tabstronaut",
+        "title": "Update Session",
+        "icon": "$(device-camera)"
       },
       {
         "command": "tabstronaut.undoDelete",
@@ -298,6 +310,11 @@
           "group": "navigation@0"
         },
         {
+          "command": "tabstronaut.createSession",
+          "when": "view == tabstronaut",
+          "group": "navigation@0.5"
+        },
+        {
           "command": "tabstronaut.collapseAll",
           "when": "view == tabstronaut && !tabstronaut:allCollapsed",
           "group": "navigation@1"
@@ -363,13 +380,18 @@
           "group": "inline@1"
         },
         {
+          "command": "tabstronaut.updateSessionGroup",
+          "when": "view == tabstronaut && viewItem == sessionGroup",
+          "group": "inline@1"
+        },
+        {
           "command": "tabstronaut.addSubGroup",
           "when": "view == tabstronaut && viewItem == group",
           "group": "inline@2"
         },
         {
           "command": "tabstronaut.restoreAllTabsInGroup",
-          "when": "view == tabstronaut && viewItem == group",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == sessionGroup)",
           "group": "inline@3"
         },
         {
@@ -379,12 +401,12 @@
         },
         {
           "command": "tabstronaut.editTabGroup",
-          "when": "view == tabstronaut && viewItem == group",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == sessionGroup)",
           "group": "inline@5"
         },
         {
           "command": "tabstronaut.removeTabGroup",
-          "when": "view == tabstronaut && viewItem == group",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == sessionGroup)",
           "group": "inline@6"
         },
         {
@@ -478,6 +500,10 @@
         },
         {
           "command": "tabstronaut.addAllOpenTabsToGroup",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.updateSessionGroup",
           "when": "false"
         },
         {

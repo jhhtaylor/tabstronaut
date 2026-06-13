@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
-import { COLORS, COLOR_LABELS, showConfirmation } from './utils';
+import { COLORS, COLOR_LABELS, isGroupContextValue, isSessionManaged, showConfirmation } from './utils';
 import { gatherFileUris } from './fileOperations';
 
 export type GroupNameResult = {
@@ -20,7 +20,7 @@ export async function getGroupName(
   );
   if (!promptForGroupDetails) {
     return {
-      name: `Group ${treeDataProvider.getGroups().length + 1}`,
+      name: `Group ${treeDataProvider.getRootGroups().length + 1}`,
       useDefaults: true,
     };
   }
@@ -51,7 +51,7 @@ export async function getGroupName(
       const value = inputBox.value;
       if (value.trim() === '') {
         finalize({
-          name: `Group ${treeDataProvider.getGroups().length + 1}`,
+          name: `Group ${treeDataProvider.getRootGroups().length + 1}`,
           useDefaults: false,
         });
       } else {
@@ -64,7 +64,7 @@ export async function getGroupName(
     inputBox.onDidTriggerButton((button) => {
       if (button === defaultButton) {
         finalize({
-          name: `Group ${treeDataProvider.getGroups().length + 1}`,
+          name: `Group ${treeDataProvider.getRootGroups().length + 1}`,
           useDefaults: true,
         });
         inputBox.hide();
@@ -104,6 +104,11 @@ export async function selectTabGroup(
   const buildGroupItems = (groups: Group[], prefix = ''): CustomQuickPickItem[] => {
     const items: CustomQuickPickItem[] = [];
     for (const group of groups) {
+      if (isSessionManaged(group)) {
+        // Sessions are managed via their own refresh/restore/rename/delete
+        // controls, not generic group pickers.
+        continue;
+      }
       const label = prefix
         ? `${prefix} > ${typeof group.label === 'string' ? group.label : ''}`
         : (typeof group.label === 'string' ? group.label : '');
@@ -170,7 +175,7 @@ export async function selectTabGroup(
           return;
         }
 
-        const color = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+        const color = COLORS[treeDataProvider.getRootGroups().length % COLORS.length];
         let groupColor = color;
         if (!result.useDefaults) {
           const selectedColorOption = await selectColorOption(color);
@@ -263,7 +268,7 @@ export async function handleNewGroupCreation(
     return;
   }
 
-  const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+  const defaultColor = COLORS[treeDataProvider.getRootGroups().length % COLORS.length];
   let groupColor = defaultColor;
   if (!result.useDefaults) {
     const selectedColorOption = (await selectColorOption(defaultColor)) as
@@ -338,7 +343,7 @@ export async function handleNewGroupCreationFromMultipleFiles(
     return;
   }
 
-  const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+  const defaultColor = COLORS[treeDataProvider.getRootGroups().length % COLORS.length];
   let groupColor = defaultColor;
   if (!result.useDefaults) {
     const selectedColorOption = (await selectColorOption(defaultColor)) as
@@ -369,7 +374,7 @@ export async function renameTabGroupCommand(
   treeDataProvider: TabstronautDataProvider,
   item: any
 ) {
-  if (item.contextValue !== 'group' || typeof item.label !== 'string') {
+  if (!isGroupContextValue(item.contextValue) || typeof item.label !== 'string') {
     return;
   }
 
@@ -551,7 +556,7 @@ export async function sortTabGroupCommand(
   treeDataProvider: TabstronautDataProvider,
   item: any
 ): Promise<void> {
-  if (item.contextValue !== 'group') {
+  if (!isGroupContextValue(item.contextValue)) {
     return;
   }
 
@@ -647,7 +652,9 @@ export async function openGroupQuickPick(
         group,
         buttons: group.children.length > 0 ? [openRecursiveButton] : [],
       });
-      if (group.children.length > 0) {
+      // Session columns are restored as part of the session itself, not
+      // individually, so don't list them as separate entries.
+      if (group.children.length > 0 && !group.isSession) {
         items.push(...buildItems(group.children, label));
       }
     }
@@ -716,6 +723,11 @@ function buildGroupHierarchyItems(
 ): GroupPickItem[] {
   const result: GroupPickItem[] = [];
   for (const group of groups) {
+    if (isSessionManaged(group)) {
+      // Sessions are managed via their own refresh/restore/rename/delete
+      // controls, not generic group pickers.
+      continue;
+    }
     const name = typeof group.label === 'string' ? group.label : '';
     const label = prefix ? `${prefix} > ${name}` : name;
     if (predicate(group)) {
@@ -833,11 +845,11 @@ export async function addAllTabsToGroupQuickPick(
   }
 
   if (selected.groupId === CREATE_NEW_GROUP_ID) {
-    const result = await getGroupName(treeDataProvider);
+    const result = await getGroupNameForAllToNewGroup(treeDataProvider);
     if (!result.name) {
       return;
     }
-    const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+    const defaultColor = COLORS[treeDataProvider.getRootGroups().length % COLORS.length];
     let groupColor = defaultColor;
     if (!result.useDefaults) {
       const colorOption = (await selectColorOption(defaultColor)) as ColorOption | undefined;
@@ -850,10 +862,7 @@ export async function addAllTabsToGroupQuickPick(
     if (!groupId) {
       return;
     }
-    const newGroup = treeDataProvider.findGroupById(groupId);
-    if (newGroup) {
-      await addAllOpenTabsToGroup(treeDataProvider, newGroup);
-    }
+    await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
     return;
   }
 
@@ -877,7 +886,7 @@ export async function createNewGroupCommand(
     return;
   }
 
-  const defaultColor = COLORS[treeDataProvider.getGroups().length % COLORS.length];
+  const defaultColor = COLORS[treeDataProvider.getRootGroups().length % COLORS.length];
   let groupColor = defaultColor;
   if (!result.useDefaults) {
     const colorOption = (await selectColorOption(defaultColor)) as ColorOption | undefined;

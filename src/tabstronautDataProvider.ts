@@ -6,6 +6,7 @@ import {
   generateRelativeTime,
   generateNormalizedPath,
   showConfirmation,
+  isSessionManaged,
   COLORS,
   labelForTopFolder,
 } from "./utils";
@@ -115,7 +116,8 @@ export class TabstronautDataProvider
     group.parentId = parentId;
     group.isSession = data.isSession;
     if (group.isSession) {
-      group.tooltip = `${data.label} (Session) — restoring this group recreates the saved ${Object.keys(data.children || {}).length}-column editor layout.`;
+      group.tooltip = `${data.label} (Session)`;
+      group.updateIcon();
     }
     data.items.forEach((entry) => {
       if (typeof entry === "string") {
@@ -128,6 +130,10 @@ export class TabstronautDataProvider
     const childrenData = data.children || {};
     for (const childId in childrenData) {
       const childGroup = this.deserializeGroup(childId, childrenData[childId], id);
+      if (group.isSession) {
+        childGroup.contextValue = 'sessionColumn';
+        childGroup.iconPath = new vscode.ThemeIcon('primitive-square', new vscode.ThemeColor(childGroup.colorName));
+      }
       group.children.push(childGroup);
     }
 
@@ -285,7 +291,10 @@ export class TabstronautDataProvider
     token: vscode.CancellationToken
   ): Promise<void> {
     const ids = source
-      .filter((item) => !(item instanceof Group && item.isPinned))
+      .filter(
+        (item) =>
+          !(item instanceof Group && (item.isPinned || item.contextValue === "sessionColumn"))
+      )
       .map((item) => {
         return item instanceof Group ? `group:${item.id}` : `tab:${item.id}`;
       });
@@ -303,6 +312,12 @@ export class TabstronautDataProvider
   ): Promise<void> {
     const uriItem = dataTransfer.get("text/uri-list");
     if (uriItem && target instanceof Group) {
+      if (isSessionManaged(target)) {
+        vscode.window.showInformationMessage(
+          `'${target.label}' is part of a session. Use 'Update Session' to refresh its saved layout instead.`
+        );
+        return;
+      }
       const uriList = (uriItem.value as string)
         .split(/\r?\n/)
         .map((s) => s.trim())
@@ -377,7 +392,7 @@ export class TabstronautDataProvider
           // Drop on a tab: nest inside that tab's parent group
           const targetTabId = target!.id as string;
           const nestTarget = this.findSourceGroupForTab(targetTabId);
-          if (!nestTarget || nestTarget.isPinned) {
+          if (!nestTarget || nestTarget.isPinned || isSessionManaged(nestTarget)) {
             return;
           }
           if (draggedGroup.id === nestTarget.id) {
@@ -403,7 +418,8 @@ export class TabstronautDataProvider
 
         if (
           draggedGroup.id === targetGroup.id ||
-          targetGroup.isPinned
+          targetGroup.isPinned ||
+          targetGroup.contextValue === "sessionColumn"
         ) {
           return;
         }
@@ -445,13 +461,20 @@ export class TabstronautDataProvider
       }
 
       if (id.startsWith("tab:") && target instanceof Group) {
+        if (isSessionManaged(target)) {
+          vscode.window.showInformationMessage(
+            `'${target.label}' is part of a session. Use 'Update Session' to refresh its saved layout instead.`
+          );
+          return;
+        }
+
         const tabId = id.replace("tab:", "");
         const sourceGroup = this.findSourceGroupForTab(tabId);
 
         const tab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
-        if (!tab || !sourceGroup) {
+        if (!tab || !sourceGroup || isSessionManaged(sourceGroup)) {
           return;
         }
 
@@ -498,7 +521,7 @@ export class TabstronautDataProvider
         const tab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
-        if (!tab || !sourceGroup) {
+        if (!tab || !sourceGroup || isSessionManaged(sourceGroup)) {
           return;
         }
 
@@ -531,13 +554,13 @@ export class TabstronautDataProvider
         const draggedTab = sourceGroup?.items.find((i) => i.id === tabId) as
           | TabItem
           | undefined;
-        if (!draggedTab || !sourceGroup) {
+        if (!draggedTab || !sourceGroup || isSessionManaged(sourceGroup)) {
           return;
         }
 
         const targetTabId = target.id as string;
         const targetGroup = this.findSourceGroupForTab(targetTabId);
-        if (!targetGroup) {
+        if (!targetGroup || isSessionManaged(targetGroup)) {
           return;
         }
 
@@ -918,10 +941,7 @@ export class TabstronautDataProvider
 
       group.label = newName;
       group.colorName = COLORS.includes(newColor) ? newColor : COLORS[0];
-      group.iconPath = new vscode.ThemeIcon(
-        "circle-filled",
-        new vscode.ThemeColor(group.colorName)
-      );
+      group.updateIcon();
 
       const shouldMoveGroup = vscode.workspace
         .getConfiguration("tabstronaut")

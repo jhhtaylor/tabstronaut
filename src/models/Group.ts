@@ -30,6 +30,13 @@ export class Group extends vscode.TreeItem {
         this.isPinned = isPinned;
     }
 
+    /** Updates the tree icon and context value to reflect whether this group is a session (square) or a regular group (circle). */
+    updateIcon(): void {
+        const shape = this.isSession ? 'primitive-square' : 'circle-filled';
+        this.iconPath = new vscode.ThemeIcon(shape, new vscode.ThemeColor(this.colorName));
+        this.contextValue = this.isSession ? 'sessionGroup' : 'group';
+    }
+
     createTabItem(filePath: string, pinned = false): TabItem {
         const baseName = path.basename(filePath);
         const relativePath = generateRelativeDescription(filePath);
