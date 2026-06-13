@@ -9,6 +9,8 @@ import {
   selectColorOption,
   handleAddToExistingGroup,
   addAllOpenTabsToGroup,
+  addCurrentSplitToGroup,
+  addAllTabsToGroupQuickPick,
   filterTabGroupsCommand,
   selectTabGroup,
 } from '../../src/groupOperations';
@@ -115,6 +117,32 @@ describe('groupOperations.getGroupName', () => {
       const result = await getGroupName(provider);
       strictEqual(result.name, 'Group 1');
       strictEqual(result.useDefaults, true);
+    } finally {
+      provider.clearRefreshInterval();
+      await config.update('promptForGroupDetails', originalSetting, true);
+    }
+  });
+
+  it('counts only root groups (not session columns) when generating the default name', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    const originalSetting = config.get('promptForGroupDetails');
+    await config.update('promptForGroupDetails', false, true);
+
+    Object.defineProperty(vscode.window, 'createInputBox', {
+      value: () => {
+        throw new Error('Input box should not be shown when prompts are disabled.');
+      },
+      configurable: true,
+    });
+
+    try {
+      const sessionId = await provider.addGroup('Session A');
+      await provider.addSubGroup(sessionId!, 'Column 1', 'terminal.ansiBlue');
+      await provider.addSubGroup(sessionId!, 'Column 2', 'terminal.ansiGreen');
+
+      const result = await getGroupName(provider);
+      strictEqual(result.name, 'Group 2');
     } finally {
       provider.clearRefreshInterval();
       await config.update('promptForGroupDetails', originalSetting, true);
@@ -254,18 +282,25 @@ describe('groupOperations.filterTabGroupsCommand', () => {
 
 function makeQPMock() {
   let hideCb: (() => void) | undefined;
+  let acceptCb: (() => unknown) | undefined;
+  let triggerCb: ((e: any) => unknown) | undefined;
   const qp: any = {
     items: [] as any[],
     placeholder: '',
     selectedItems: [] as any[],
-    onDidAccept: (_cb: () => void) => {},
+    onDidAccept: (cb: () => void) => { acceptCb = cb; },
     onDidHide: (cb: () => void) => { hideCb = cb; },
-    onDidTriggerItemButton: (_cb: any) => {},
+    onDidTriggerItemButton: (cb: any) => { triggerCb = cb; },
     show: () => {},
     hide: () => { hideCb?.(); },
     dispose: () => {},
   };
-  return { qp, cancel() { hideCb?.(); } };
+  return {
+    qp,
+    cancel() { hideCb?.(); },
+    accept() { return acceptCb?.(); },
+    triggerButton(e: any) { return triggerCb?.(e); },
+  };
 }
 
 describe('selectTabGroup — filterFilePath', () => {
@@ -398,5 +433,284 @@ describe('groupOperations.addAllOpenTabsToGroup', () => {
     strictEqual(updatedGroup.items.length, 2);
     strictEqual(updatedGroup.items[0].resourceUri?.fsPath, '/tmp/a.txt');
     strictEqual(updatedGroup.items[1].resourceUri?.fsPath, '/tmp/b.txt');
+  });
+});
+
+describe('groupOperations.addCurrentSplitToGroup', () => {
+  let origTabGroups: any;
+  beforeEach(() => {
+    origTabGroups = vscode.window.tabGroups;
+  });
+  afterEach(() => {
+    Object.defineProperty(vscode.window, 'tabGroups', { value: origTabGroups, configurable: true });
+  });
+
+  it('adds only the unique file tabs from the active editor split', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('G1');
+    const group = provider.getGroup('G1')!;
+
+    const activeGroup = {
+      tabs: [
+        { input: { uri: vscode.Uri.file('/tmp/a.ts') } },
+        { input: { uri: vscode.Uri.file('/tmp/a.ts') } }, // duplicate
+        { input: { uri: vscode.Uri.file('/tmp/b.ts') } },
+      ],
+    };
+    const otherGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/other.ts') } }] };
+
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [activeGroup, otherGroup], activeTabGroup: activeGroup },
+      configurable: true,
+    });
+
+    await addCurrentSplitToGroup(provider, group);
+    const updatedGroup = provider.getGroup('G1')!;
+    provider.clearRefreshInterval();
+
+    strictEqual(updatedGroup.items.length, 2);
+    ok(updatedGroup.containsFile('/tmp/a.ts'));
+    ok(updatedGroup.containsFile('/tmp/b.ts'));
+    ok(!updatedGroup.containsFile('/tmp/other.ts'));
+  });
+
+  it('adds nothing when there is no active editor split', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('G1');
+    const group = provider.getGroup('G1')!;
+
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [], activeTabGroup: undefined },
+      configurable: true,
+    });
+
+    await addCurrentSplitToGroup(provider, group);
+    const updatedGroup = provider.getGroup('G1')!;
+    provider.clearRefreshInterval();
+
+    strictEqual(updatedGroup.items.length, 0);
+  });
+});
+
+describe('selectTabGroup — current-split buttons', () => {
+  let origCreateQP: any;
+  let origTabGroups: any;
+  let origConfigPrompt: any;
+
+  beforeEach(async () => {
+    origCreateQP = vscode.window.createQuickPick;
+    origTabGroups = vscode.window.tabGroups;
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    origConfigPrompt = config.get('promptForGroupDetails');
+    await config.update('promptForGroupDetails', false, true);
+  });
+
+  afterEach(async () => {
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: origCreateQP, configurable: true });
+    Object.defineProperty(vscode.window, 'tabGroups', { value: origTabGroups, configurable: true });
+    await vscode.workspace.getConfiguration('tabstronaut').update('promptForGroupDetails', origConfigPrompt, true);
+  });
+
+  it('offers "New Tab Group from current split..." alongside the all-tabs option', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const p = selectTabGroup(provider);
+    mock.cancel();
+    await p;
+    provider.clearRefreshInterval();
+
+    const newGroupItem = (mock.qp.items as any[]).find(
+      (i: any) => i.label === 'New Tab Group from current tab...'
+    );
+    const tooltips = (newGroupItem.buttons as any[]).map((b: any) => b.tooltip);
+    ok(tooltips.includes('New Tab Group from all tabs...'));
+    ok(tooltips.includes('New Tab Group from current split...'));
+  });
+
+  it('offers "Add current split to Tab Group" on existing group items', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const p = selectTabGroup(provider);
+    mock.cancel();
+    await p;
+    provider.clearRefreshInterval();
+
+    const alphaItem = (mock.qp.items as any[]).find((i: any) => i.label === 'Alpha');
+    const tooltips = (alphaItem.buttons as any[]).map((b: any) => b.tooltip);
+    ok(tooltips.includes('Add all tabs to Tab Group'));
+    ok(tooltips.includes('Add current split to Tab Group'));
+  });
+
+  it('"New Tab Group from current split..." creates a group from only the active split', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const activeGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/split.ts') } }] };
+    const otherGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/other.ts') } }] };
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [activeGroup, otherGroup], activeTabGroup: activeGroup },
+      configurable: true,
+    });
+
+    const p = selectTabGroup(provider);
+    const newGroupItem = (mock.qp.items as any[]).find(
+      (i: any) => i.label === 'New Tab Group from current tab...'
+    );
+    const splitButton = (newGroupItem.buttons as any[]).find(
+      (b: any) => b.tooltip === 'New Tab Group from current split...'
+    );
+    await mock.triggerButton({ item: newGroupItem, button: splitButton });
+    await p;
+    provider.clearRefreshInterval();
+
+    const rootGroups = provider.getRootGroups();
+    strictEqual(rootGroups.length, 1);
+    strictEqual(rootGroups[0].isSession, false);
+    ok(rootGroups[0].containsFile('/tmp/split.ts'));
+    ok(!rootGroups[0].containsFile('/tmp/other.ts'));
+  });
+
+  it('"Add current split to Tab Group" adds only the active split\'s tabs to an existing group', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('Alpha');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const activeGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/split.ts') } }] };
+    const otherGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/other.ts') } }] };
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [activeGroup, otherGroup], activeTabGroup: activeGroup },
+      configurable: true,
+    });
+
+    const p = selectTabGroup(provider);
+    const alphaItem = (mock.qp.items as any[]).find((i: any) => i.label === 'Alpha');
+    const splitButton = (alphaItem.buttons as any[]).find(
+      (b: any) => b.tooltip === 'Add current split to Tab Group'
+    );
+    await mock.triggerButton({ item: alphaItem, button: splitButton });
+    await p;
+    provider.clearRefreshInterval();
+
+    const group = provider.findGroupById(id!)!;
+    ok(group.containsFile('/tmp/split.ts'));
+    ok(!group.containsFile('/tmp/other.ts'));
+  });
+});
+
+describe('groupOperations.addAllTabsToGroupQuickPick', () => {
+  let origCreateQP: any;
+  let origTabGroups: any;
+  let origConfigPrompt: any;
+
+  beforeEach(async () => {
+    origCreateQP = vscode.window.createQuickPick;
+    origTabGroups = vscode.window.tabGroups;
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    origConfigPrompt = config.get('promptForGroupDetails');
+    await config.update('promptForGroupDetails', false, true);
+  });
+
+  afterEach(async () => {
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: origCreateQP, configurable: true });
+    Object.defineProperty(vscode.window, 'tabGroups', { value: origTabGroups, configurable: true });
+    await vscode.workspace.getConfiguration('tabstronaut').update('promptForGroupDetails', origConfigPrompt, true);
+  });
+
+  it('defaults to "all tabs" mode, offering "Add current split" as the secondary action', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const p = addAllTabsToGroupQuickPick(provider);
+    await p;
+
+    strictEqual(mock.qp.placeholder, 'Add all open tabs to a Tab Group');
+    const alphaItem = (mock.qp.items as any[]).find((i: any) => i.label === 'Alpha');
+    const tooltips = (alphaItem.buttons as any[]).map((b: any) => b.tooltip);
+    ok(tooltips.includes('Add current split to Tab Group'));
+
+    provider.clearRefreshInterval();
+  });
+
+  it('"split" mode offers "Add all tabs" as the secondary action', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Alpha');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const p = addAllTabsToGroupQuickPick(provider, 'split');
+    await p;
+
+    strictEqual(mock.qp.placeholder, "Add current split's tabs to a Tab Group");
+    const alphaItem = (mock.qp.items as any[]).find((i: any) => i.label === 'Alpha');
+    const tooltips = (alphaItem.buttons as any[]).map((b: any) => b.tooltip);
+    ok(tooltips.includes('Add all tabs to Tab Group'));
+
+    provider.clearRefreshInterval();
+  });
+
+  it('in "split" mode, accepting an existing group adds only the active split\'s tabs', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('Alpha');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const activeGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/split.ts') } }] };
+    const otherGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/other.ts') } }] };
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [activeGroup, otherGroup], activeTabGroup: activeGroup },
+      configurable: true,
+    });
+
+    const p = addAllTabsToGroupQuickPick(provider, 'split');
+    await p;
+    const alphaItem = (mock.qp.items as any[]).find((i: any) => i.label === 'Alpha');
+    mock.qp.selectedItems = [alphaItem];
+    await mock.accept();
+
+    provider.clearRefreshInterval();
+    const group = provider.findGroupById(id!)!;
+    ok(group.containsFile('/tmp/split.ts'));
+    ok(!group.containsFile('/tmp/other.ts'));
+  });
+
+  it('in default mode, triggering the split-horizontal button on a group adds only the active split\'s tabs', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const id = await provider.addGroup('Alpha');
+
+    const mock = makeQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
+
+    const activeGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/split.ts') } }] };
+    const otherGroup = { tabs: [{ input: { uri: vscode.Uri.file('/tmp/other.ts') } }] };
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [activeGroup, otherGroup], activeTabGroup: activeGroup },
+      configurable: true,
+    });
+
+    const p = addAllTabsToGroupQuickPick(provider);
+    await p;
+    const alphaItem = (mock.qp.items as any[]).find((i: any) => i.label === 'Alpha');
+    await mock.triggerButton({ item: alphaItem, button: alphaItem.buttons[0] });
+
+    provider.clearRefreshInterval();
+    const group = provider.findGroupById(id!)!;
+    ok(group.containsFile('/tmp/split.ts'));
+    ok(!group.containsFile('/tmp/other.ts'));
   });
 });
