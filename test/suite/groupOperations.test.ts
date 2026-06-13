@@ -552,7 +552,7 @@ describe('selectTabGroup — current-split buttons', () => {
     await vscode.workspace.getConfiguration('tabstronaut').update('promptForGroupDetails', origConfigPrompt, true);
   });
 
-  it('offers "New Tab Group from current split..." alongside the all-tabs option', async () => {
+  it('offers "New Tab Group from current split" alongside the all-tabs option', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
 
     const mock = makeQPMock();
@@ -568,7 +568,7 @@ describe('selectTabGroup — current-split buttons', () => {
     );
     const tooltips = (newGroupItem.buttons as any[]).map((b: any) => b.tooltip);
     ok(tooltips.includes('New Tab Group from all tabs...'));
-    ok(tooltips.includes('New Tab Group from current split...'));
+    ok(tooltips.includes('New Tab Group from current split'));
   });
 
   it('offers "Add current split to Tab Group" on existing group items', async () => {
@@ -589,7 +589,7 @@ describe('selectTabGroup — current-split buttons', () => {
     ok(tooltips.includes('Add current split to Tab Group'));
   });
 
-  it('"New Tab Group from current split..." creates a group from only the active split', async () => {
+  it('"New Tab Group from current split" creates a group from only the active split', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
 
     const mock = makeQPMock();
@@ -607,7 +607,7 @@ describe('selectTabGroup — current-split buttons', () => {
       (i: any) => i.label === 'New Tab Group from current tab...'
     );
     const splitButton = (newGroupItem.buttons as any[]).find(
-      (b: any) => b.tooltip === 'New Tab Group from current split...'
+      (b: any) => b.tooltip === 'New Tab Group from current split'
     );
     await mock.triggerButton({ item: newGroupItem, button: splitButton });
     await p;

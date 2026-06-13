@@ -152,7 +152,7 @@ export async function selectTabGroup(
         },
         {
           iconPath: new vscode.ThemeIcon('split-horizontal'),
-          tooltip: 'New Tab Group from current split...',
+          tooltip: 'New Tab Group from current split',
         },
       ],
     },
@@ -181,7 +181,7 @@ export async function selectTabGroup(
       }
 
       if (item.label === 'New Tab Group from current tab...') {
-        const fromCurrentSplit = e.button.tooltip === 'New Tab Group from current split...';
+        const fromCurrentSplit = e.button.tooltip === 'New Tab Group from current split';
 
         const result = await getGroupNameForAllToNewGroup(treeDataProvider);
         if (!result.name) {
@@ -217,7 +217,7 @@ export async function selectTabGroup(
             'tabstronaut.addAllToNewGroup',
             groupId
           );
-          showConfirmation(describeAddAllResult(treeDataProvider, groupId, result.name));
+          showConfirmation(`Created '${result.name}' and added all open tabs.`);
         }
         quickPick.hide();
         return;
@@ -292,7 +292,7 @@ export async function handleNewGroupCreation(
     showConfirmation(`Created '${result.name}' and added 1 file.`);
   } else if (groupLabel === 'New Tab Group from all tabs...') {
     await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-    showConfirmation(describeAddAllResult(treeDataProvider, groupId, result.name));
+    showConfirmation(`Created '${result.name}' and added all open tabs.`);
   }
 }
 
@@ -1054,23 +1054,6 @@ export async function pickGroupToDelete(
   }
 
   return treeDataProvider.findGroupById(selected.groupId);
-}
-
-/**
- * Builds the confirmation message for "add all open tabs to a new group",
- * accounting for whether tabstronaut.addAllToNewGroup captured the current
- * editor layout as a Tab Snapshot (multiple columns) or did a flat add.
- */
-export function describeAddAllResult(
-  treeDataProvider: TabstronautDataProvider,
-  groupId: string,
-  groupName: string
-): string {
-  const group = treeDataProvider.findGroupById(groupId);
-  if (group?.isSnapshot) {
-    return `Created '${groupName}' and saved the current editor layout as a Tab Snapshot (${group.children.length} columns).`;
-  }
-  return `Created '${groupName}' and added all open tabs.`;
 }
 
 export async function confirmIfRequired(placeHolder: string): Promise<boolean> {

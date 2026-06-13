@@ -3,7 +3,7 @@ import * as path from "path";
 import { TabstronautDataProvider, SuggestionItem } from "./tabstronautDataProvider";
 import { UngroupedProvider } from "./ungroupedProvider";
 import { Group } from "./models/Group";
-import { closeAllEditors, isGroupContextValue, showConfirmation } from "./utils";
+import { closeAllEditors, getTabFilePath, isGroupContextValue, showConfirmation } from "./utils";
 import { handleOpenTab, openFileSmart } from "./fileOperations";
 import {
   handleTabGroupAction,
@@ -527,18 +527,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addAllToNewGroup",
       async (groupId: string) => {
-        const snapshotAware = vscode.workspace
-          .getConfiguration("tabstronaut")
-          .get<boolean>("snapshotAwareGroups", true);
-
-        if (snapshotAware) {
-          const group = treeDataProvider.findGroupById(groupId);
-          if (group) {
-            await captureSnapshotIntoGroup(treeDataProvider, group);
-          }
-          return;
-        }
-
         const allTabs = vscode.window.tabGroups.all.flatMap(
           (group) => group.tabs
         );
@@ -546,21 +534,8 @@ export function activate(context: vscode.ExtensionContext) {
         const addedFiles = new Set<string>();
 
         for (const tab of allTabs) {
-          if (
-            !tab.input ||
-            typeof tab.input !== "object" ||
-            !("uri" in tab.input)
-          ) {
-            continue;
-          }
-
-          const uri = tab.input.uri;
-          if (!(uri instanceof vscode.Uri) || uri.scheme !== "file") {
-            continue;
-          }
-
-          const filePath = uri.fsPath;
-          if (!addedFiles.has(filePath)) {
+          const filePath = getTabFilePath(tab);
+          if (filePath && !addedFiles.has(filePath)) {
             await treeDataProvider.addToGroup(groupId, filePath);
             addedFiles.add(filePath);
           }
@@ -590,11 +565,7 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   const restoreGroup = async (group: Group, recursive: boolean) => {
-    const snapshotAware = vscode.workspace
-      .getConfiguration("tabstronaut")
-      .get<boolean>("snapshotAwareGroups", true);
-
-    if (snapshotAware && group.isSnapshot) {
+    if (group.isSnapshot) {
       await restoreSnapshotGroup(treeDataProvider, group);
       return;
     }

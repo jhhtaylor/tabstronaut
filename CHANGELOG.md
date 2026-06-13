@@ -8,7 +8,7 @@ All notable changes to the Tabstronaut extension will be documented in this file
   - **`Ctrl+Alt+S` / `Cmd+Alt+S`** — **Create New Tab Snapshot** — saves your current split layout (2+ editor columns required) as a new Tab Snapshot. Also available as a camera-icon button at the top of the Tabstronaut sidebar.
   - **`Ctrl+Alt+Shift+S` / `Cmd+Alt+Shift+S`** — **Update Tab Snapshot** — replaces the saved layout of the Tab Snapshot selected in the sidebar with your current layout. Also available via its camera-icon inline button.
   - Tab Snapshots are restored, renamed, and deleted the same way as regular Tab Groups (click, `Ctrl+Alt+O`, `Ctrl+Alt+Enter`, number shortcuts, etc.), and are shown with a square icon and a "(Tab Snapshot)" tooltip.
-  - **`Add All Open Tabs to Group` (`Ctrl+Alt+G`)** now automatically saves a Tab Snapshot when 2+ editor columns are open, instead of always flattening into one group. This was previously called "session-aware groups"; disable it via the **Snapshot Aware Groups** setting (`tabstronaut.snapshotAwareGroups`) to always create a flat group.
+  - Tab Snapshots are only created or updated explicitly via `Ctrl+Alt+S` / `Ctrl+Alt+Shift+S` — `Add All Open Tabs to Group` (`Ctrl+Alt+G`) and "New Tab Group from all tabs..." continue to always create a flat group, as before.
   - This is a rebrand of the "Session" groups feature introduced in 1.5.6/1.5.7 — existing saved sessions continue to work and are now shown as Tab Snapshots.
 
 ## [1.5.7]
