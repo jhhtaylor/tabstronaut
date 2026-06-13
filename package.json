@@ -257,6 +257,12 @@
         "icon": "$(add)"
       },
       {
+        "command": "tabstronaut.addCurrentSplitToGroupQuickPick",
+        "category": "Tabstronaut",
+        "title": "Add Current Split's Tabs to Group...",
+        "icon": "$(split-horizontal)"
+      },
+      {
         "command": "tabstronaut.createNewGroup",
         "category": "Tabstronaut",
         "title": "Create New Tab Group",
@@ -555,6 +561,10 @@
           "when": "false"
         },
         {
+          "command": "tabstronaut.addCurrentSplitToGroupQuickPick",
+          "when": "false"
+        },
+        {
           "command": "tabstronaut.createNewGroup",
           "when": "false"
         },
@@ -661,6 +671,11 @@
         "command": "tabstronaut.addAllTabsToGroupQuickPick",
         "key": "ctrl+alt+g",
         "mac": "cmd+alt+g"
+      },
+      {
+        "command": "tabstronaut.addCurrentSplitToGroupQuickPick",
+        "key": "ctrl+alt+shift+g",
+        "mac": "cmd+alt+shift+g"
       },
       {
         "command": "tabstronaut.createNewGroup",

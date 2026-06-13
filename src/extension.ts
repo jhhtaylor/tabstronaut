@@ -772,6 +772,14 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  // ── Ctrl+Alt+Shift+G: add current split's open tabs to a group ─────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tabstronaut.addCurrentSplitToGroupQuickPick",
+      () => addAllTabsToGroupQuickPick(treeDataProvider, 'split')
+    )
+  );
+
   // ── Ctrl+Alt+N: create a new empty group ────────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand(

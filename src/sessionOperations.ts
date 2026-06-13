@@ -3,19 +3,7 @@ import * as path from 'path';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
 import { confirmIfRequired, getGroupNameForAllToNewGroup, selectColorOption, ColorOption } from './groupOperations';
-import { closeAllEditors, generateUuidv4, COLORS, showConfirmation } from './utils';
-
-function getTabFilePath(tab: vscode.Tab): string | undefined {
-  const input = tab.input;
-  if (!input || typeof input !== 'object' || !('uri' in input)) {
-    return undefined;
-  }
-  const uri = (input as any).uri;
-  if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
-    return undefined;
-  }
-  return uri.fsPath;
-}
+import { closeAllEditors, generateUuidv4, getTabFilePath, COLORS, showConfirmation } from './utils';
 
 /**
  * Captures the current editor layout into the given group: one child group

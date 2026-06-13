@@ -1,6 +1,19 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
+/** Returns the file path backing a tab, or undefined if it isn't a file-based editor tab. */
+export function getTabFilePath(tab: vscode.Tab): string | undefined {
+  const input = tab.input;
+  if (!input || typeof input !== "object" || !("uri" in input)) {
+    return undefined;
+  }
+  const uri = (input as any).uri;
+  if (!(uri instanceof vscode.Uri) || uri.scheme !== "file") {
+    return undefined;
+  }
+  return uri.fsPath;
+}
+
 export function generateUuidv4() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     var r = (Math.random() * 16) | 0,

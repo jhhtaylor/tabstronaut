@@ -34,6 +34,7 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Create a new empty group** | `Ctrl+Alt+N` | `Cmd+Alt+N` |
 | **Add current tab to a group** *(only shows groups the file isn't already in)* | `Ctrl+Alt+A` | `Cmd+Alt+A` |
 | **Add all open tabs to a group** | `Ctrl+Alt+G` | `Cmd+Alt+G` |
+| **Add current split's tabs to a group** | `Ctrl+Alt+Shift+G` | `Cmd+Alt+Shift+G` |
 | **Open / restore a group** | `Ctrl+Alt+O` | `Cmd+Alt+O` |
 | **Rename a group** | `Ctrl+Alt+E` | `Cmd+Alt+E` |
 | **Rename focused group** *(sidebar must have focus)* | `F2` | `F2` |
@@ -43,7 +44,7 @@ Every Tabstronaut action has a keyboard shortcut so you never need to touch the 
 | **Delete a group** | `Ctrl+Alt+Shift+R` | `Cmd+Alt+Shift+R` |
 | **Restore group 1–9 by number** | `Ctrl+Alt+1` – `Ctrl+Alt+9` | `Cmd+Alt+1` – `Cmd+Alt+9` |
 
-The letter shortcuts (**A**, **G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu. **F2**, **Delete** (⌫ on Mac), and **Ctrl+Alt+Enter** work when a group is selected in the Tabstronaut sidebar — navigate with arrow keys, then press F2 to rename, Delete/⌫ to delete, or Ctrl+Alt+Enter to restore in place.
+The letter shortcuts (**A**, **G**, **Shift+G**, **O**, **E**, **R**, **Shift+R**) open a quick-pick menu — start typing to filter the list. **N** silently creates a group with no menu when the *Prompt for Group Details* setting is off (the default). The number shortcuts restore a top-level group immediately without any menu. **F2**, **Delete** (⌫ on Mac), and **Ctrl+Alt+Enter** work when a group is selected in the Tabstronaut sidebar — navigate with arrow keys, then press F2 to rename, Delete/⌫ to delete, or Ctrl+Alt+Enter to restore in place.
 
 > **Tip:** All of these can also be reached from the Tabstronaut sidebar, the right-click menu in the editor tab bar, or the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 

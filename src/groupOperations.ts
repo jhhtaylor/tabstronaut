@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TabstronautDataProvider } from './tabstronautDataProvider';
 import { Group } from './models/Group';
-import { COLORS, COLOR_LABELS, isGroupContextValue, isSessionManaged, showConfirmation } from './utils';
+import { COLORS, COLOR_LABELS, getTabFilePath, isGroupContextValue, isSessionManaged, showConfirmation } from './utils';
 import { gatherFileUris } from './fileOperations';
 
 export type GroupNameResult = {
@@ -125,6 +125,13 @@ export async function selectTabGroup(
               ),
               tooltip: 'Add all tabs to Tab Group',
             },
+            {
+              iconPath: new vscode.ThemeIcon(
+                'split-horizontal',
+                new vscode.ThemeColor(group.colorName)
+              ),
+              tooltip: 'Add current split to Tab Group',
+            },
           ],
         });
       }
@@ -142,6 +149,10 @@ export async function selectTabGroup(
         {
           iconPath: new vscode.ThemeIcon('new-folder'),
           tooltip: 'New Tab Group from all tabs...',
+        },
+        {
+          iconPath: new vscode.ThemeIcon('split-horizontal'),
+          tooltip: 'New Tab Group from current split...',
         },
       ],
     },
@@ -170,6 +181,8 @@ export async function selectTabGroup(
       }
 
       if (item.label === 'New Tab Group from current tab...') {
+        const fromCurrentSplit = e.button.tooltip === 'New Tab Group from current split...';
+
         const result = await getGroupNameForAllToNewGroup(treeDataProvider);
         if (!result.name) {
           return;
@@ -194,11 +207,18 @@ export async function selectTabGroup(
           return;
         }
 
-        await vscode.commands.executeCommand(
-          'tabstronaut.addAllToNewGroup',
-          groupId
-        );
-        showConfirmation(describeAddAllResult(treeDataProvider, groupId, result.name));
+        if (fromCurrentSplit) {
+          const group = treeDataProvider.findGroupById(groupId);
+          if (group) {
+            await addCurrentSplitToGroup(treeDataProvider, group);
+          }
+        } else {
+          await vscode.commands.executeCommand(
+            'tabstronaut.addAllToNewGroup',
+            groupId
+          );
+          showConfirmation(describeAddAllResult(treeDataProvider, groupId, result.name));
+        }
         quickPick.hide();
         return;
       }
@@ -211,32 +231,11 @@ export async function selectTabGroup(
           return;
         }
 
-        const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
-        const addedFiles = new Set<string>();
-        let count = 0;
-
-        for (const tab of allTabs) {
-          if (
-            !tab.input ||
-            typeof tab.input !== 'object' ||
-            !('uri' in tab.input)
-          ) {
-            continue;
-          }
-          const uri = (tab.input as any).uri;
-          if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
-            continue;
-          }
-
-          const filePath = uri.fsPath;
-          if (!addedFiles.has(filePath)) {
-            await treeDataProvider.addToGroup(group.id, filePath);
-            addedFiles.add(filePath);
-            count++;
-          }
+        if (e.button.tooltip === 'Add current split to Tab Group') {
+          await addCurrentSplitToGroup(treeDataProvider, group);
+        } else {
+          await addAllOpenTabsToGroup(treeDataProvider, group);
         }
-
-        showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
         quickPick.hide();
       }
     });
@@ -452,26 +451,42 @@ export async function addAllOpenTabsToGroup(
   let count = 0;
 
   for (const tab of allTabs) {
-    if (
-      !tab.input ||
-      typeof tab.input !== 'object' ||
-      !('uri' in tab.input)
-    ) {
+    const filePath = getTabFilePath(tab);
+    if (!filePath || addedFiles.has(filePath)) {
       continue;
     }
-    const uri = (tab.input as any).uri;
-    if (!(uri instanceof vscode.Uri) || uri.scheme !== 'file') {
-      continue;
-    }
-    const filePath = uri.fsPath;
-    if (!addedFiles.has(filePath)) {
-      await treeDataProvider.addToGroup(group.id, filePath);
-      addedFiles.add(filePath);
-      count++;
-    }
+    await treeDataProvider.addToGroup(group.id, filePath);
+    addedFiles.add(filePath);
+    count++;
   }
 
   showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
+}
+
+/**
+ * Adds every file tab from the active editor split (the editor column
+ * containing the currently focused tab) to the given group.
+ */
+export async function addCurrentSplitToGroup(
+  treeDataProvider: TabstronautDataProvider,
+  group: Group
+): Promise<void> {
+  const activeTabGroup = vscode.window.tabGroups.activeTabGroup;
+  const tabs = activeTabGroup?.tabs ?? [];
+  const addedFiles = new Set<string>();
+  let count = 0;
+
+  for (const tab of tabs) {
+    const filePath = getTabFilePath(tab);
+    if (!filePath || addedFiles.has(filePath)) {
+      continue;
+    }
+    await treeDataProvider.addToGroup(group.id, filePath);
+    addedFiles.add(filePath);
+    count++;
+  }
+
+  showConfirmation(`Added ${count} tab(s) from the current split to Tab Group '${group.label}'.`);
 }
 
 export async function addFilesToGroupCommand(
@@ -719,7 +734,8 @@ const CREATE_NEW_GROUP_ID = '__create_new__';
 function buildGroupHierarchyItems(
   groups: Group[],
   predicate: (group: Group) => boolean,
-  prefix = ''
+  prefix = '',
+  secondaryButton?: { icon: string; tooltip: string }
 ): GroupPickItem[] {
   const result: GroupPickItem[] = [];
   for (const group of groups) {
@@ -737,10 +753,19 @@ function buildGroupHierarchyItems(
       if (childCount > 0) {
         descParts.push(`${childCount} sub-group${childCount !== 1 ? 's' : ''}`);
       }
-      result.push({ label, description: descParts.join(', '), groupId: group.id });
+      const item: GroupPickItem = { label, description: descParts.join(', '), groupId: group.id };
+      if (secondaryButton) {
+        item.buttons = [
+          {
+            iconPath: new vscode.ThemeIcon(secondaryButton.icon, new vscode.ThemeColor(group.colorName)),
+            tooltip: secondaryButton.tooltip,
+          },
+        ];
+      }
+      result.push(item);
     }
     if (group.children.length > 0) {
-      result.push(...buildGroupHierarchyItems(group.children, predicate, label));
+      result.push(...buildGroupHierarchyItems(group.children, predicate, label, secondaryButton));
     }
   }
   return result;
@@ -821,30 +846,51 @@ export async function removeCurrentTabFromGroupQuickPick(
 
 /**
  * Ctrl+Alt+G — add every currently open file tab to an existing or new group.
+ * Ctrl+Alt+Shift+G — same picker, but adds only the tabs from the current
+ * editor split by default. Either way, each item has an inline button to
+ * perform the other action instead.
  */
 export async function addAllTabsToGroupQuickPick(
-  treeDataProvider: TabstronautDataProvider
+  treeDataProvider: TabstronautDataProvider,
+  primaryMode: 'all' | 'split' = 'all'
 ): Promise<void> {
   const rootGroups = treeDataProvider.getRootGroups();
+  const splitIsPrimary = primaryMode === 'split';
+
+  const secondaryButton = splitIsPrimary
+    ? { icon: 'new-folder', tooltip: 'Add all tabs to Tab Group' }
+    : { icon: 'split-horizontal', tooltip: 'Add current split to Tab Group' };
+  const secondaryCreateTooltip = splitIsPrimary
+    ? 'Create new group from all tabs'
+    : 'Create new group from current split';
+
+  const quickPick = vscode.window.createQuickPick<GroupPickItem>();
 
   const items: GroupPickItem[] = [
-    { label: '$(add) Create new group...', description: '', groupId: CREATE_NEW_GROUP_ID },
+    {
+      label: '$(add) Create new group...',
+      description: '',
+      groupId: CREATE_NEW_GROUP_ID,
+      buttons: [
+        {
+          iconPath: new vscode.ThemeIcon(secondaryButton.icon),
+          tooltip: secondaryCreateTooltip,
+        },
+      ],
+    },
   ];
 
   if (rootGroups.length > 0) {
     items.push({ label: '', kind: vscode.QuickPickItemKind.Separator, description: '', groupId: '' });
-    items.push(...buildGroupHierarchyItems(rootGroups, () => true));
+    items.push(...buildGroupHierarchyItems(rootGroups, () => true, '', secondaryButton));
   }
 
-  const selected = await vscode.window.showQuickPick(items, {
-    placeHolder: 'Add all open tabs to a Tab Group',
-  });
+  quickPick.items = items;
+  quickPick.placeholder = splitIsPrimary
+    ? "Add current split's tabs to a Tab Group"
+    : 'Add all open tabs to a Tab Group';
 
-  if (!selected || !selected.groupId) {
-    return;
-  }
-
-  if (selected.groupId === CREATE_NEW_GROUP_ID) {
+  const createNewGroup = async (fromCurrentSplit: boolean): Promise<void> => {
     const result = await getGroupNameForAllToNewGroup(treeDataProvider);
     if (!result.name) {
       return;
@@ -862,14 +908,45 @@ export async function addAllTabsToGroupQuickPick(
     if (!groupId) {
       return;
     }
-    await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-    return;
-  }
+    if (fromCurrentSplit) {
+      const group = treeDataProvider.findGroupById(groupId);
+      if (group) {
+        await addCurrentSplitToGroup(treeDataProvider, group);
+      }
+    } else {
+      await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
+    }
+  };
 
-  const group = treeDataProvider.findGroupById(selected.groupId);
-  if (group) {
-    await addAllOpenTabsToGroup(treeDataProvider, group);
-  }
+  quickPick.onDidAccept(async () => {
+    const selected = quickPick.selectedItems[0];
+    quickPick.hide();
+    if (!selected || !selected.groupId) {
+      return;
+    }
+    if (selected.groupId === CREATE_NEW_GROUP_ID) {
+      await createNewGroup(splitIsPrimary);
+      return;
+    }
+    const group = treeDataProvider.findGroupById(selected.groupId);
+    if (group) {
+      await (splitIsPrimary ? addCurrentSplitToGroup : addAllOpenTabsToGroup)(treeDataProvider, group);
+    }
+  });
+
+  quickPick.onDidTriggerItemButton(async (e) => {
+    quickPick.hide();
+    if (e.item.groupId === CREATE_NEW_GROUP_ID) {
+      await createNewGroup(!splitIsPrimary);
+      return;
+    }
+    const group = treeDataProvider.findGroupById(e.item.groupId);
+    if (group) {
+      await (splitIsPrimary ? addAllOpenTabsToGroup : addCurrentSplitToGroup)(treeDataProvider, group);
+    }
+  });
+
+  quickPick.show();
 }
 
 /**
