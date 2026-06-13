@@ -193,7 +193,7 @@ export async function selectTabGroup(
           'tabstronaut.addAllToNewGroup',
           groupId
         );
-        showConfirmation(`Created '${result.name}' and added all open tabs.`);
+        showConfirmation(describeAddAllResult(treeDataProvider, groupId, result.name));
         quickPick.hide();
         return;
       }
@@ -288,7 +288,7 @@ export async function handleNewGroupCreation(
     showConfirmation(`Created '${result.name}' and added 1 file.`);
   } else if (groupLabel === 'New Tab Group from all tabs...') {
     await vscode.commands.executeCommand('tabstronaut.addAllToNewGroup', groupId);
-    showConfirmation(`Created '${result.name}' and added all open tabs.`);
+    showConfirmation(describeAddAllResult(treeDataProvider, groupId, result.name));
   }
 }
 
@@ -958,6 +958,23 @@ export async function pickGroupToDelete(
   }
 
   return treeDataProvider.findGroupById(selected.groupId);
+}
+
+/**
+ * Builds the confirmation message for "add all open tabs to a new group",
+ * accounting for whether tabstronaut.addAllToNewGroup captured the current
+ * editor layout as a session (multiple columns) or did a flat add.
+ */
+export function describeAddAllResult(
+  treeDataProvider: TabstronautDataProvider,
+  groupId: string,
+  groupName: string
+): string {
+  const group = treeDataProvider.findGroupById(groupId);
+  if (group?.isSession) {
+    return `Created '${groupName}' and saved the current editor layout as a session (${group.children.length} columns).`;
+  }
+  return `Created '${groupName}' and added all open tabs.`;
 }
 
 export async function confirmIfRequired(placeHolder: string): Promise<boolean> {

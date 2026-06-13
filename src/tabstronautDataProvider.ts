@@ -43,12 +43,15 @@ export class SuggestionItem extends vscode.TreeItem {
   }
 }
 
+type GroupStorageItem = string | { path: string; pinned?: boolean };
+
 interface GroupStorageData {
   label: string;
-  items: string[];
+  items: GroupStorageItem[];
   children?: { [id: string]: GroupStorageData };
   creationTime: string;
   colorName: string;
+  isSession?: boolean;
 }
 
 export class TabstronautDataProvider
@@ -110,7 +113,17 @@ export class TabstronautDataProvider
       data.colorName
     );
     group.parentId = parentId;
-    data.items.forEach((filePath) => group.addItem(filePath));
+    group.isSession = data.isSession;
+    if (group.isSession) {
+      group.tooltip = `${data.label} (Session) — restoring this group recreates the saved ${Object.keys(data.children || {}).length}-column editor layout.`;
+    }
+    data.items.forEach((entry) => {
+      if (typeof entry === "string") {
+        group.addItem(entry);
+      } else {
+        group.items.push(group.createTabItem(entry.path, entry.pinned));
+      }
+    });
 
     const childrenData = data.children || {};
     for (const childId in childrenData) {
@@ -137,10 +150,15 @@ export class TabstronautDataProvider
     }
     return {
       label: group.label,
-      items: group.items.map((item) => item.resourceUri?.fsPath as string),
+      items: group.items.map((item): GroupStorageItem =>
+        item.pinned
+          ? { path: item.resourceUri?.fsPath as string, pinned: true }
+          : (item.resourceUri?.fsPath as string)
+      ),
       children,
       creationTime: group.creationTime.toISOString(),
       colorName: group.colorName,
+      ...(group.isSession ? { isSession: true } : {}),
     };
   }
 
@@ -1154,7 +1172,11 @@ export class TabstronautDataProvider
         typeof id !== "string" ||
         typeof group.label !== "string" ||
         !Array.isArray(group.items) ||
-        !group.items.every((item: any) => typeof item === "string") ||
+        !group.items.every(
+          (item: any) =>
+            typeof item === "string" ||
+            (typeof item === "object" && item !== null && typeof item.path === "string")
+        ) ||
         typeof group.creationTime !== "string" ||
         typeof group.colorName !== "string"
       ) {

@@ -134,6 +134,17 @@ export function generateColorHash(id: string): number {
   return hash;
 }
 
+/**
+ * Closes every open tab, including pinned ones. `workbench.action.closeAllEditors`
+ * leaves pinned tabs open, which can leave stale tabs behind.
+ */
+export async function closeAllEditors(): Promise<void> {
+  const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+  if (allTabs.length > 0) {
+    await vscode.window.tabGroups.close(allTabs, true);
+  }
+}
+
 export function showConfirmation(message: string) {
   const shouldShow = vscode.workspace
     .getConfiguration("tabstronaut")

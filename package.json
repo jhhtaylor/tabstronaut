@@ -692,6 +692,11 @@
           "default": false,
           "description": "Close all currently open tabs before restoring a Tab Group for clean context switching. Cannot be used together with Automatically remove closed tabs."
         },
+        "tabstronaut.sessionAwareGroups": {
+          "type": "boolean",
+          "default": true,
+          "description": "When 'Add all to New Tab Group' is run with multiple editor columns open, save each column (including pinned tabs) as its own sub-group and mark the group as a session. Restoring a session group recreates that column layout. Disable to always use the simple flat add/restore behavior."
+        },
         "tabstronaut.showConfirmationMessages": {
           "type": "boolean",
           "default": false,

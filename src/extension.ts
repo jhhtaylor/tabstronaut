@@ -3,7 +3,7 @@ import * as path from "path";
 import { TabstronautDataProvider, SuggestionItem } from "./tabstronautDataProvider";
 import { UngroupedProvider } from "./ungroupedProvider";
 import { Group } from "./models/Group";
-import { showConfirmation } from "./utils";
+import { closeAllEditors, showConfirmation } from "./utils";
 import { handleOpenTab, openFileSmart } from "./fileOperations";
 import {
   handleTabGroupAction,
@@ -23,6 +23,7 @@ import {
   renameGroupQuickPick,
   confirmIfRequired,
 } from "./groupOperations";
+import { captureSessionIntoGroup, restoreSessionGroup } from "./sessionOperations";
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
 import { aiEnhanceSuggestion, resetAiAvailability } from "./aiGroupSuggester";
@@ -453,7 +454,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }, 5000);
 
-        vscode.commands.executeCommand("workbench.action.closeAllEditors");
+        await closeAllEditors();
       }
     )
   );
@@ -526,6 +527,18 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "tabstronaut.addAllToNewGroup",
       async (groupId: string) => {
+        const sessionAware = vscode.workspace
+          .getConfiguration("tabstronaut")
+          .get<boolean>("sessionAwareGroups", true);
+
+        if (sessionAware) {
+          const group = treeDataProvider.findGroupById(groupId);
+          if (group) {
+            await captureSessionIntoGroup(treeDataProvider, group);
+          }
+          return;
+        }
+
         const allTabs = vscode.window.tabGroups.all.flatMap(
           (group) => group.tabs
         );
@@ -576,6 +589,65 @@ export function activate(context: vscode.ExtensionContext) {
     }
   };
 
+  const restoreGroup = async (group: Group, recursive: boolean) => {
+    const sessionAware = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<boolean>("sessionAwareGroups", true);
+
+    if (sessionAware && group.isSession) {
+      await restoreSessionGroup(treeDataProvider, group);
+      return;
+    }
+
+    const autoClose = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<boolean>("autoCloseOnRestore", false);
+    if (autoClose) {
+      if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
+        return;
+      }
+
+      recentlyClosedEditors = getOpenEditorFilePaths();
+      vscode.commands.executeCommand(
+        "setContext",
+        "tabstronaut:canUndoClose",
+        true
+      );
+
+      if (undoCloseTimeout) {
+        clearTimeout(undoCloseTimeout);
+      }
+
+      undoCloseTimeout = setTimeout(() => {
+        recentlyClosedEditors = null;
+        vscode.commands.executeCommand(
+          "setContext",
+          "tabstronaut:canUndoClose",
+          false
+        );
+      }, 5000);
+
+      await closeAllEditors();
+    }
+
+    if (recursive) {
+      await restoreGroupTabsRecursive(group);
+    } else {
+      for (const tabItem of group.items) {
+        const filePath = tabItem.resourceUri?.fsPath;
+        if (filePath) {
+          try {
+            await openFileSmart(filePath);
+          } catch {
+            vscode.window.showErrorMessage(
+              `Cannot open '${path.basename(filePath)}'. Please check if the file exists and try again.`
+            );
+          }
+        }
+      }
+    }
+  };
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.restoreAllTabsInGroup",
@@ -584,42 +656,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (!resolved || resolved.contextValue !== "group") {
           return;
         }
-        const group: Group = resolved;
-
-        const autoClose = vscode.workspace
-          .getConfiguration("tabstronaut")
-          .get<boolean>("autoCloseOnRestore", false);
-        if (autoClose) {
-          if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
-            return;
-          }
-
-          recentlyClosedEditors = getOpenEditorFilePaths();
-          vscode.commands.executeCommand(
-            "setContext",
-            "tabstronaut:canUndoClose",
-            true
-          );
-
-          if (undoCloseTimeout) {
-            clearTimeout(undoCloseTimeout);
-          }
-
-          undoCloseTimeout = setTimeout(() => {
-            recentlyClosedEditors = null;
-            vscode.commands.executeCommand(
-              "setContext",
-              "tabstronaut:canUndoClose",
-              false
-            );
-          }, 5000);
-
-          await vscode.commands.executeCommand(
-            "workbench.action.closeAllEditors"
-          );
-        }
-
-        await restoreGroupTabsRecursive(group);
+        await restoreGroup(resolved, true);
       }
     )
   );
@@ -632,41 +669,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (!group || group.contextValue !== "group") {
           return;
         }
-
-        const autoClose = vscode.workspace
-          .getConfiguration("tabstronaut")
-          .get<boolean>("autoCloseOnRestore", false);
-        if (autoClose) {
-          if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
-            return;
-          }
-
-          recentlyClosedEditors = getOpenEditorFilePaths();
-          vscode.commands.executeCommand(
-            "setContext",
-            "tabstronaut:canUndoClose",
-            true
-          );
-
-          if (undoCloseTimeout) {
-            clearTimeout(undoCloseTimeout);
-          }
-
-          undoCloseTimeout = setTimeout(() => {
-            recentlyClosedEditors = null;
-            vscode.commands.executeCommand(
-              "setContext",
-              "tabstronaut:canUndoClose",
-              false
-            );
-          }, 5000);
-
-          await vscode.commands.executeCommand(
-            "workbench.action.closeAllEditors"
-          );
-        }
-
-        await restoreGroupTabsRecursive(group);
+        await restoreGroup(group, true);
       }
     )
   );
@@ -682,56 +685,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const { group, recursive } = selection;
-
-        const autoClose = vscode.workspace
-          .getConfiguration("tabstronaut")
-          .get<boolean>("autoCloseOnRestore", false);
-        if (autoClose) {
-          if (!await confirmIfRequired(`Close all open editors and restore Tab Group '${group.label}'?`)) {
-            return;
-          }
-
-          recentlyClosedEditors = getOpenEditorFilePaths();
-          vscode.commands.executeCommand(
-            "setContext",
-            "tabstronaut:canUndoClose",
-            true
-          );
-
-          if (undoCloseTimeout) {
-            clearTimeout(undoCloseTimeout);
-          }
-
-          undoCloseTimeout = setTimeout(() => {
-            recentlyClosedEditors = null;
-            vscode.commands.executeCommand(
-              "setContext",
-              "tabstronaut:canUndoClose",
-              false
-            );
-          }, 5000);
-
-          await vscode.commands.executeCommand(
-            "workbench.action.closeAllEditors"
-          );
-        }
-
-        if (recursive) {
-          await restoreGroupTabsRecursive(group);
-        } else {
-          for (const tabItem of group.items) {
-            const filePath = tabItem.resourceUri?.fsPath;
-            if (filePath) {
-              try {
-                await openFileSmart(filePath);
-              } catch {
-                vscode.window.showErrorMessage(
-                  `Cannot open '${path.basename(filePath)}'. Please check if the file exists and try again.`
-                );
-              }
-            }
-          }
-        }
+        await restoreGroup(group, recursive);
       }
     )
   );
@@ -1171,6 +1125,20 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         const group: Group = item;
+
+        const sessionAware = vscode.workspace
+          .getConfiguration("tabstronaut")
+          .get<boolean>("sessionAwareGroups", true);
+
+        if (sessionAware && group.isSession) {
+          if (!await confirmIfRequired(`Refresh saved session '${group.label}' with the current editor layout?`)) {
+            return;
+          }
+          if (await captureSessionIntoGroup(treeDataProvider, group)) {
+            showConfirmation(`Session '${group.label}' refreshed.`);
+          }
+          return;
+        }
 
         if (!await confirmIfRequired(`Add all open editors to Tab Group '${group.label}'?`)) {
           return;

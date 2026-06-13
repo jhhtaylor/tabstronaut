@@ -10,6 +10,8 @@ export class Group extends vscode.TreeItem {
     creationTime: Date;
     colorName: string;
     isPinned: boolean;
+    /** True if this group's children represent a captured editor-column layout (a "session"). */
+    isSession?: boolean;
 
     constructor(
         label: string,
@@ -28,7 +30,7 @@ export class Group extends vscode.TreeItem {
         this.isPinned = isPinned;
     }
 
-    createTabItem(filePath: string): TabItem {
+    createTabItem(filePath: string, pinned = false): TabItem {
         const baseName = path.basename(filePath);
         const relativePath = generateRelativeDescription(filePath);
         const item = new TabItem(baseName, vscode.TreeItemCollapsibleState.None);
@@ -38,6 +40,7 @@ export class Group extends vscode.TreeItem {
         item.id = this.id + filePath;
         item.contextValue = 'tab';
         item.groupId = this.id;
+        item.pinned = pinned;
         item.command = {
             command: 'tabstronaut.previewSpecificTab',
             title: 'Open Specific Tab',
@@ -72,4 +75,5 @@ export class Group extends vscode.TreeItem {
 
 export class TabItem extends vscode.TreeItem {
     groupId?: string;
+    pinned?: boolean;
 }
