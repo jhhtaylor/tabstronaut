@@ -43,6 +43,8 @@ Restore a Tab Snapshot the same way you'd restore any Tab Group — click it in 
 
 Rearranged your editors and want to save the new layout under the same Tab Snapshot? Select it in the sidebar and either click its **Update Tab Snapshot** button (camera icon) or press `Ctrl+Alt+Shift+S` / `Cmd+Alt+Shift+S`. This replaces the saved columns and files with your current layout.
 
+If you update a Tab Snapshot while only a single editor column is open, it's converted back into a regular Tab Group containing that column's files — its square icon and "(Tab Snapshot)" tooltip are removed.
+
 ### How to tell a Tab Snapshot apart from a regular group
 
 Tab Snapshots use a square icon (regular groups use a circle) and show "(Tab Snapshot)" in their tooltip. Their column sub-groups are managed automatically — they're restored, renamed, and removed as part of the Tab Snapshot itself, so they don't appear in the usual "Add to Tab Group" pickers.

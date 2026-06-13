@@ -184,6 +184,89 @@ describe('restoreSnapshotGroup', () => {
     ok(infoMsg.includes('no saved columns'), infoMsg);
     strictEqual(closeCalled, false);
   });
+
+  it('opens tabs in saved order, then pins them last-to-first so pinned tabs keep their relative order', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const groupId = await provider.addGroup('G1');
+    const group = provider.findGroupById(groupId!)!;
+
+    const origConfirm = vscode.workspace.getConfiguration('tabstronaut').get('confirmRemoveAndClose');
+    await vscode.workspace.getConfiguration('tabstronaut').update('confirmRemoveAndClose', false, true);
+
+    const origOpenTextDocument = vscode.workspace.openTextDocument;
+    const origShowTextDocument = vscode.window.showTextDocument;
+    const origExecuteCommand = vscode.commands.executeCommand;
+
+    try {
+      // Capture a 2-column snapshot: column 1 = [a (unpinned), b (pinned)],
+      // column 2 = [c (pinned), d (unpinned), e (pinned)].
+      Object.defineProperty(vscode.window, 'tabGroups', {
+        value: {
+          all: [
+            { viewColumn: 1, tabs: [makeFileTab('/tmp/a.ts'), makeFileTab('/tmp/b.ts', true)] },
+            { viewColumn: 2, tabs: [makeFileTab('/tmp/c.ts', true), makeFileTab('/tmp/d.ts'), makeFileTab('/tmp/e.ts', true)] },
+          ],
+        },
+        configurable: true,
+      });
+      await captureSnapshotIntoGroup(provider, group);
+
+      const events: string[] = [];
+      let lastOpened = '';
+
+      Object.defineProperty(vscode.workspace, 'openTextDocument', {
+        value: (filePath: string) => Promise.resolve({ uri: vscode.Uri.file(filePath) }),
+        configurable: true,
+      });
+      Object.defineProperty(vscode.window, 'showTextDocument', {
+        value: (document: any, options: any) => {
+          lastOpened = document.uri.fsPath;
+          events.push(`open:${lastOpened}@${options.viewColumn}`);
+          return Promise.resolve({});
+        },
+        configurable: true,
+      });
+      Object.defineProperty(vscode.commands, 'executeCommand', {
+        value: (command: string, ...args: any[]) => {
+          if (command === 'workbench.action.pinEditor') {
+            events.push(`pin:${lastOpened}`);
+            return Promise.resolve();
+          }
+          if (command === 'vscode.setEditorLayout') {
+            return Promise.resolve();
+          }
+          return origExecuteCommand(command, ...args);
+        },
+        configurable: true,
+      });
+      Object.defineProperty(vscode.window, 'tabGroups', {
+        value: { all: [], close: () => Promise.resolve() },
+        configurable: true,
+      });
+
+      await restoreSnapshotGroup(provider, group);
+
+      strictEqual(events.join(','), [
+        'open:/tmp/a.ts@1',
+        'open:/tmp/b.ts@1',
+        'open:/tmp/b.ts@1',
+        'pin:/tmp/b.ts',
+        'open:/tmp/c.ts@2',
+        'open:/tmp/d.ts@2',
+        'open:/tmp/e.ts@2',
+        'open:/tmp/e.ts@2',
+        'pin:/tmp/e.ts',
+        'open:/tmp/c.ts@2',
+        'pin:/tmp/c.ts',
+      ].join(','));
+    } finally {
+      provider.clearRefreshInterval();
+      Object.defineProperty(vscode.workspace, 'openTextDocument', { value: origOpenTextDocument, configurable: true });
+      Object.defineProperty(vscode.window, 'showTextDocument', { value: origShowTextDocument, configurable: true });
+      Object.defineProperty(vscode.commands, 'executeCommand', { value: origExecuteCommand, configurable: true });
+      await vscode.workspace.getConfiguration('tabstronaut').update('confirmRemoveAndClose', origConfirm, true);
+    }
+  });
 });
 
 // ── createSnapshotCommand ─────────────────────────────────────────────────────

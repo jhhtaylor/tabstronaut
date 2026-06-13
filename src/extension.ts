@@ -1124,6 +1124,14 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         const group: Group = item;
+
+        if (group.isSnapshot) {
+          vscode.window.showInformationMessage(
+            `'${group.label}' is a Tab Snapshot group. Its columns are managed automatically and can't have sub-groups added.`
+          );
+          return;
+        }
+
         await handleAddSubGroup(treeDataProvider, group);
       }
     )
@@ -1149,6 +1157,13 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         const group: Group = item;
+
+        if (group.isSnapshot) {
+          vscode.window.showInformationMessage(
+            `'${group.label}' is a Tab Snapshot group. Use 'Update Tab Snapshot' on it to refresh its saved layout instead.`
+          );
+          return;
+        }
 
         if (!await confirmIfRequired(`Add all open editors to Tab Group '${group.label}'?`)) {
           return;

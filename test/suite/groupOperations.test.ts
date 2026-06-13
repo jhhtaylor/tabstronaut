@@ -434,6 +434,35 @@ describe('groupOperations.addAllOpenTabsToGroup', () => {
     strictEqual(updatedGroup.items[0].resourceUri?.fsPath, '/tmp/a.txt');
     strictEqual(updatedGroup.items[1].resourceUri?.fsPath, '/tmp/b.txt');
   });
+
+  it('shows an info message and adds nothing when there are no open file tabs', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('G1');
+    const group = provider.getGroup('G1')!;
+
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [] },
+      configurable: true,
+    });
+
+    let infoMsg = '';
+    const origInfo = vscode.window.showInformationMessage;
+    Object.defineProperty(vscode.window, 'showInformationMessage', {
+      value: (msg: string) => { infoMsg = msg; return Promise.resolve(undefined); },
+      configurable: true,
+    });
+
+    try {
+      await addAllOpenTabsToGroup(provider, group);
+    } finally {
+      Object.defineProperty(vscode.window, 'showInformationMessage', { value: origInfo, configurable: true });
+    }
+    const updatedGroup = provider.getGroup('G1')!;
+    provider.clearRefreshInterval();
+
+    strictEqual(updatedGroup.items.length, 0);
+    ok(infoMsg.includes('No open file tabs'), infoMsg);
+  });
 });
 
 describe('groupOperations.addCurrentSplitToGroup', () => {
@@ -474,7 +503,7 @@ describe('groupOperations.addCurrentSplitToGroup', () => {
     ok(!updatedGroup.containsFile('/tmp/other.ts'));
   });
 
-  it('adds nothing when there is no active editor split', async () => {
+  it('shows an info message and adds nothing when there is no active editor split', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     await provider.addGroup('G1');
     const group = provider.getGroup('G1')!;
@@ -484,11 +513,23 @@ describe('groupOperations.addCurrentSplitToGroup', () => {
       configurable: true,
     });
 
-    await addCurrentSplitToGroup(provider, group);
+    let infoMsg = '';
+    const origInfo = vscode.window.showInformationMessage;
+    Object.defineProperty(vscode.window, 'showInformationMessage', {
+      value: (msg: string) => { infoMsg = msg; return Promise.resolve(undefined); },
+      configurable: true,
+    });
+
+    try {
+      await addCurrentSplitToGroup(provider, group);
+    } finally {
+      Object.defineProperty(vscode.window, 'showInformationMessage', { value: origInfo, configurable: true });
+    }
     const updatedGroup = provider.getGroup('G1')!;
     provider.clearRefreshInterval();
 
     strictEqual(updatedGroup.items.length, 0);
+    ok(infoMsg.includes('No open file tabs'), infoMsg);
   });
 });
 

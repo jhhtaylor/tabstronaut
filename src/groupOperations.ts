@@ -460,6 +460,11 @@ export async function addAllOpenTabsToGroup(
     count++;
   }
 
+  if (count === 0) {
+    vscode.window.showInformationMessage('No open file tabs to add.');
+    return;
+  }
+
   showConfirmation(`Added ${count} open tab(s) to Tab Group '${group.label}'.`);
 }
 
@@ -484,6 +489,11 @@ export async function addCurrentSplitToGroup(
     await treeDataProvider.addToGroup(group.id, filePath);
     addedFiles.add(filePath);
     count++;
+  }
+
+  if (count === 0) {
+    vscode.window.showInformationMessage('No open file tabs in the current split to add.');
+    return;
   }
 
   showConfirmation(`Added ${count} tab(s) from the current split to Tab Group '${group.label}'.`);

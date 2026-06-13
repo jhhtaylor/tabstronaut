@@ -49,6 +49,60 @@ describe('TabstronautDataProvider.getGroup', () => {
   });
 });
 
+describe('TabstronautDataProvider - isSnapshot deserialization', () => {
+  it('defaults isSnapshot to false (not undefined) for groups with neither isSnapshot nor isSession', () => {
+    const tabGroups = {
+      '1': {
+        label: 'Work',
+        items: ['/tmp/file1'],
+        creationTime: new Date().toISOString(),
+        colorName: 'terminal.ansiRed',
+      },
+    };
+    const provider = new TabstronautDataProvider(new MockMemento({ tabGroups }));
+    const group = provider.getGroup('Work');
+    provider.clearRefreshInterval();
+
+    strictEqual(group?.isSnapshot, false);
+  });
+
+  it('reads isSnapshot directly when present', () => {
+    const tabGroups = {
+      '1': {
+        label: 'Snap',
+        items: [],
+        creationTime: new Date().toISOString(),
+        colorName: 'terminal.ansiRed',
+        isSnapshot: true,
+      },
+    };
+    const provider = new TabstronautDataProvider(new MockMemento({ tabGroups }));
+    const group = provider.getGroup('Snap');
+    provider.clearRefreshInterval();
+
+    strictEqual(group?.isSnapshot, true);
+    strictEqual(group?.contextValue, 'snapshotGroup');
+  });
+
+  it('falls back to the deprecated isSession field for pre-1.6.0 saved state', () => {
+    const tabGroups = {
+      '1': {
+        label: 'OldSession',
+        items: [],
+        creationTime: new Date().toISOString(),
+        colorName: 'terminal.ansiRed',
+        isSession: true,
+      },
+    };
+    const provider = new TabstronautDataProvider(new MockMemento({ tabGroups }));
+    const group = provider.getGroup('OldSession');
+    provider.clearRefreshInterval();
+
+    strictEqual(group?.isSnapshot, true);
+    strictEqual(group?.contextValue, 'snapshotGroup');
+  });
+});
+
 describe('TabstronautDataProvider basic operations', () => {
   it('addGroup adds a new group', async () => {
     const memento = new MockMemento({});

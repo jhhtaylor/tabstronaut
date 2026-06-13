@@ -153,7 +153,13 @@ export async function restoreSnapshotGroup(
 
   for (let i = 0; i < columns.length; i++) {
     const viewColumn = i + 1;
-    for (const item of columns[i].items) {
+    const items = columns[i].items;
+
+    // Pass 1: open every tab in saved left-to-right order, all unpinned.
+    // Pinning a tab moves it to the front of the group, so pinning as we go
+    // would scramble the order; opening everything first establishes the
+    // correct order for the unpinned tabs.
+    for (const item of items) {
       const filePath = item.resourceUri?.fsPath;
       if (!filePath) {
         continue;
@@ -161,13 +167,28 @@ export async function restoreSnapshotGroup(
       try {
         const document = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(document, { viewColumn, preview: false });
-        if (item.pinned) {
-          await vscode.commands.executeCommand('workbench.action.pinEditor');
-        }
       } catch {
         vscode.window.showErrorMessage(
           `Cannot open '${path.basename(filePath)}'. Please check if the file exists and try again.`
         );
+      }
+    }
+
+    // Pass 2: pin tabs in reverse order. Since pinning moves a tab to the
+    // front of the group, pinning from last to first leaves the pinned tabs
+    // in their original left-to-right order.
+    for (let j = items.length - 1; j >= 0; j--) {
+      const item = items[j];
+      const filePath = item.resourceUri?.fsPath;
+      if (!item.pinned || !filePath) {
+        continue;
+      }
+      try {
+        const document = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(document, { viewColumn, preview: false });
+        await vscode.commands.executeCommand('workbench.action.pinEditor');
+      } catch {
+        // Already reported in pass 1 if the file is missing.
       }
     }
   }

@@ -116,7 +116,7 @@ export class TabstronautDataProvider
       data.colorName
     );
     group.parentId = parentId;
-    group.isSnapshot = data.isSnapshot ?? data.isSession;
+    group.isSnapshot = !!(data.isSnapshot ?? data.isSession);
     if (group.isSnapshot) {
       group.tooltip = `${data.label} (Tab Snapshot)`;
       group.updateIcon();
