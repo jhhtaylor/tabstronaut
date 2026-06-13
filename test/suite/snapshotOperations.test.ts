@@ -61,7 +61,7 @@ describe('captureSnapshotIntoGroup', () => {
     ok(infoMsg.includes('No open file tabs'), infoMsg);
   });
 
-  it('captures a single editor column as a flat (non-snapshot) group', async () => {
+  it('captures a single editor pane as a Tab Snapshot with one pane', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     const groupId = await provider.addGroup('G1');
     const group = provider.findGroupById(groupId!)!;
@@ -75,11 +75,12 @@ describe('captureSnapshotIntoGroup', () => {
     provider.clearRefreshInterval();
 
     strictEqual(result, true);
-    strictEqual(group.isSnapshot, false);
-    strictEqual(group.children.length, 0);
-    strictEqual(group.items.length, 2);
-    strictEqual(group.items[1].pinned, true);
-    strictEqual(group.contextValue, 'group');
+    strictEqual(group.isSnapshot, true);
+    strictEqual(group.contextValue, 'snapshotGroup');
+    strictEqual(group.children.length, 1);
+    strictEqual(group.children[0].label, 'Pane 1');
+    strictEqual(group.children[0].items.length, 2);
+    strictEqual(group.children[0].items[1].pinned, true);
   });
 
   it('captures multiple editor columns as a Tab Snapshot with square column icons', async () => {
@@ -105,7 +106,7 @@ describe('captureSnapshotIntoGroup', () => {
     strictEqual(group.contextValue, 'snapshotGroup');
     strictEqual(group.tooltip, 'G1 (Tab Snapshot)');
     strictEqual(group.children.length, 2);
-    strictEqual(group.children[0].label, 'Column 1');
+    strictEqual(group.children[0].label, 'Pane 1');
     strictEqual(group.children[0].contextValue, 'snapshotColumn');
     strictEqual((group.children[0].iconPath as vscode.ThemeIcon).id, 'primitive-square');
     strictEqual(group.children[1].items.length, 2);
@@ -290,11 +291,11 @@ describe('createSnapshotCommand', () => {
     await vscode.workspace.getConfiguration('tabstronaut').update('promptForGroupDetails', origConfigPrompt, true);
   });
 
-  it('shows info and creates no group when fewer than 2 editor columns with files are open', async () => {
+  it('shows info and creates no group when no file tabs are open', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
 
     Object.defineProperty(vscode.window, 'tabGroups', {
-      value: { all: [{ viewColumn: 1, tabs: [makeFileTab('/tmp/a.ts')] }] },
+      value: { all: [] },
       configurable: true,
     });
 
@@ -309,7 +310,26 @@ describe('createSnapshotCommand', () => {
     provider.clearRefreshInterval();
 
     strictEqual(rootGroups.length, 0);
-    ok(infoMsg.toLowerCase().includes('split your editor'), infoMsg);
+    ok(infoMsg.toLowerCase().includes('no open file tabs'), infoMsg);
+  });
+
+  it('creates a Tab Snapshot with a single pane when only one editor pane with files is open', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+
+    Object.defineProperty(vscode.window, 'tabGroups', {
+      value: { all: [{ viewColumn: 1, tabs: [makeFileTab('/tmp/a.ts')] }] },
+      configurable: true,
+    });
+
+    await createSnapshotCommand(provider);
+    const rootGroups = provider.getRootGroups();
+    provider.clearRefreshInterval();
+
+    strictEqual(rootGroups.length, 1);
+    strictEqual(rootGroups[0].isSnapshot, true);
+    strictEqual(rootGroups[0].children.length, 1);
+    strictEqual(rootGroups[0].children[0].label, 'Pane 1');
+    strictEqual(rootGroups[0].children[0].items.length, 1);
   });
 
   it('creates a new Tab Snapshot group capturing the current multi-column layout', async () => {

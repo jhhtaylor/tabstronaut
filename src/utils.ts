@@ -158,7 +158,7 @@ export function isGroupContextValue(contextValue: unknown): boolean {
 
 /**
  * True for a Tab Snapshot itself (root group with isSnapshot) or one of its
- * captured columns (contextValue 'snapshotColumn'). Both are managed
+ * captured panes (contextValue 'snapshotColumn'). Both are managed
  * exclusively through the Tab Snapshot's own refresh/restore/rename/delete
  * controls, so generic group pickers and drag-and-drop should skip them.
  */

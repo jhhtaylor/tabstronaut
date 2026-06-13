@@ -138,8 +138,8 @@ describe('groupOperations.getGroupName', () => {
 
     try {
       const snapshotId = await provider.addGroup('Snapshot A');
-      await provider.addSubGroup(snapshotId!, 'Column 1', 'terminal.ansiBlue');
-      await provider.addSubGroup(snapshotId!, 'Column 2', 'terminal.ansiGreen');
+      await provider.addSubGroup(snapshotId!, 'Pane 1', 'terminal.ansiBlue');
+      await provider.addSubGroup(snapshotId!, 'Pane 2', 'terminal.ansiGreen');
 
       const result = await getGroupName(provider);
       strictEqual(result.name, 'Group 2');

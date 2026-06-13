@@ -7,10 +7,9 @@ import { closeAllEditors, generateUuidv4, getTabFilePath, COLORS, showConfirmati
 
 /**
  * Captures the current editor layout into the given group: one child group
- * per VS Code editor column, populated with that column's open files and
- * their pinned state. If only a single column is open, the files are added
- * directly to the group instead (no extra nesting), and the group is left
- * as a regular (non-snapshot) group.
+ * per editor pane, populated with that pane's open files and their pinned
+ * state. The group is marked as a Tab Snapshot, even if only a single pane
+ * is open.
  *
  * Re-running this on an existing Tab Snapshot group replaces its previous
  * snapshot.
@@ -29,49 +28,34 @@ export async function captureSnapshotIntoGroup(
     return false;
   }
 
-  if (editorGroups.length === 1) {
-    group.children = [];
-    group.items = [];
-    group.isSnapshot = false;
-    group.tooltip = undefined;
-    group.updateIcon();
-    for (const tab of editorGroups[0].tabs) {
+  group.items = [];
+  group.isSnapshot = true;
+  group.tooltip = `${group.label} (Tab Snapshot)`;
+  group.updateIcon();
+
+  while (group.children.length > editorGroups.length) {
+    group.children.pop();
+  }
+
+  for (let i = 0; i < editorGroups.length; i++) {
+    let pane = group.children[i];
+    if (!pane) {
+      pane = new Group(`Pane ${i + 1}`, generateUuidv4(), new Date());
+      pane.parentId = group.id;
+      group.children[i] = pane;
+    } else {
+      pane.label = `Pane ${i + 1}`;
+    }
+    pane.contextValue = 'snapshotColumn';
+    pane.iconPath = new vscode.ThemeIcon('primitive-square', new vscode.ThemeColor(pane.colorName));
+
+    pane.items = [];
+    for (const tab of editorGroups[i].tabs) {
       const filePath = getTabFilePath(tab);
       if (!filePath) {
         continue;
       }
-      group.items.push(group.createTabItem(filePath, tab.isPinned));
-    }
-  } else {
-    group.items = [];
-    group.isSnapshot = true;
-    group.tooltip = `${group.label} (Tab Snapshot)`;
-    group.updateIcon();
-
-    while (group.children.length > editorGroups.length) {
-      group.children.pop();
-    }
-
-    for (let i = 0; i < editorGroups.length; i++) {
-      let column = group.children[i];
-      if (!column) {
-        column = new Group(`Column ${i + 1}`, generateUuidv4(), new Date());
-        column.parentId = group.id;
-        group.children[i] = column;
-      } else {
-        column.label = `Column ${i + 1}`;
-      }
-      column.contextValue = 'snapshotColumn';
-      column.iconPath = new vscode.ThemeIcon('primitive-square', new vscode.ThemeColor(column.colorName));
-
-      column.items = [];
-      for (const tab of editorGroups[i].tabs) {
-        const filePath = getTabFilePath(tab);
-        if (!filePath) {
-          continue;
-        }
-        column.items.push(column.createTabItem(filePath, tab.isPinned));
-      }
+      pane.items.push(pane.createTabItem(filePath, tab.isPinned));
     }
   }
 
@@ -80,10 +64,9 @@ export async function captureSnapshotIntoGroup(
 }
 
 /**
- * "Create New Tab Snapshot" view-title button: saves the current multi-column
- * editor layout as a brand new Tab Snapshot group. Requires at least 2 editor
- * columns with file tabs open; otherwise prompts the user to split their
- * editor first.
+ * "Create New Tab Snapshot" view-title button: saves the current editor
+ * layout (one or more panes, their files, and pinned state) as a brand new
+ * Tab Snapshot group.
  */
 export async function createSnapshotCommand(
   treeDataProvider: TabstronautDataProvider
@@ -92,10 +75,8 @@ export async function createSnapshotCommand(
     g.tabs.some((tab) => getTabFilePath(tab) !== undefined)
   );
 
-  if (editorGroups.length < 2) {
-    vscode.window.showInformationMessage(
-      'Split your editor into 2 or more groups, then use "Create New Tab Snapshot" to save that layout.'
-    );
+  if (editorGroups.length === 0) {
+    vscode.window.showInformationMessage('No open file tabs to save.');
     return;
   }
 

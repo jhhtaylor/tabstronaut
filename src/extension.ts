@@ -759,7 +759,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // ── View title: save the current multi-column editor layout as a new Tab Snapshot ──
+  // ── View title: save the current editor layout as a new Tab Snapshot ──
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tabstronaut.createSnapshot",
@@ -1098,7 +1098,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (group.isSnapshot) {
           vscode.window.showInformationMessage(
-            `'${group.label}' is a Tab Snapshot group. Its columns are managed automatically and can't have sub-groups added.`
+            `'${group.label}' is a Tab Snapshot group. Its panes are managed automatically and can't have sub-groups added.`
           );
           return;
         }

@@ -677,7 +677,7 @@ export async function openGroupQuickPick(
         group,
         buttons: group.children.length > 0 ? [openRecursiveButton] : [],
       });
-      // Tab Snapshot columns are restored as part of the snapshot itself, not
+      // Tab Snapshot panes are restored as part of the snapshot itself, not
       // individually, so don't list them as separate entries.
       if (group.children.length > 0 && !group.isSnapshot) {
         items.push(...buildItems(group.children, label));

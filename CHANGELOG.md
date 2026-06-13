@@ -2,6 +2,12 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.1]
+
+- Updated the top-level description to reflect Tab Snapshots and Ungrouped Tabs alongside the original archive/restore workflow.
+- **Create New Tab Snapshot** (`Ctrl+Alt+S` / `Cmd+Alt+S`) no longer requires 2+ editor panes. With a single pane open it now creates a Tab Snapshot containing that one pane, instead of showing an informational message.
+- Renamed Tab Snapshot column sub-groups from "Column N" to "Pane N" to avoid confusion with Tab Groups and VS Code's own "editor group" terminology.
+
 ## [1.6.0]
 
 - **Tab Snapshots** — a new kind of Tab Group that remembers your whole split-editor layout (columns, files, and pinned state), not just a flat list of files. Restoring one recreates the saved column layout exactly.
