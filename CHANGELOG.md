@@ -2,6 +2,12 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.2]
+
+- **Export now uses relative paths** — `tabGroups-export.json` stores file paths relative to the workspace root instead of absolute paths. Exported files can be imported on any machine (or any location on the same machine) as long as the workspace folder structure matches. Pre-1.6.2 exports that contain absolute paths continue to import correctly.
+- **Multi-root workspace support in export/import** — in workspaces with multiple root folders, exported paths are prefixed with the workspace folder name (e.g. `"frontend/src/App.tsx"`) so the correct root is resolved on import.
+- **Graceful import with no workspace open** — importing when no workspace folder is open no longer produces silently broken paths; paths are passed through unchanged.
+
 ## [1.6.1]
 
 - Updated the top-level description to reflect Tab Snapshots and Ungrouped Tabs alongside the original archive/restore workflow.

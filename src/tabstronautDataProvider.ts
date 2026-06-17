@@ -1116,6 +1116,83 @@ export class TabstronautDataProvider
     return path.resolve(require("os").homedir(), configuredPath);
   }
 
+  private convertItemPaths(
+    groupData: { [id: string]: any },
+    convertPath: (p: string) => string
+  ): { [id: string]: any } {
+    const processItems = (items: any[]): any[] =>
+      items.map((item) => {
+        if (typeof item === "string") {
+          return convertPath(item);
+        } else if (
+          typeof item === "object" &&
+          item !== null &&
+          typeof item.path === "string"
+        ) {
+          return { ...item, path: convertPath(item.path) };
+        }
+        return item;
+      });
+
+    const processGroup = (group: any): any => {
+      const result = { ...group, items: processItems(group.items ?? []) };
+      if (group.children && typeof group.children === "object") {
+        result.children = Object.fromEntries(
+          Object.entries(group.children).map(([id, child]) => [
+            id,
+            processGroup(child),
+          ])
+        );
+      }
+      return result;
+    };
+
+    return Object.fromEntries(
+      Object.entries(groupData).map(([id, group]) => [id, processGroup(group)])
+    );
+  }
+
+  private makePathsRelative(groupData: {
+    [id: string]: any;
+  }): { [id: string]: any } {
+    // In multi-root workspaces, include the folder name as a prefix so the
+    // correct root can be recovered on import.  For single-folder workspaces
+    // the flag makes no difference (VSCode never prepends the folder name).
+    const multiRoot = (vscode.workspace.workspaceFolders?.length ?? 0) > 1;
+    return this.convertItemPaths(groupData, (p) =>
+      vscode.workspace.asRelativePath(p, multiRoot)
+    );
+  }
+
+  private makePathsAbsolute(groupData: {
+    [id: string]: any;
+  }): { [id: string]: any } {
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    if (folders.length === 0) {
+      // No workspace open — relative paths cannot be resolved; return as-is so
+      // the import still succeeds (paths will just stay unresolvable).
+      return groupData;
+    }
+    return this.convertItemPaths(groupData, (p) => {
+      if (path.isAbsolute(p)) {
+        return p; // backward-compatible: old exports stored absolute paths
+      }
+      if (folders.length > 1) {
+        // Exports from multi-root workspaces use a "folderName/rest" prefix.
+        // Normalize backslashes first: asRelativePath uses the OS separator, so
+        // Windows exports may contain backslashes that would break startsWith.
+        const normalized = p.replace(/\\/g, "/");
+        for (const folder of folders) {
+          const prefix = folder.name + "/";
+          if (normalized.startsWith(prefix)) {
+            return path.join(folder.uri.fsPath, normalized.slice(prefix.length));
+          }
+        }
+      }
+      return path.join(folders[0].uri.fsPath, p);
+    });
+  }
+
   async exportGroupsToFile(): Promise<void> {
     const defaultPath = this.getImportExportDirectory();
 
@@ -1135,7 +1212,7 @@ export class TabstronautDataProvider
       "tabGroups",
       {}
     );
-    const content = JSON.stringify(groupData, null, 2);
+    const content = JSON.stringify(this.makePathsRelative(groupData), null, 2);
 
     await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
     showConfirmation("Tab Groups exported successfully.");
@@ -1171,11 +1248,13 @@ export class TabstronautDataProvider
         return;
       }
 
+      const absoluteGroups = this.makePathsAbsolute(importedGroups);
+
       const currentGroups = this.workspaceState.get<{ [id: string]: any }>(
         "tabGroups",
         {}
       );
-      const mergedGroups = { ...currentGroups, ...importedGroups };
+      const mergedGroups = { ...currentGroups, ...absoluteGroups };
 
       await this.workspaceState.update("tabGroups", mergedGroups);
       this.rebuildStateFromStorage();
