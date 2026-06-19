@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.3]
+
+- Converted `webpack.config.js` and `eslint.config.cjs` to TypeScript (`webpack.config.ts`, `eslint.config.ts`) for a fully TypeScript codebase.
+
 ## [1.6.2]
 
 - **Export now uses relative paths** — `tabGroups-export.json` stores file paths relative to the workspace root instead of absolute paths. Exported files can be imported on any machine (or any location on the same machine) as long as the workspace folder structure matches. Pre-1.6.2 exports that contain absolute paths continue to import correctly.

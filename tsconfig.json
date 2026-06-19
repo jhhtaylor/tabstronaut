@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "rootDir": ".",
     "strict": true,
-    "types": ["mocha"]
+    "types": ["mocha", "node"]
   },
-  "exclude": ["node_modules", ".vscode-test", "webviews"]
+  "exclude": ["node_modules", ".vscode-test", "webviews", "webpack.config.ts", "eslint.config.ts"]
 }

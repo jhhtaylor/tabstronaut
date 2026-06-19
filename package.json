@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.6.2",
+  "version": "1.6.3",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -113,7 +113,7 @@
       {
         "command": "tabstronaut.filterTabGroupsActive",
         "category": "Tabstronaut",
-        "title": "\u2713 Filter Tab Groups by Name...",
+        "title": "✓ Filter Tab Groups by Name...",
         "icon": "$(filter-filled)"
       },
       {
@@ -776,12 +776,12 @@
         "tabstronaut.enableTabGroupSuggestions": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Analyse which files you open together and suggest tab groups.\n\n**Enabled:** File paths are recorded locally on your device to detect patterns. Nothing is sent anywhere.\n\n**Disabled:** This is a full opt-out \u2014 no file usage data is collected, recorded, or stored. The upside is complete privacy; the downside is that no suggestions will ever appear and any existing usage data stops being used."
+          "markdownDescription": "Analyse which files you open together and suggest tab groups.\n\n**Enabled:** File paths are recorded locally on your device to detect patterns. Nothing is sent anywhere.\n\n**Disabled:** This is a full opt-out — no file usage data is collected, recorded, or stored. The upside is complete privacy; the downside is that no suggestions will ever appear and any existing usage data stops being used."
         },
         "tabstronaut.enableAIGroupNaming": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate a better name for suggested groups. Only file **names** are sent \u2014 never full paths or file contents.\n\nHas no effect when **Enable Tab Group Suggestions** is disabled."
+          "markdownDescription": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate a better name for suggested groups. Only file **names** are sent — never full paths or file contents.\n\nHas no effect when **Enable Tab Group Suggestions** is disabled."
         }
       }
     }
@@ -808,9 +808,11 @@
     "concurrently": "^10.0.3",
     "eslint": "^9.30.1",
     "glob": "^11.1.0",
+    "jiti": "^2.7.0",
     "minimatch": "^10.2.4",
     "mocha": "^11.7.1",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "webpack": "^5.105.0",
     "webpack-cli": "^6.0.1"
