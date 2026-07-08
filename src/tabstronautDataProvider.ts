@@ -11,6 +11,16 @@ import {
   labelForTopFolder,
 } from "./utils";
 import { SuggestedGroup } from "./groupSuggester";
+import { getCurrentTip } from "./tips";
+
+class TipItem extends vscode.TreeItem {
+  constructor(tipText: string) {
+    super(`Tip: ${tipText}`, vscode.TreeItemCollapsibleState.None);
+    this.id = "tabstronaut-tip";
+    this.contextValue = "tip";
+    this.iconPath = new vscode.ThemeIcon("lightbulb");
+  }
+}
 
 export class SuggestionItem extends vscode.TreeItem {
   constructor(
@@ -18,7 +28,7 @@ export class SuggestionItem extends vscode.TreeItem {
     public readonly suggestionIndex: number
   ) {
     super(
-      `Suggested: ${suggestion.name}`,
+      `Suggestion: ${suggestion.name}`,
       vscode.TreeItemCollapsibleState.None
     );
     this.id = `suggestion-${suggestionIndex}`;
@@ -666,7 +676,7 @@ export class TabstronautDataProvider
 
   private createInstructionItem(): vscode.TreeItem {
     const instructionItem = new vscode.TreeItem(
-      "Click the '+' icon to create a new Tab Group"
+      "Get Started: Click the '+' icon to create a new Tab Group"
     );
     instructionItem.contextValue = "instruction";
     instructionItem.iconPath = new vscode.ThemeIcon("info");
@@ -724,6 +734,13 @@ export class TabstronautDataProvider
 
     if (!this.groupFilter && this.suggestions.length > 0) {
       this.suggestions.forEach((s, i) => result.push(new SuggestionItem(s, i)));
+    }
+
+    const showTips = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<boolean>("showTips", true);
+    if (!this.groupFilter && showTips) {
+      result.push(new TipItem(getCurrentTip()));
     }
 
     return Promise.resolve(result);

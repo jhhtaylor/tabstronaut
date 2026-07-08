@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.6.3",
+  "version": "1.6.4",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -782,6 +782,11 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Use your installed VS Code AI provider (e.g. GitHub Copilot) to generate a better name for suggested groups. Only file **names** are sent — never full paths or file contents.\n\nHas no effect when **Enable Tab Group Suggestions** is disabled."
+        },
+        "tabstronaut.showTips": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a rotating 'Tip: ...' row at the bottom of the Tab Groups panel, cycling hourly."
         }
       }
     }

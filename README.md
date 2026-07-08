@@ -22,6 +22,8 @@ Love this extension? You can support its development with a small donation - com
   - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes.
 - Tab Snapshots
   - Save your entire split-editor layout, including pinned tabs, and restore it exactly as it was with one click. Click **Create New Tab Snapshot** (camera icon, `Ctrl+Alt+S` / `Cmd+Alt+S`) to save the current layout, and **Update Tab Snapshot** (`Ctrl+Alt+Shift+S` / `Cmd+Alt+Shift+S`) to refresh it later. Restore, rename, and delete it the same way as any other Tab Group. Shown with a square icon and a "(Tab Snapshot)" tooltip to tell it apart from regular groups.
+- In-panel tips
+  - A "Tip: ..." row at the bottom of the Tab Groups panel cycles through nearly 60 tips on shortcuts, drag-and-drop, Tab Snapshots, and settings, changing every hour. Turn it off with the **Show Tips** setting (`tabstronaut.showTips`) if you'd rather not see it.
 
 ## Tips
 

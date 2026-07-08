@@ -997,6 +997,9 @@ export function activate(context: vscode.ExtensionContext) {
         "Tabstronaut confirmation message setting updated."
       );
     }
+    if (e.affectsConfiguration("tabstronaut.showTips")) {
+      treeDataProvider.refresh();
+    }
     if (e.affectsConfiguration("tabstronaut.autoRemoveClosedTabs")) {
       const config = vscode.workspace.getConfiguration("tabstronaut");
       const isEnabled = config.get<boolean>("autoRemoveClosedTabs", false);

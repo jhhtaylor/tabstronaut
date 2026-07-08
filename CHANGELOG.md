@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.4]
+
+- **Tips row** — the Tab Groups panel now shows a rotating "Tip: ..." row at the bottom, cycling hourly through nearly 60 tips covering keyboard shortcuts, drag-and-drop, Tab Snapshots, and settings you might not have found yet. Turn it off with the new **Show Tips** setting (`tabstronaut.showTips`, on by default).
+- Suggested-group rows are now labeled "Suggestion: ..." (previously "Suggested: ...") and the empty-state hint is now labeled "Get Started: ..." for consistent labeling across all three informational rows.
+
 ## [1.6.3]
 
 - Converted `webpack.config.js` and `eslint.config.cjs` to TypeScript (`webpack.config.ts`, `eslint.config.ts`) for a fully TypeScript codebase.

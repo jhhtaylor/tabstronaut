@@ -305,6 +305,44 @@ describe('TabstronautDataProvider group filter', () => {
   });
 });
 
+describe('TabstronautDataProvider tip row', () => {
+  it('appends a rotating tip as the last root-level item', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Work');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    const tipItem = children[children.length - 1];
+    strictEqual(tipItem.contextValue, 'tip');
+    ok(typeof tipItem.label === 'string' && tipItem.label.startsWith('Tip: '));
+  });
+
+  it('hides the tip while a group filter is active', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Work');
+    provider.setGroupFilter('wor');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    ok(!children.some((c) => c.contextValue === 'tip'));
+  });
+
+  it('respects the showTips setting', async () => {
+    const config = vscode.workspace.getConfiguration('tabstronaut');
+    const original = config.get('showTips');
+    await config.update('showTips', false, true);
+
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Work');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    ok(!children.some((c) => c.contextValue === 'tip'));
+
+    await config.update('showTips', original, true);
+  });
+});
+
 describe('TabstronautDataProvider.getGroupByOrder', () => {
   it('returns the first root group for order 1 when there are no sub-groups', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
