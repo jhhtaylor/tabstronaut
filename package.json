@@ -800,7 +800,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "publish:all": "bash scripts/publish.sh"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
@@ -816,6 +817,7 @@
     "jiti": "^2.7.0",
     "minimatch": "^10.2.4",
     "mocha": "^11.7.1",
+    "ovsx": "^1.0.2",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
