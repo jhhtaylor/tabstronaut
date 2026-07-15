@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.5]
+
+- Reworded several tips in the panel's Tips row that read awkwardly or duplicated another tip, and added one covering the '+' icon in the editor toolbar for adding the active tab to a group.
+
 ## [1.6.4]
 
 - **Tips row** — the Tab Groups panel now shows a rotating "Tip: ..." row at the bottom, cycling hourly through nearly 60 tips covering keyboard shortcuts, drag-and-drop, Tab Snapshots, and settings you might not have found yet. Turn it off with the new **Show Tips** setting (`tabstronaut.showTips`, on by default).

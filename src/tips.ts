@@ -49,15 +49,15 @@ export const TIPS: string[] = [
   "You can turn on confirmation prompts before removing groups or closing all your tabs",
   "You can use a Tab Snapshot to save a whole multi-pane debugging layout and bring it back later",
   "You can hover a tab in a group and click its restore icon to open just that one tab",
-  "You can search 'Tabstronaut' in Keyboard Shortcuts settings to see, and rebind, every shortcut at once",
+  "You can search 'Tabstronaut' in Keyboard Shortcuts settings to see and rebind every shortcut at once",
   "You can right-click a Tab Group for quick access to restore, sort, edit, and remove it",
   "You can glance at a group's description to see the relative time since it was last touched",
-  "You can rely on a Tab Group moving to the top automatically when you add, edit, or remove a tab in it (configurable in Settings)",
-  "You can open 'Show More Options' in the toolbar to reach less common actions without cluttering the panel",
+  "You can click the '+' icon in the editor toolbar, at the top right of any open file, to add that tab to a Tab Group",
+  "You can open 'Show More Options' in the toolbar to export or import groups, jump to Tabstronaut's settings, or leave feedback",
   "You can turn off 'Display file paths as Tab descriptions' in Settings if you'd rather see just the file name",
   "You can turn on 'Show confirmation messages' in Settings to get a notification every time a tab is added to a group",
-  "You can rely on a Tab Snapshot's saved panes being protected from drag-and-drop, so use 'Update Tab Snapshot' to change them instead",
-  "You can move a file into a subgroup and trust Tabstronaut to remove it from the parent group automatically, so it's never listed twice",
+  "A Tab Snapshot's saved panes are protected from drag-and-drop, so use 'Update Tab Snapshot' to change them instead",
+  "Moving a file into a subgroup automatically removes it from the parent group, so it's never listed twice",
 ];
 
 export function getCurrentTip(): string {
