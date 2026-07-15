@@ -2,6 +2,10 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.7]
+
+- Fixed the packaged extension including a local Claude Code settings directory and a stale git worktree that had accumulated in the repo, bloating the VSIX with ~2.2MB of unrelated files. No secrets were included — the leaked settings were only local tool-permission allowlists — but the package is now back to just the files the extension actually needs.
+
 ## [1.6.6]
 
 - Fixed the test runner failing to launch the VS Code extension host under some shells (it was silently reporting false success instead of actually running any tests).

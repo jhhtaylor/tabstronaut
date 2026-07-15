@@ -10,3 +10,5 @@ webpack.config.ts
 **/.eslintrc.json
 **/*.map
 **/*.ts
+**/.claude/**
+.github/**
