@@ -292,7 +292,14 @@ function makeQPMock() {
     onDidHide: (cb: () => void) => { hideCb = cb; },
     onDidTriggerItemButton: (cb: any) => { triggerCb = cb; },
     show: () => {},
-    hide: () => { hideCb?.(); },
+    // Real VS Code fires onDidHide on a later tick, decoupled from whatever
+    // called .hide() — never synchronously within the same call stack. Some
+    // handlers rely on that ordering: they call `quickPick.hide(); finish(x)`
+    // and expect `finish(x)` to win the `settled` race; others (e.g.
+    // selectTabGroup's button handler) call only `quickPick.hide()` and rely
+    // on onDidHide's `resolve(undefined)` to settle at all. Deferring here
+    // (rather than firing synchronously, or never) satisfies both.
+    hide: () => { setTimeout(() => hideCb?.(), 0); },
     dispose: () => {},
   };
   return {
@@ -615,7 +622,9 @@ describe('selectTabGroup — current-split buttons', () => {
 
     const rootGroups = provider.getRootGroups();
     strictEqual(rootGroups.length, 1);
-    strictEqual(rootGroups[0].isSnapshot, false);
+    // Group.isSnapshot is only ever set to `true`; a plain group leaves it
+    // `undefined` rather than `false`.
+    ok(!rootGroups[0].isSnapshot);
     ok(rootGroups[0].containsFile('/tmp/split.ts'));
     ok(!rootGroups[0].containsFile('/tmp/other.ts'));
   });

@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.6]
+
+- Fixed the test runner failing to launch the VS Code extension host under some shells (it was silently reporting false success instead of actually running any tests).
+- With the test host actually running, fixed several tests that had drifted from the current implementation and were failing for real: two `openGroupQuickPick` tests and one `selectTabGroup` button-handler test had a mock that resolved with the wrong value before the real handler could; four `addAllTabsToGroupQuickPick` tests were mocking an API the function no longer calls; one assertion expected `isSnapshot` to be exactly `false` instead of falsy. No user-facing behavior changed.
+
 ## [1.6.5]
 
 - Reworded several tips in the panel's Tips row that read awkwardly or duplicated another tip, and added one covering the '+' icon in the editor toolbar for adding the active tab to a group.

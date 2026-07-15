@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as fs from 'fs';
 import { runTests, downloadAndUnzipVSCode } from '@vscode/test-electron';
 
 async function main() {
@@ -7,24 +6,22 @@ async function main() {
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');
     const extensionTestsPath = path.resolve(__dirname, './suite/index');
 
-    // @vscode/test-electron passes --no-sandbox and --disable-gpu-sandbox which
-    // cause the VS Code binary to exit with code 9 on macOS when spawned via
-    // cp.spawn (without a TTY). The `code` CLI shell script inside the app
-    // bundle handles argument passing correctly and avoids this issue.
-    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.118.1');
-    const executablePath = process.platform === 'darwin'
-      ? path.resolve(
-          path.dirname(vscodeExecutablePath),
-          '../Resources/app/bin/code'
-        )
-      : vscodeExecutablePath;
+    // If this process was itself launched from an Electron-based tool (e.g. an
+    // IDE or CLI built on Electron), ELECTRON_RUN_AS_NODE may be set in the
+    // environment. runTests() spawns the downloaded VS Code binary with a copy
+    // of process.env, so that variable would force it to run as a plain Node
+    // process instead of launching as an app, making it reject every VS Code
+    // launch flag it's given (previously worked around here by routing through
+    // the `code` CLI script instead of the app binary directly — but that script
+    // forwards to an already-running VS Code window via IPC when one exists,
+    // silently skipping the test run entirely rather than launching an isolated
+    // extension host).
+    delete process.env.ELECTRON_RUN_AS_NODE;
 
-    if (process.platform === 'darwin' && !fs.existsSync(executablePath)) {
-      throw new Error(`code CLI not found at ${executablePath}`);
-    }
+    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.118.1');
 
     await runTests({
-      vscodeExecutablePath: executablePath,
+      vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath,
     });

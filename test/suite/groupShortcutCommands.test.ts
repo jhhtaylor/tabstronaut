@@ -21,25 +21,53 @@ class MockMemento implements vscode.Memento {
 }
 
 // ── addAllTabsToGroupQuickPick ────────────────────────────────────────────────
+//
+// addAllTabsToGroupQuickPick uses vscode.window.createQuickPick() (needed for
+// the per-item secondary buttons), not the simpler showQuickPick() promise
+// API — the mocks below must match that.
+
+function makeAddAllTabsQPMock() {
+  let acceptCb: (() => unknown) | undefined;
+  let hideCb: (() => void) | undefined;
+
+  const qp: any = {
+    items: [] as any[],
+    placeholder: '',
+    selectedItems: [] as any[],
+    onDidAccept: (cb: () => unknown) => { acceptCb = cb; },
+    onDidHide: (cb: () => void) => { hideCb = cb; },
+    onDidTriggerItemButton: () => {},
+    show: () => {},
+    // See openGroupQuickPick.test.ts's makeMockQuickPick for why this must be
+    // a no-op rather than synchronously firing hideCb.
+    hide: () => {},
+    dispose: () => {},
+  };
+
+  return {
+    qp,
+    cancel() { hideCb?.(); },
+    accept(item: any) { qp.selectedItems = [item]; return acceptCb?.(); },
+  };
+}
 
 describe('addAllTabsToGroupQuickPick', () => {
-  let origShowQP: any;
+  let origCreateQP: any;
 
-  beforeEach(() => { origShowQP = (vscode.window as any).showQuickPick; });
+  beforeEach(() => { origCreateQP = vscode.window.createQuickPick; });
   afterEach(() => {
-    Object.defineProperty(vscode.window, 'showQuickPick', { value: origShowQP, configurable: true });
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: origCreateQP, configurable: true });
   });
 
   it('returns without error when user cancels', async () => {
     const provider = new TabstronautDataProvider(new MockMemento());
     await provider.addGroup('Alpha');
 
-    Object.defineProperty(vscode.window, 'showQuickPick', {
-      value: () => Promise.resolve(undefined),
-      configurable: true,
-    });
+    const mock = makeAddAllTabsQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
 
     await addAllTabsToGroupQuickPick(provider);
+    mock.cancel();
     provider.clearRefreshInterval();
     strictEqual(provider.getRootGroups().length, 1, 'no groups created on cancel');
   });
@@ -48,14 +76,13 @@ describe('addAllTabsToGroupQuickPick', () => {
     const provider = new TabstronautDataProvider(new MockMemento());
     await provider.addGroup('Alpha');
 
-    let firstItem: any;
-    Object.defineProperty(vscode.window, 'showQuickPick', {
-      value: (items: any[]) => { firstItem = items[0]; return Promise.resolve(undefined); },
-      configurable: true,
-    });
+    const mock = makeAddAllTabsQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
 
     await addAllTabsToGroupQuickPick(provider);
     provider.clearRefreshInterval();
+
+    const firstItem = mock.qp.items[0];
     ok(firstItem?.label?.includes('Create new group'), `first item should be "Create new group...", got: ${firstItem?.label}`);
   });
 
@@ -64,16 +91,13 @@ describe('addAllTabsToGroupQuickPick', () => {
     await provider.addGroup('Alpha');
     await provider.addGroup('Beta');
 
-    let capturedItems: any[] = [];
-    Object.defineProperty(vscode.window, 'showQuickPick', {
-      value: (items: any[]) => { capturedItems = items; return Promise.resolve(undefined); },
-      configurable: true,
-    });
+    const mock = makeAddAllTabsQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
 
     await addAllTabsToGroupQuickPick(provider);
     provider.clearRefreshInterval();
 
-    const groupLabels = capturedItems
+    const groupLabels = mock.qp.items
       .filter((i: any) => i.groupId && i.groupId !== '__create_new__' && i.kind !== vscode.QuickPickItemKind.Separator)
       .map((i: any) => i.label);
 
@@ -84,33 +108,29 @@ describe('addAllTabsToGroupQuickPick', () => {
   it('shows no separator when there are no existing groups (only "Create new group...")', async () => {
     const provider = new TabstronautDataProvider(new MockMemento());
 
-    let capturedItems: any[] = [];
-    Object.defineProperty(vscode.window, 'showQuickPick', {
-      value: (items: any[]) => { capturedItems = items; return Promise.resolve(undefined); },
-      configurable: true,
-    });
+    const mock = makeAddAllTabsQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
 
     await addAllTabsToGroupQuickPick(provider);
     provider.clearRefreshInterval();
 
-    strictEqual(capturedItems.length, 1, 'only "Create new group..." when no groups exist');
-    strictEqual(capturedItems.filter((i: any) => i.kind === vscode.QuickPickItemKind.Separator).length, 0);
+    strictEqual(mock.qp.items.length, 1, 'only "Create new group..." when no groups exist');
+    strictEqual(mock.qp.items.filter((i: any) => i.kind === vscode.QuickPickItemKind.Separator).length, 0);
   });
 
   it('selecting an existing group calls addAllOpenTabsToGroup (0 tabs in test env is safe)', async () => {
     const provider = new TabstronautDataProvider(new MockMemento());
     const id = await provider.addGroup('Alpha');
 
-    Object.defineProperty(vscode.window, 'showQuickPick', {
-      value: (items: any[]) => {
-        const groupItem = items.find((i: any) => i.groupId && i.groupId !== '__create_new__' && i.kind !== vscode.QuickPickItemKind.Separator);
-        return Promise.resolve(groupItem);
-      },
-      configurable: true,
-    });
+    const mock = makeAddAllTabsQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
 
-    // No open tabs in test env — should complete without throwing
     await addAllTabsToGroupQuickPick(provider);
+    const groupItem = mock.qp.items.find(
+      (i: any) => i.groupId && i.groupId !== '__create_new__' && i.kind !== vscode.QuickPickItemKind.Separator
+    );
+    // No open tabs in test env — should complete without throwing
+    await mock.accept(groupItem);
     provider.clearRefreshInterval();
 
     const group = provider.findGroupById(id!);
@@ -124,16 +144,13 @@ describe('addAllTabsToGroupQuickPick', () => {
     const parentId = await provider.addGroup('Parent');
     await provider.addSubGroup(parentId!, 'Child', 'terminal.ansiBlue');
 
-    let capturedItems: any[] = [];
-    Object.defineProperty(vscode.window, 'showQuickPick', {
-      value: (items: any[]) => { capturedItems = items; return Promise.resolve(undefined); },
-      configurable: true,
-    });
+    const mock = makeAddAllTabsQPMock();
+    Object.defineProperty(vscode.window, 'createQuickPick', { value: () => mock.qp, configurable: true });
 
     await addAllTabsToGroupQuickPick(provider);
     provider.clearRefreshInterval();
 
-    const labels = capturedItems.map((i: any) => i.label);
+    const labels = mock.qp.items.map((i: any) => i.label);
     ok(labels.includes('Parent'), 'Parent should be listed');
     ok(labels.some((l: string) => l === 'Parent > Child'), `expected "Parent > Child", got: ${JSON.stringify(labels)}`);
   });
