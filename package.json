@@ -818,7 +818,7 @@
     "minimatch": "^10.2.4",
     "mocha": "^11.7.1",
     "ovsx": "^1.0.2",
-    "ts-loader": "^9.5.2",
+    "ts-loader": "^9.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "webpack": "^5.105.0",
