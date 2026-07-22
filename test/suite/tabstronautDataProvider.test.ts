@@ -306,15 +306,40 @@ describe('TabstronautDataProvider group filter', () => {
 });
 
 describe('TabstronautDataProvider tip row', () => {
-  it('appends a rotating tip as the last root-level item', async () => {
+  it('pins the rotating tip as the first root-level item, ahead of groups', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     await provider.addGroup('Work');
     const children = await provider.getChildren();
     provider.clearRefreshInterval();
 
-    const tipItem = children[children.length - 1];
+    const tipItem = children[0];
     strictEqual(tipItem.contextValue, 'tip');
     ok(typeof tipItem.label === 'string' && tipItem.label.startsWith('Tip: '));
+  });
+
+  it('keeps the tip pinned at the top regardless of how many groups exist', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Work');
+    await provider.addGroup('Play');
+    await provider.addGroup('Personal');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    strictEqual(children[0].contextValue, 'tip');
+  });
+
+  it('pins suggestions and the tip above groups, in suggestion-then-tip-then-groups order', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    await provider.addGroup('Work');
+    provider.setSuggestions([
+      { name: 'Suggested Group', files: ['/tmp/a', '/tmp/b'], strength: 5, source: 'heuristic' },
+    ]);
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    strictEqual(children[0].contextValue, 'suggestion');
+    strictEqual(children[1].contextValue, 'tip');
+    strictEqual((children[2] as Group).label, 'Work');
   });
 
   it('hides the tip while a group filter is active', async () => {

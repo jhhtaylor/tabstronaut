@@ -72,6 +72,61 @@ describe('TabstronautDataProvider addToGroup duplicate handling', () => {
   });
 });
 
+describe('TabstronautDataProvider handleDrop tab move between groups', () => {
+  // VS Code auto-populates "text/uri-list" for any dragged TreeItem that has a
+  // resourceUri (every tab does) in addition to our own custom mime type, even
+  // when the drag starts and ends inside this same tree. Both entries must be
+  // set here to faithfully reproduce a real in-tree drag.
+  function internalTabDragData(tabId: string, filePath: string): vscode.DataTransfer {
+    const dragData = new vscode.DataTransfer();
+    dragData.set(
+      'application/vnd.code.tree.tabstronaut',
+      new vscode.DataTransferItem(`tab:${tabId}`)
+    );
+    dragData.set(
+      'text/uri-list',
+      new vscode.DataTransferItem(vscode.Uri.file(filePath).toString())
+    );
+    return dragData;
+  }
+
+  it('moves (not copies) a tab when dropped on another group header', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1Id = await provider.addGroup('G1');
+    const g2Id = await provider.addGroup('G2');
+    await provider.addToGroup(g1Id!, '/tmp/file1');
+    const g1 = provider.getGroup('G1')!;
+    const g2 = provider.getGroup('G2')!;
+    const tabId = g1.items[0].id!;
+
+    const dragData = internalTabDragData(tabId, '/tmp/file1');
+    await provider.handleDrop(g2, dragData, new vscode.CancellationTokenSource().token);
+    provider.clearRefreshInterval();
+
+    strictEqual(provider.getGroup('G1')!.items.length, 0, 'source group should be empty');
+    strictEqual(provider.getGroup('G2')!.items.length, 1, 'target group should have the tab');
+  });
+
+  it('moves (not copies) a tab when dropped onto a specific tab in the target group', async () => {
+    const provider = new TabstronautDataProvider(new MockMemento({}));
+    const g1Id = await provider.addGroup('G1');
+    const g2Id = await provider.addGroup('G2');
+    await provider.addToGroup(g1Id!, '/tmp/file1');
+    await provider.addToGroup(g2Id!, '/tmp/file2');
+    const g1 = provider.getGroup('G1')!;
+    const g2 = provider.getGroup('G2')!;
+    const tabId = g1.items[0].id!;
+    const targetTab = g2.items[0];
+
+    const dragData = internalTabDragData(tabId, '/tmp/file1');
+    await provider.handleDrop(targetTab, dragData, new vscode.CancellationTokenSource().token);
+    provider.clearRefreshInterval();
+
+    strictEqual(provider.getGroup('G1')!.items.length, 0, 'source group should be empty');
+    strictEqual(provider.getGroup('G2')!.items.length, 2, 'target group should have both tabs');
+  });
+});
+
 describe('TabstronautDataProvider handleDrop new group on empty space', () => {
   it('creates new group with defaults when dropping tab to empty area', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));

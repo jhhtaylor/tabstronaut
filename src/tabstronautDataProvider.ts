@@ -322,7 +322,16 @@ export class TabstronautDataProvider
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken
   ): Promise<void> {
-    const uriItem = dataTransfer.get("text/uri-list");
+    const transferItem = dataTransfer.get(
+      "application/vnd.code.tree.tabstronaut"
+    );
+
+    // VS Code auto-populates "text/uri-list" for any dragged TreeItem that has a
+    // resourceUri (every tab does), even when the drag originates from this same
+    // tree. Only treat "text/uri-list" as a real external drop (Explorer, editor
+    // tab bar, OS) when our own internal mime type isn't also present - otherwise
+    // an in-tree tab move gets misread as an add, leaving the tab in both groups.
+    const uriItem = !transferItem ? dataTransfer.get("text/uri-list") : undefined;
     if (uriItem && target instanceof Group) {
       if (isSnapshotManaged(target)) {
         vscode.window.showInformationMessage(
@@ -352,9 +361,6 @@ export class TabstronautDataProvider
       return;
     }
 
-    const transferItem = dataTransfer.get(
-      "application/vnd.code.tree.tabstronaut"
-    );
     if (!transferItem) {
       return;
     }
@@ -724,14 +730,6 @@ export class TabstronautDataProvider
     }
     const result: (Group | vscode.TreeItem)[] = [];
 
-    if (groups.length === 0) {
-      result.push(
-        this.groupFilter ? this.createNoMatchItem() : this.createInstructionItem()
-      );
-    } else {
-      result.push(...groups);
-    }
-
     if (!this.groupFilter && this.suggestions.length > 0) {
       this.suggestions.forEach((s, i) => result.push(new SuggestionItem(s, i)));
     }
@@ -741,6 +739,14 @@ export class TabstronautDataProvider
       .get<boolean>("showTips", true);
     if (!this.groupFilter && showTips) {
       result.push(new TipItem(getCurrentTip()));
+    }
+
+    if (groups.length === 0) {
+      result.push(
+        this.groupFilter ? this.createNoMatchItem() : this.createInstructionItem()
+      );
+    } else {
+      result.push(...groups);
     }
 
     return Promise.resolve(result);

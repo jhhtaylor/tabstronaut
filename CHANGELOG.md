@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.6.8]
+
+- Fixed dragging a tab from one Tab Group directly onto another group (or onto a tab inside it) copying the file instead of moving it, leaving it listed in both groups. VS Code attaches a `text/uri-list` entry to any dragged tab automatically, and that was being treated as an external drop before the extension's own move logic ever ran.
+- The Tips row and suggested-group rows are now pinned to the top of the panel, above your Tab Groups, instead of the bottom - they no longer shift position as groups expand, collapse, or are added.
+
 ## [1.6.7]
 
 - Fixed the packaged extension including a local Claude Code settings directory and a stale git worktree that had accumulated in the repo, bloating the VSIX with ~2.2MB of unrelated files. No secrets were included — the leaked settings were only local tool-permission allowlists — but the package is now back to just the files the extension actually needs.
