@@ -808,7 +808,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
     "@types/vscode": "^1.99.0",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.33.1",
     "@vscode/test-electron": "^2.5.2",
     "concurrently": "^10.0.3",
