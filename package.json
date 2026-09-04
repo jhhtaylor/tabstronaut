@@ -809,7 +809,7 @@
     "@types/node": "26.x",
     "@types/vscode": "^1.125.0",
     "@typescript-eslint/eslint-plugin": "^8.68.0",
-    "@typescript-eslint/parser": "^8.33.1",
+    "@typescript-eslint/parser": "^8.69.0",
     "@vscode/test-electron": "^3.0.0",
     "concurrently": "^10.0.5",
     "eslint": "^9.30.1",
