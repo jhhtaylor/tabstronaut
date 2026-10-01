@@ -804,7 +804,7 @@
     "publish:all": "bash scripts/publish.sh"
   },
   "devDependencies": {
-    "@types/glob": "^8.1.0",
+    "@types/glob": "^9.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "26.x",
     "@types/vscode": "^1.125.0",
