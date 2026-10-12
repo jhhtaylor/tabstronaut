@@ -826,7 +826,7 @@
   },
   "overrides": {
     "serialize-javascript": "7.0.5",
-    "shell-quote": "1.10.0",
+    "shell-quote": "1.11.0",
     "diff": "8.0.4"
   }
 }
