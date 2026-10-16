@@ -27,6 +27,7 @@ import { captureSnapshotIntoGroup, restoreSnapshotGroup, createSnapshotCommand }
 import { TabUsageTracker } from "./tabUsageTracker";
 import { suggestGroups } from "./groupSuggester";
 import { aiEnhanceSuggestion, resetAiAvailability } from "./aiGroupSuggester";
+import { registerCopyCommands } from "./copyOperations";
 
 let treeDataProvider: TabstronautDataProvider;
 let collapsedGroups: Set<string>;
@@ -175,7 +176,7 @@ export function activate(context: vscode.ExtensionContext) {
   config.get("showConfirmationMessages");
   config.get("promptForGroupDetails");
 
-  treeDataProvider = new TabstronautDataProvider(context.workspaceState);
+  treeDataProvider = new TabstronautDataProvider(context.workspaceState, context.globalState);
 
   void enforceExclusiveSettings("autoCloseOnRestore");
 
@@ -921,6 +922,14 @@ export function activate(context: vscode.ExtensionContext) {
 
         treeDataProvider.removeFromGroup(item.groupId, item.resourceUri?.fsPath);
       }
+    )
+  );
+
+  registerCopyCommands(context);
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tabstronaut.dismissTip", () =>
+      treeDataProvider.dismissTip()
     )
   );
 

@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.6.8",
+  "version": "1.7.0",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -273,6 +273,52 @@
         "category": "Tabstronaut",
         "title": "Rename Tab Group...",
         "icon": "$(edit)"
+      },
+      {
+        "command": "tabstronaut.copyRepoName",
+        "category": "Tabstronaut",
+        "title": "Copy Repo Name"
+      },
+      {
+        "command": "tabstronaut.copyRepoPath",
+        "category": "Tabstronaut",
+        "title": "Copy Repo Path"
+      },
+      {
+        "command": "tabstronaut.copyPath",
+        "category": "Tabstronaut",
+        "title": "Copy Path"
+      },
+      {
+        "command": "tabstronaut.copyRelativePath",
+        "category": "Tabstronaut",
+        "title": "Copy Relative Path"
+      },
+      {
+        "command": "tabstronaut.copyFileName",
+        "category": "Tabstronaut",
+        "title": "Copy File Name"
+      },
+      {
+        "command": "tabstronaut.copyFileNameWithExtension",
+        "category": "Tabstronaut",
+        "title": "Copy File Name With Extension"
+      },
+      {
+        "command": "tabstronaut.copyAtMention",
+        "category": "Tabstronaut",
+        "title": "Copy as @ Mention"
+      },
+      {
+        "command": "tabstronaut.copyGroupFilePaths",
+        "category": "Tabstronaut",
+        "title": "Copy File Paths"
+      },
+      {
+        "command": "tabstronaut.dismissTip",
+        "category": "Tabstronaut",
+        "title": "Dismiss Tip Until Tomorrow",
+        "icon": "$(close)"
       }
     ],
     "viewsContainers": {
@@ -434,6 +480,51 @@
           "command": "tabstronaut.dismissSuggestion",
           "when": "view == tabstronaut && viewItem == suggestion",
           "group": "inline@1"
+        },
+        {
+          "command": "tabstronaut.copyGroupFilePaths",
+          "when": "view == tabstronaut && (viewItem == group || viewItem == snapshotGroup || viewItem == snapshotColumn)",
+          "group": "8_copy@0"
+        },
+        {
+          "command": "tabstronaut.dismissTip",
+          "when": "view == tabstronaut && viewItem == tip",
+          "group": "inline@0"
+        },
+        {
+          "command": "tabstronaut.copyRepoName",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "7_copyRepo@0"
+        },
+        {
+          "command": "tabstronaut.copyRepoPath",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "7_copyRepo@1"
+        },
+        {
+          "command": "tabstronaut.copyPath",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "8_copyPath@0"
+        },
+        {
+          "command": "tabstronaut.copyRelativePath",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "8_copyPath@1"
+        },
+        {
+          "command": "tabstronaut.copyFileName",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "8_copyPath@2"
+        },
+        {
+          "command": "tabstronaut.copyFileNameWithExtension",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "8_copyPath@3"
+        },
+        {
+          "command": "tabstronaut.copyAtMention",
+          "when": "(view == tabstronaut || view == tabstronautUngrouped) && viewItem == tab",
+          "group": "8_copyPath@4"
         }
       ],
       "commandPalette": [
@@ -571,6 +662,42 @@
         {
           "command": "tabstronaut.renameGroupQuickPick",
           "when": "false"
+        },
+        {
+          "command": "tabstronaut.copyGroupFilePaths",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.dismissTip",
+          "when": "false"
+        },
+        {
+          "command": "tabstronaut.copyRepoName",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "tabstronaut.copyRepoPath",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "tabstronaut.copyPath",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "tabstronaut.copyRelativePath",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "tabstronaut.copyFileName",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "tabstronaut.copyFileNameWithExtension",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "tabstronaut.copyAtMention",
+          "when": "editorIsOpen"
         }
       ]
     },
@@ -786,7 +913,7 @@
         "tabstronaut.showTips": {
           "type": "boolean",
           "default": true,
-          "description": "Show a rotating 'Tip: ...' row at the bottom of the Tab Groups panel, cycling hourly."
+          "description": "Show a daily 'Tip' row at the bottom of the Tab Groups panel. Dismissing it hides tips until the next day."
         }
       }
     }

@@ -1,6 +1,6 @@
 /// <reference types="mocha" />
 import { strictEqual, ok } from 'assert';
-import { TIPS, getCurrentTip } from '../../src/tips';
+import { TIPS, getCurrentTip, getCurrentDayIndex } from '../../src/tips';
 
 describe('tips', () => {
   it('has a healthy number of tips, each a clean single sentence', () => {
@@ -16,9 +16,8 @@ describe('tips', () => {
     strictEqual(new Set(TIPS).size, TIPS.length);
   });
 
-  it('picks a tip deterministically based on the current hour', () => {
-    const expectedIndex = Math.floor(Date.now() / 3600000) % TIPS.length;
-    strictEqual(getCurrentTip(), TIPS[expectedIndex]);
+  it('picks a tip deterministically based on the current day', () => {
+    strictEqual(getCurrentTip(), TIPS[getCurrentDayIndex() % TIPS.length]);
   });
 
   it('always returns one of the known tips', () => {

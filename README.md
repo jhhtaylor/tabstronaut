@@ -22,8 +22,10 @@ Love this extension? You can support its development with a small donation - com
   - Save tab groups for later, export them to share, or bring back archived sets whenever inspiration strikes.
 - Tab Snapshots
   - Save your entire split-editor layout, including pinned tabs, and restore it exactly as it was with one click. Click **Create New Tab Snapshot** (camera icon, `Ctrl+Alt+S` / `Cmd+Alt+S`) to save the current layout, and **Update Tab Snapshot** (`Ctrl+Alt+Shift+S` / `Cmd+Alt+Shift+S`) to refresh it later. Restore, rename, and delete it the same way as any other Tab Group. Shown with a square icon and a "(Tab Snapshot)" tooltip to tell it apart from regular groups.
+- Copy file references
+  - Right-click a tab in a group to copy its path, relative path, file name (with or without the extension), an `@` mention for AI chat tools, or the name and path of the git repo it lives in. Right-click a group or a Tab Snapshot pane to copy the relative paths of every file inside it, one per line.
 - In-panel tips
-  - A "Tip: ..." row at the bottom of the Tab Groups panel cycles through nearly 60 tips on shortcuts, drag-and-drop, Tab Snapshots, and settings, changing every hour. Turn it off with the **Show Tips** setting (`tabstronaut.showTips`) if you'd rather not see it.
+  - A small "Tip" row at the bottom of the Tab Groups panel shows one tip a day on shortcuts, drag-and-drop, Tab Snapshots, and settings. Click its X to hide tips until tomorrow, or turn them off for good with the **Show Tips** setting (`tabstronaut.showTips`).
 
 ## Tips
 

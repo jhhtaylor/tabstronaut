@@ -306,29 +306,20 @@ describe('TabstronautDataProvider group filter', () => {
 });
 
 describe('TabstronautDataProvider tip row', () => {
-  it('pins the rotating tip as the first root-level item, ahead of groups', async () => {
-    const provider = new TabstronautDataProvider(new MockMemento({}));
-    await provider.addGroup('Work');
-    const children = await provider.getChildren();
-    provider.clearRefreshInterval();
-
-    const tipItem = children[0];
-    strictEqual(tipItem.contextValue, 'tip');
-    ok(typeof tipItem.label === 'string' && tipItem.label.startsWith('Tip: '));
-  });
-
-  it('keeps the tip pinned at the top regardless of how many groups exist', async () => {
+  it('shows the daily tip as the last root-level item, below groups', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     await provider.addGroup('Work');
     await provider.addGroup('Play');
-    await provider.addGroup('Personal');
     const children = await provider.getChildren();
     provider.clearRefreshInterval();
 
-    strictEqual(children[0].contextValue, 'tip');
+    const tipItem = children[children.length - 1];
+    strictEqual(tipItem.contextValue, 'tip');
+    strictEqual(tipItem.label, 'Tip');
+    ok(typeof tipItem.description === 'string' && tipItem.description.length > 0);
   });
 
-  it('pins suggestions and the tip above groups, in suggestion-then-tip-then-groups order', async () => {
+  it('orders suggestions, then groups, then the tip', async () => {
     const provider = new TabstronautDataProvider(new MockMemento({}));
     await provider.addGroup('Work');
     provider.setSuggestions([
@@ -338,8 +329,29 @@ describe('TabstronautDataProvider tip row', () => {
     provider.clearRefreshInterval();
 
     strictEqual(children[0].contextValue, 'suggestion');
-    strictEqual(children[1].contextValue, 'tip');
-    strictEqual((children[2] as Group).label, 'Work');
+    strictEqual((children[1] as Group).label, 'Work');
+    strictEqual(children[2].contextValue, 'tip');
+  });
+
+  it('hides the tip for the rest of the day once dismissed', async () => {
+    const globalState = new MockMemento({});
+    const provider = new TabstronautDataProvider(new MockMemento({}), globalState);
+    await provider.addGroup('Work');
+    await provider.dismissTip();
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    ok(!children.some((c) => c.contextValue === 'tip'));
+  });
+
+  it('shows the tip again on a later day', async () => {
+    const globalState = new MockMemento({ tipDismissedDay: 0 });
+    const provider = new TabstronautDataProvider(new MockMemento({}), globalState);
+    await provider.addGroup('Work');
+    const children = await provider.getChildren();
+    provider.clearRefreshInterval();
+
+    ok(children.some((c) => c.contextValue === 'tip'));
   });
 
   it('hides the tip while a group filter is active', async () => {

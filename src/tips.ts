@@ -57,10 +57,16 @@ export const TIPS: string[] = [
   "You can turn off 'Display file paths as Tab descriptions' in Settings if you'd rather see just the file name",
   "You can turn on 'Show confirmation messages' in Settings to get a notification every time a tab is added to a group",
   "A Tab Snapshot's saved panes are protected from drag-and-drop, so use 'Update Tab Snapshot' to change them instead",
+  "You can right-click a tab in a group to copy its path, file name, repo name, or an @ mention to paste into an AI chat",
+  "You can right-click a Tab Group to copy the paths of every file in it, one per line",
   "Moving a file into a subgroup automatically removes it from the parent group, so it's never listed twice",
 ];
 
+export function getCurrentDayIndex(): number {
+  const now = new Date();
+  return Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000);
+}
+
 export function getCurrentTip(): string {
-  const hourIndex = Math.floor(Date.now() / 3600000);
-  return TIPS[hourIndex % TIPS.length];
+  return TIPS[getCurrentDayIndex() % TIPS.length];
 }

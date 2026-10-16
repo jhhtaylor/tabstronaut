@@ -2,6 +2,13 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.7.0]
+
+- Added copy options to the right-click menu for tabs in the Tab Groups and Ungrouped Tabs panels: Copy Repo Name, Copy Repo Path, Copy Path, Copy Relative Path, Copy File Name, Copy File Name With Extension and Copy as @ Mention. Repo name comes from the git remote, falling back to the repo folder name.
+- Added Copy File Paths to the right-click menu for Tab Groups, Tab Snapshots and snapshot panes. It copies the relative path of every file inside, including sub-groups, one per line.
+- The Tips row is quieter: it sits at the bottom of the panel, shows one tip per day instead of cycling hourly, and the tip text is dimmed. Click its X to hide tips until the next day.
+- Dropping a tab onto the Tips row now creates a new group, the same as dropping it on empty space.
+
 ## [1.6.8]
 
 - Fixed dragging a tab from one Tab Group directly onto another group (or onto a tab inside it) copying the file instead of moving it, leaving it listed in both groups. VS Code attaches a `text/uri-list` entry to any dragged tab automatically, and that was being treated as an external drop before the extension's own move logic ever ran.

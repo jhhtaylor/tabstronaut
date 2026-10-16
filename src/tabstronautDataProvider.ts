@@ -11,13 +11,17 @@ import {
   labelForTopFolder,
 } from "./utils";
 import { SuggestedGroup } from "./groupSuggester";
-import { getCurrentTip } from "./tips";
+import { getCurrentTip, getCurrentDayIndex } from "./tips";
+
+const TIP_DISMISSED_DAY_KEY = "tipDismissedDay";
 
 class TipItem extends vscode.TreeItem {
   constructor(tipText: string) {
-    super(`Tip: ${tipText}`, vscode.TreeItemCollapsibleState.None);
+    super("Tip", vscode.TreeItemCollapsibleState.None);
     this.id = "tabstronaut-tip";
     this.contextValue = "tip";
+    this.description = tipText;
+    this.tooltip = `${tipText}\n\nDismiss to hide tips until tomorrow.`;
     this.iconPath = new vscode.ThemeIcon("lightbulb");
   }
 }
@@ -92,7 +96,10 @@ export class TabstronautDataProvider
   private groupFilter?: string;
   private suggestions: SuggestedGroup[] = [];
 
-  constructor(private workspaceState: vscode.Memento) {
+  constructor(
+    private workspaceState: vscode.Memento,
+    private globalState: vscode.Memento = workspaceState
+  ) {
     const groupData = this.workspaceState.get<{
       [id: string]: GroupStorageData;
     }>("tabGroups", {});
@@ -532,7 +539,8 @@ export class TabstronautDataProvider
         id.startsWith("tab:") &&
         (!target ||
           (target instanceof vscode.TreeItem &&
-            target.contextValue === "instruction"))
+            (target.contextValue === "instruction" ||
+              target.contextValue === "tip")))
       ) {
         const tabId = id.replace("tab:", "");
         const sourceGroup = this.findSourceGroupForTab(tabId);
@@ -734,13 +742,6 @@ export class TabstronautDataProvider
       this.suggestions.forEach((s, i) => result.push(new SuggestionItem(s, i)));
     }
 
-    const showTips = vscode.workspace
-      .getConfiguration("tabstronaut")
-      .get<boolean>("showTips", true);
-    if (!this.groupFilter && showTips) {
-      result.push(new TipItem(getCurrentTip()));
-    }
-
     if (groups.length === 0) {
       result.push(
         this.groupFilter ? this.createNoMatchItem() : this.createInstructionItem()
@@ -749,7 +750,26 @@ export class TabstronautDataProvider
       result.push(...groups);
     }
 
+    if (!this.groupFilter && this.isTipVisible()) {
+      result.push(new TipItem(getCurrentTip()));
+    }
+
     return Promise.resolve(result);
+  }
+
+  private isTipVisible(): boolean {
+    const showTips = vscode.workspace
+      .getConfiguration("tabstronaut")
+      .get<boolean>("showTips", true);
+    return (
+      showTips &&
+      this.globalState.get<number>(TIP_DISMISSED_DAY_KEY) !== getCurrentDayIndex()
+    );
+  }
+
+  public async dismissTip(): Promise<void> {
+    await this.globalState.update(TIP_DISMISSED_DAY_KEY, getCurrentDayIndex());
+    this._onDidChangeTreeData.fire();
   }
 
   public getUngroupedItems(): vscode.TreeItem[] {
