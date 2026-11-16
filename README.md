@@ -6,6 +6,12 @@ Tabstronaut is a tab management tool for VS Code. Archive tab groups and bring t
 
 ![Tabstronaut in action](media/tabstronaut-demo.gif)
 
+## Watch the trailer
+
+[![Tabstronaut trailer and feature tour on YouTube](https://img.youtube.com/vi/v09gixRGUeE/maxresdefault.jpg)](https://youtu.be/v09gixRGUeE)
+
+The first minute is the trailer, followed by a tour of every feature.
+
 ## Support the creator
 
 <a href="https://www.buymeacoffee.com/jhhtaylor" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217" height="60"></a>
