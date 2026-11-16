@@ -7,3 +7,7 @@ updates:
     commit-message:
       prefix: "[Dependabot]"
       include: "scope"
+    ignore:
+      # typescript-eslint doesn't support TypeScript 7 yet (peer range <6.1.0)
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
