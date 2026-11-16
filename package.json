@@ -24,7 +24,7 @@
   "sponsor": {
     "url": "https://www.buymeacoffee.com/jhhtaylor"
   },
-  "version": "1.7.0",
+  "version": "1.7.1",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -937,22 +937,22 @@
     "@types/vscode": "~1.99.0",
     "@typescript-eslint/eslint-plugin": "^8.68.0",
     "@typescript-eslint/parser": "^8.69.0",
-    "@vscode/test-electron": "^3.0.0",
-    "concurrently": "^10.0.5",
+    "@vscode/test-electron": "^3.1.0",
+    "concurrently": "^10.0.7",
     "eslint": "^9.30.1",
-    "glob": "^13.0.6",
+    "glob": "^14.0.6",
     "jiti": "^2.7.0",
-    "minimatch": "^10.2.6",
+    "minimatch": "^11.0.8",
     "mocha": "^12.0.2",
     "ovsx": "^1.0.2",
     "ts-loader": "^9.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
-    "webpack": "^5.110.1",
+    "webpack": "^5.112.2",
     "webpack-cli": "^7.2.3"
   },
   "overrides": {
-    "serialize-javascript": "7.0.5",
+    "serialize-javascript": "7.1.3",
     "shell-quote": "1.11.0",
     "diff": "8.0.4"
   }

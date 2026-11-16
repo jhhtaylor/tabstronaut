@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.7.1]
+
+- Added a link to the new Tabstronaut trailer and feature tour on YouTube to the extension page.
+- Updated development dependencies. No change to how the extension behaves.
+
 ## [1.7.0]
 
 - Added copy options to the right-click menu for tabs in the Tab Groups and Ungrouped Tabs panels: Copy Repo Name, Copy Repo Path, Copy Path, Copy Relative Path, Copy File Name, Copy File Name With Extension and Copy as @ Mention. Repo name comes from the git remote, falling back to the repo folder name.
