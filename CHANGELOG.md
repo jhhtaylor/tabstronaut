@@ -2,6 +2,11 @@
 
 All notable changes to the Tabstronaut extension will be documented in this file.
 
+## [1.7.2]
+
+- New demo GIF on the extension page, cut from the trailer. The old one is kept in the repo under `media/legacy`.
+- The demo GIF is no longer bundled into the installed extension, so the download is smaller. The extension page still shows it.
+
 ## [1.7.1]
 
 - Added a link to the new Tabstronaut trailer and feature tour on YouTube to the extension page.

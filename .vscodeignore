@@ -12,3 +12,5 @@ webpack.config.ts
 **/*.ts
 **/.claude/**
 .github/**
+media/*.gif
+media/legacy/**
